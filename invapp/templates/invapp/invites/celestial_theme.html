@@ -1,0 +1,424 @@
+{% extends "invapp/base_invite.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block page_specific_fonts %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:wght@400;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block page_specific_styles %}
+<style>
+    body {
+        background-color: #0b0f19; /* Fallback dark color */
+        background-image: url('https://images.pexels.com/photos/1252890/pexels-photo-1252890.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        font-family: 'Montserrat', sans-serif;
+        color: #e0e0e0;
+        overflow-x: hidden;
+    }
+
+    /* Modern Dark Overlay to improve general contrast */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(11, 15, 25, 0.6); /* Dark blue-black tint */
+        z-index: -1;
+    }
+
+    .font-display { font-family: 'Cinzel Decorative', cursive; }
+    .font-serif { font-family: 'Cormorant Garamond', serif; }
+
+    .text-gold-accent {
+        color: #f2d6a4;
+        text-shadow: 0 0 10px rgba(242, 214, 164, 0.3);
+    }
+
+    /* Glassmorphic Card for better contrast */
+    .celestial-card {
+        background: rgba(18, 22, 36, 0.65);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        border-radius: 1rem;
+    }
+
+    /* Twinkling Stars Animation */
+    @keyframes twinkle {
+        0%, 100% { opacity: 0.3; transform: scale(0.8); }
+        50% { opacity: 1; transform: scale(1.2); }
+    }
+    .star-anim {
+        animation: twinkle 4s infinite ease-in-out;
+    }
+
+    /* Buttons */
+    .btn-celestial {
+        background: linear-gradient(135deg, #f2d6a4 0%, #d4af37 100%);
+        color: #0b0f19;
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+    }
+    .btn-celestial:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
+    }
+
+    /* Scroll Reveal */
+    .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    }
+    .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Modal Inputs */
+    .modal-input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(242, 214, 164, 0.3);
+        color: white;
+    }
+    .modal-input:focus {
+        border-color: #f2d6a4;
+        ring: 1px solid #f2d6a4;
+        background: rgba(255, 255, 255, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- x-data handles Menu and RSVP Modal -->
+<div x-data="{ menuOpen: false, rsvpOpen: false }" class="relative min-h-screen pb-20">
+
+    <!-- ========================================== -->
+    <!-- === DECORATIVE BACKGROUND ELEMENTS     === -->
+    <!-- ========================================== -->
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <!-- Random Stars -->
+        <div class="absolute top-[10%] left-[15%] w-1 h-1 bg-white rounded-full star-anim" style="animation-delay: 0s;"></div>
+        <div class="absolute top-[25%] right-[20%] w-1.5 h-1.5 bg-white rounded-full star-anim" style="animation-delay: 1s;"></div>
+        <div class="absolute bottom-[30%] left-[10%] w-1 h-1 bg-white rounded-full star-anim" style="animation-delay: 2.5s;"></div>
+        <div class="absolute top-[5%] right-[5%] w-2 h-2 bg-white rounded-full star-anim" style="animation-delay: 0.5s; box-shadow: 0 0 10px white;"></div>
+    </div>
+
+    <!-- In-Page Navigation -->
+    <header class="sticky top-0 z-40 p-4 flex justify-between items-center bg-[#0b0f19]/80 backdrop-blur-md border-b border-white/5">
+        <div class="font-display text-xl text-gold-accent tracking-widest">
+            {{ event.bride_name|first|default:'M' }} & {{ event.groom_name|first|default:'A' }}
+        </div>
+        <button @click="menuOpen = true" class="p-2 text-gold-accent rounded-md hover:bg-white/5 focus:outline-none">
+            <span class="sr-only">Open Menu</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+        </button>
+    </header>
+
+    <!-- Full Screen Navigation Overlay -->
+    <div x-show="menuOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 bg-[#0b0f19]/95 backdrop-blur-xl z-50 flex flex-col items-center justify-center"
+         style="display: none;">
+
+        <button @click="menuOpen = false" class="absolute top-6 right-6 p-2 text-gold-accent">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+
+        <nav class="text-center space-y-10">
+            <a @click="menuOpen = false" href="#home" class="block text-4xl font-display text-white hover:text-gold-accent transition-colors duration-300">{% translate "Acasă" %}</a>
+            <a @click="menuOpen = false" href="#details" class="block text-4xl font-display text-white hover:text-gold-accent transition-colors duration-300">{% translate "Detaii" %}</a>
+            <a @click="menuOpen = false" href="#timeline" class="block text-4xl font-display text-white hover:text-gold-accent transition-colors duration-300">{% translate "Evenimente" %}</a>
+            {% if not is_preview %}
+            <button @click="menuOpen = false; rsvpOpen = true" class="block text-4xl font-display w-full text-gold-accent hover:text-white transition-colors duration-300">{% translate "RSVP" %}</button>
+            {% endif %}
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <main class="relative z-10 max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="space-y-20 text-center">
+
+            <!-- Hero Section -->
+            <section id="home" class="reveal">
+                 {% if event.couple_photo %}
+                    <div class="w-64 h-64 mx-auto rounded-full p-1 border border-gold-accent/30 shadow-[0_0_30px_rgba(242,214,164,0.1)] mb-10">
+                        <div class="w-full h-full rounded-full overflow-hidden">
+                            <img src="{{ event.couple_photo.url }}" alt="Couple Photo" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="celestial-card p-8 md:p-12">
+                    <p class="text-sm uppercase tracking-[0.3em] text-gray-300 mb-4">{{ event.invitation_wording|default:"Împreună cu stelele" }}</p>
+
+                    <h1 class="font-display text-5xl sm:text-7xl text-gold-accent leading-tight mb-6">
+                        {{ event.bride_name|default:"Maria" }}<br>
+                        <span class="text-3xl text-white/80">&</span><br>
+                        {{ event.groom_name|default:"Andrei" }}
+                    </h1>
+
+                    <!-- Constellation Divider -->
+                    <div class="flex justify-center items-center gap-2 my-8 opacity-60">
+                        <div class="h-px w-12 bg-gold-accent"></div>
+                        <svg class="w-6 h-6 text-gold-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0.587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>
+                        <div class="h-px w-12 bg-gold-accent"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-8 text-sm text-gray-300">
+                        <div>
+                            <p class="uppercase tracking-widest text-gold-accent text-xs mb-1">{% translate "Părinții miresei" %}</p>
+                            <p class="font-serif text-lg">{{ event.bride_parents }}</p>
+                        </div>
+                        <div>
+                            <p class="uppercase tracking-widest text-gold-accent text-xs mb-1">{% translate "Părinții mirelui" %}</p>
+                            <p class="font-serif text-lg">{{ event.groom_parents }}</p>
+                        </div>
+                    </div>
+
+                    {% if event.godparents.all %}
+                    <div class="mt-8 pt-8 border-t border-white/10">
+                        <p class="uppercase tracking-widest text-gold-accent text-xs mb-2">{% translate "Nașii" %}</p>
+                        {% for gp in event.godparents.all %}
+                            <p class="font-serif text-lg">{{ gp.name }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-10">
+                        <p class="font-display text-3xl text-white border-y border-gold-accent/30 py-3 inline-block px-8">
+                            {{ event.event_date|date:"d . m . Y" }}
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Countdown Timer -->
+            {% if event.event_date %}
+            <section id="countdown-timer" class="reveal"
+                     data-event-date="{{ event.event_date|date:'Y-m-d' }}T{% if event.party_time %}{{ event.party_time|time:'H:i:s' }}{% elif event.ceremony_time %}{{ event.ceremony_time|time:'H:i:s' }}{% else %}00:00:00{% endif %}">
+                <h2 class="font-display text-2xl text-gold-accent mb-6">{% translate "Până la alinierea stelelor" %}</h2>
+                <div class="grid grid-cols-4 gap-4 max-w-md mx-auto">
+                    <div class="celestial-card p-4">
+                        <p id="days" class="text-3xl font-display text-white">00</p>
+                        <p class="text-[10px] uppercase tracking-widest text-gray-400">Days</p>
+                    </div>
+                    <div class="celestial-card p-4">
+                        <p id="hours" class="text-3xl font-display text-white">00</p>
+                        <p class="text-[10px] uppercase tracking-widest text-gray-400">Hrs</p>
+                    </div>
+                    <div class="celestial-card p-4">
+                        <p id="minutes" class="text-3xl font-display text-white">00</p>
+                        <p class="text-[10px] uppercase tracking-widest text-gray-400">Min</p>
+                    </div>
+                    <div class="celestial-card p-4">
+                        <p id="seconds" class="text-3xl font-display text-white">00</p>
+                        <p class="text-[10px] uppercase tracking-widest text-gray-400">Sec</p>
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Event Details -->
+            <section id="details" class="space-y-8 reveal">
+                <div class="celestial-card p-8 relative overflow-hidden group">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-gold-accent/10 rounded-full blur-3xl group-hover:bg-gold-accent/20 transition-colors"></div>
+
+                    <h2 class="font-display text-3xl text-gold-accent mb-6">{% translate "Cununia religioasă" %}</h2>
+                    <div class="space-y-2">
+                        <p class="text-2xl font-serif text-white">{{ event.ceremony_time|time:"H:i" }}</p>
+                        <p class="text-lg text-gray-300">{{ event.ceremony_location|default:"Locația cununiei" }}</p>
+                    </div>
+                    {% if event.ceremony_maps_url %}
+                        <a href="{{ event.ceremony_maps_url }}" target="_blank" class="inline-block mt-6 px-6 py-2 border border-gold-accent text-gold-accent text-xs uppercase tracking-widest hover:bg-gold-accent hover:text-black transition-colors">
+                            {% translate "Spre cununie" %}
+                        </a>
+                    {% endif %}
+                </div>
+
+                <div class="celestial-card p-8 relative overflow-hidden group">
+                    <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-gold-accent/10 rounded-full blur-3xl group-hover:bg-gold-accent/20 transition-colors"></div>
+
+                    <h2 class="font-display text-3xl text-gold-accent mb-6">{% translate "Petrecerea" %}</h2>
+                    <div class="space-y-2">
+                        <p class="text-2xl font-serif text-white">{{ event.party_time|time:"H:i" }}</p>
+                        <p class="text-lg font-bold text-white">{{ event.venue_name }}</p>
+                        <p class="text-sm text-gray-400">{{ event.venue_address }}</p>
+                    </div>
+                    {% if event.party_maps_url %}
+                        <a href="{{ event.party_maps_url }}" target="_blank" class="inline-block mt-6 px-6 py-2 border border-gold-accent text-gold-accent text-xs uppercase tracking-widest hover:bg-gold-accent hover:text-black transition-colors">
+                            {% translate "Spre petrecere" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Timeline -->
+            {% if event.schedule_details %}
+            <section id="timeline" class="celestial-card p-8 reveal">
+                <h2 class="font-display text-3xl text-gold-accent mb-8">{% translate "Cronologia constelațiilor" %}</h2>
+                <div class="text-left max-w-md mx-auto space-y-6 font-serif text-lg text-gray-300 border-l border-white/10 pl-6 ml-4">
+                    {{ event.schedule_details|linebreaks }}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Floating RSVP Button -->
+            {% if not is_preview %}
+            <div class="fixed bottom-6 left-0 right-0 flex justify-center z-40 px-4">
+                <button @click="rsvpOpen = true" class="btn-celestial py-4 px-8 rounded-full flex items-center gap-2 w-full max-w-xs justify-center">
+                    <span>{% translate "Confirmare" %}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
+                </button>
+            </div>
+            {% endif %}
+
+        </div>
+    </main>
+
+    <!-- ============================================== -->
+    <!-- === RSVP MODAL (Fixed Overlay)             === -->
+    <!-- ============================================== -->
+    {% if not is_preview %}
+    <div x-show="rsvpOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-10"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 translate-y-10"
+         class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/80 backdrop-blur-sm"
+         style="display: none;">
+
+        <div @click.away="rsvpOpen = false" class="celestial-card w-full max-w-md p-8 relative overflow-y-auto max-h-[85vh]">
+            <button @click="rsvpOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <h3 class="text-3xl font-display text-center mb-2 text-gold-accent">{% translate "RSVP" %}</h3>
+            <p class="text-center text-sm text-gray-400 mb-6">{% translate "Vă rugăm să răspundeți până la data " %} {{ event.event_date|date:"d M Y" }}</p>
+
+            <form id="rsvp-form" method="POST"
+                  action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}"
+                  class="space-y-5"
+                  data-manual-status="{% if guest.manual_is_attending is not None %}true{% else %}false{% endif %}">
+                {% csrf_token %}
+
+                <div class="text-center mb-6 pb-6 border-b border-white/10">
+                    <label class="block text-xs font-bold uppercase tracking-widest mb-4 text-gold-accent">{% translate "Veți participa?" %}</label>
+                    <div class="flex justify-center gap-6">
+                        {% for radio in form.attending %}
+                            <div class="flex items-center gap-2">
+                                {{ radio.tag }}
+                                <span class="text-lg font-serif text-white">{{ radio.choice_label }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div id="attending_details" style="display: none;" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">{% translate "Invitați" %}</label>
+                        <input type="number" name="{{ form.number_attending.name }}" min="1" max="{{ guest.max_attendees }}" class="w-full p-3 rounded modal-input focus:outline-none" placeholder="1">
+                        <p class="text-[10px] text-gray-500 text-right mt-1">Max: {{ guest.max_attendees }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">{% translate "Meniu Special" %}</label>
+                        <textarea name="{{ form.meal_preference.name }}" rows="2" class="w-full p-3 rounded modal-input focus:outline-none"></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">{% translate "Lăsați un mesaj" %}</label>
+                    <textarea name="{{ form.message.name }}" rows="2" class="w-full p-3 rounded modal-input focus:outline-none" placeholder="{% translate 'Leave a note for the couple...' %}"></textarea>
+                </div>
+
+                <button type="submit" class="btn-celestial w-full py-3 rounded text-sm mt-4">
+                    {% translate "Trimite răspuns" %}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Scroll Animation Logic
+    const revealElements = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1 });
+    revealElements.forEach(el => observer.observe(el));
+
+    // Countdown Timer
+    const countdownEl = document.getElementById('countdown-timer');
+    if (countdownEl && countdownEl.dataset.eventDate) {
+        const eventDateStr = countdownEl.dataset.eventDate;
+        const eventDate = new Date(eventDateStr).getTime();
+
+        if (isNaN(eventDate)) {
+            console.error("Invalid countdown date:", eventDateStr);
+        } else {
+            const timer = setInterval(function() {
+                const now = new Date().getTime();
+                const distance = eventDate - now;
+                if (distance < 0) {
+                    clearInterval(timer);
+                    return;
+                }
+                document.getElementById('days').innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+                document.getElementById('hours').innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+                document.getElementById('minutes').innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                document.getElementById('seconds').innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            }, 1000);
+        }
+    }
+
+    // RSVP Form Logic
+    const rsvpForm = document.getElementById('rsvp-form');
+    if (rsvpForm) {
+        const attendingRadios = document.querySelectorAll('input[name="attending"]');
+        const attendingDetailsDiv = document.getElementById('attending_details');
+        const attendingYesRadio = document.querySelector('input[name="attending"][value="True"]');
+
+        function toggleAttendingDetails() {
+            if (attendingYesRadio && attendingDetailsDiv) {
+                attendingDetailsDiv.style.display = attendingYesRadio.checked ? 'block' : 'none';
+            }
+        }
+
+        attendingRadios.forEach(radio => radio.addEventListener('change', toggleAttendingDetails));
+        toggleAttendingDetails();
+
+        rsvpForm.addEventListener('submit', function(event) {
+            const hasManualUpdate = rsvpForm.getAttribute('data-manual-status') === 'true';
+            if (hasManualUpdate && !confirm("{% translate 'This will override manual updates. Continue?' %}")) {
+                event.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

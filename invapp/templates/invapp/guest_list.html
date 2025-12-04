@@ -1,0 +1,74 @@
+{% extends "invapp/base.html" %}
+
+{% block title %}Guest List for {{ event.title }}{% endblock %}
+{% block header %}Guest List for {{ event.title }}{% endblock %}
+
+{% block content %}
+    <p><a href="{% url 'invapp:dashboard' %}">&laquo; Back to Dashboard</a></p>
+
+    <h3>Guests</h3>
+    <p><a href="{% url 'invapp:guest_create' event_id=event.id %}" style="padding: 8px 15px; background-color: green; color: white; text-decoration: none; border-radius: 4px;">+ Add New Guest</a></p>
+
+    {% if guests %}
+        <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Max Attendees</th>
+                    <th>Gender/Type</th> {# Assuming you added gender before #}
+                    <th>Invitation Link</th>
+                    <th>Actions</th>
+                    <th>RSVP Status</th>
+                    <th>Meal Preferences</th>{# Modified for next step #}
+                </tr>
+            </thead>
+            <tbody>
+            {% for guest in guests %}
+                <tr>
+                    <td>{{ guest.name }}</td>
+                    <td>{{ guest.email|default:"N/A" }}</td>
+                     <td>{{ guest.phone_number|default:"N/A" }}</td> {# <-- New Cell #}
+                    <td>{{ guest.max_attendees }}</td>
+                     <td>{{ guest.get_gender_display }}</td>
+                     <td>
+                        {% if guest.invitation_method == 'digital' %}
+                            {% url 'invapp:guest_invite' guest_uuid=guest.unique_id as invite_path %}
+                            <input type="text" value="{{ request.scheme }}://{{ request.get_host }}{{ invite_path }}" readonly size="20" id="inviteLink-{{ guest.id }}">
+                            <button onclick="copyToClipboard({{ invite_path }})" style="font-size:0.8em;">Copy</button>
+                            <a href="{{ invite_path }}" target="_blank" style="font-size:0.8em;">[View]</a>
+                        {% else %}
+                            Physical Invite
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'invapp:guest_edit' pk=guest.pk %}">Edit</a>
+                        <form action="{% url 'invapp:guest_delete' pk=guest.pk %}" method="post" style="display: inline; margin-left: 10px;">
+                            {% csrf_token %}
+                            <button type="submit" onclick="return confirm('Are you sure you want to delete guest {{ guest.name }}? This will also delete their RSVP and Table Assignment.');" style="color: red; border: none; background: none; cursor: pointer;">Delete</button>
+                        </form>
+                    </td>
+
+                    <td>
+                        {% if guest.manual_is_attending is not None %}
+                            Manual: {% if guest.manual_is_attending %}Yes ({{ guest.attending_count|default:0 }}){% else %}No{% endif %}
+                        {% elif guest.rsvp_details %}
+                            Digital: {% if guest.rsvp_details.attending %}Yes ({{ guest.attending_count|default:0 }}){% else %}No{% endif %}
+                            {% if guest.rsvp_details.updated_at %}
+                                 <br><small>On: {{ guest.rsvp_details.updated_at|date:"Y-m-d H:i" }}</small>
+                             {% endif %}
+                        {% else %}
+                            No Response
+                        {% endif %}
+                    </td>
+                    <td>{{ guest.rsvp_details.meal_preference|default_if_none:"" }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No guests added for this event yet.</p>
+    {% endif %}
+
+{% endblock %}

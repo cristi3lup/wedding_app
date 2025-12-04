@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<!-- THE FIX: The 'dark' class here forces dark mode for any template that extends this file. -->
+<html lang="{{ LANGUAGE_CODE }}" class="h-full dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}You're Invited{% endblock %}</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <!-- Block for page-specific fonts -->
+    {% block page_specific_fonts %}{% endblock %}
+
+    <!-- 2. Tailwind CSS via CDN (The Easy Way) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 3. Custom Config for Tailwind Colors/Fonts -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              'sans': ['Montserrat', 'Poppins', 'Lato', 'sans-serif'],
+              'serif': ['Cormorant Garamond', 'Bodoni Moda', 'serif'],
+              'script': ['Great Vibes', 'cursive'],
+              'display': ['Cinzel Decorative', 'serif'],
+              'ticket': ['Oswald', 'sans-serif'],
+              'hand': ['Caveat', 'cursive'],
+            },
+            colors: {
+              'brand-bg': '#fdfcf9',
+              'brand-text': '#5c5c5c',
+              'brand-heading': '#2a2a2a',
+              'brand-accent': '#d4afb9',
+              'brand-accent-dark': '#b9909b',
+              'botanical-green': '#5D7355',
+              'gold': '#C5A065',
+              'gold-accent': '#f2d6a4',
+              'lemon-gold': '#d4af37',
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Block for page-specific CSS styles -->
+    {% block page_specific_styles %}{% endblock %}
+
+</head>
+<body class="h-full antialiased">
+    <!-- This is the main content block that your invitation designs will fill. -->
+    {% block content %}{% endblock %}
+
+    <!-- This block allows you to add specific JavaScript at the bottom of a page. -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

@@ -1,0 +1,16 @@
+{% extends "invapp/base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Confirm Delete Guest" %}{% endblock %}
+{% block header %}{% translate "Delete Guest"%}{% endblock %}
+
+{% block content %}
+    <p>{% translate "Are you sure you want to delete the guest "" %}<strong>{{ guest.name }}</strong>"?</p>
+    <p style="color: red;">{% translate "This action cannot be undone and will also delete their RSVP response and any table assignment." %}</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">{% translate "Yes, Delete Guest" %}</button>
+        {# Redirect back to the guest list for the event this guest belonged to #}
+        <a href="{% url 'invapp:guest_list' event_id=guest.event.id %}" style="margin-left: 10px;">{% translate "Cancel" %}</a>
+    </form>
+{% endblock %}

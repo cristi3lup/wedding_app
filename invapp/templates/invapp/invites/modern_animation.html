@@ -1,0 +1,473 @@
+{% extends "invapp/base_invite.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block page_specific_fonts %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+{% endblock %}
+
+{% block page_specific_styles %}
+<style>
+    /* --- RESET & VARIABLES --- */
+    :root {
+        --font-serif: 'Playfair Display', serif;
+        --font-sans: 'Montserrat', sans-serif;
+        --color-text: #333333;
+        --color-accent: #C5A059;
+        --bg-light: #ffffff;
+        --bg-offwhite: #f9f9f9;
+    }
+
+    body {
+        font-family: var(--font-sans);
+        color: var(--color-text);
+        line-height: 1.8;
+        background-color: var(--bg-light);
+        overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, h5 {
+        font-family: var(--font-serif);
+        font-weight: 400;
+        margin-bottom: 0.5em;
+    }
+
+    p {
+        font-weight: 300;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+    }
+
+    .container-custom {
+        width: 90%;
+        max-width: 1000px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    .text-center { text-align: center; }
+    .uppercase { text-transform: uppercase; letter-spacing: 2px; }
+    .italic { font-style: italic; }
+
+    /* --- PARALLAX UTILITIES --- */
+    .parallax-section {
+        position: relative;
+        background-attachment: fixed;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        min-height: 80vh; /* Increased height for drama */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .overlay {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.4);
+        z-index: 1;
+    }
+
+    .parallax-content {
+        position: relative;
+        z-index: 2;
+        color: white;
+        text-align: center;
+        padding: 20px;
+    }
+
+    /* --- HERO --- */
+    #hero {
+        height: 100vh;
+        /* Default fallback image if no couple photo */
+        background-image: url('{% if event.couple_photo %}{{ event.couple_photo.url }}{% else %}https://images.unsplash.com/photo-1583939003579-730e3918a45a?q=80&w=1974&auto=format&fit=crop{% endif %}');
+    }
+
+    #hero h1 {
+        font-size: 3.5rem;
+        line-height: 1.1;
+        margin-bottom: 10px;
+    }
+    @media (min-width: 768px) {
+        #hero h1 { font-size: 5.5rem; }
+    }
+
+    #hero p {
+        font-family: var(--font-serif);
+        font-size: 1.5rem;
+        font-style: italic;
+        letter-spacing: 1px;
+    }
+
+    /* --- COUNTDOWN --- */
+    #countdown-section {
+        padding: 100px 0;
+        background-color: var(--bg-light);
+    }
+
+    .countdown-grid {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 60px;
+        flex-wrap: wrap;
+    }
+
+    .time-number {
+        display: block;
+        font-family: var(--font-serif);
+        font-size: 2.5rem;
+        line-height: 1;
+    }
+    @media (min-width: 768px) {
+        .time-number { font-size: 3.5rem; }
+        .countdown-grid { gap: 50px; }
+    }
+
+    .time-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #888;
+        margin-top: 10px;
+        display: block;
+    }
+
+    /* --- SAVE THE DATE --- */
+    #save-date {
+        /* Use main invitation image or fallback */
+        background-image: url('{% if event.main_invitation_image %}{{ event.main_invitation_image.url }}{% else %}https://images.unsplash.com/photo-1511285560982-1356c11d4606?q=80&w=2076&auto=format&fit=crop{% endif %}');
+        padding: 120px 0;
+    }
+
+    #save-date h2 {
+        font-size: 3rem;
+        margin: 0;
+        color: #fff;
+    }
+    @media (min-width: 768px) {
+        #save-date h2 { font-size: 4rem; }
+    }
+
+    #save-date p {
+        font-size: 1.2rem;
+        margin-top: 20px;
+        color: rgba(255,255,255,0.95);
+    }
+
+    /* --- DETAILS & LOGISTICS --- */
+    #details {
+        padding: 100px 0;
+        background-color: var(--bg-light);
+    }
+
+    .section-header {
+        font-size: 2.5rem;
+        margin-bottom: 50px;
+        font-style: italic;
+        text-align: center;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 40px;
+        text-align: center;
+    }
+    @media (min-width: 768px) {
+        .details-grid {
+            grid-template-columns: 1fr 1fr;
+            text-align: left;
+        }
+    }
+
+    .details-item h3 {
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 15px;
+        color: var(--color-accent);
+    }
+
+    /* --- MAP --- */
+    #map-section {
+        width: 100%;
+        height: 450px;
+        background-color: #eee;
+    }
+    #map-section iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        filter: grayscale(100%); /* Stylish monochrome map */
+    }
+
+    /* --- RSVP FORM STYLES --- */
+    #rsvp-section {
+        padding: 100px 0;
+        background-color: #f4f4f4;
+    }
+    
+    .rsvp-card {
+        background: white;
+        padding: 40px;
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+    }
+
+    .rsvp-input {
+        width: 100%;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        background: transparent;
+        font-family: var(--font-sans);
+    }
+    
+    .rsvp-btn {
+        background-color: #1a1a1a;
+        color: #fff;
+        padding: 16px 48px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        border: none;
+        cursor: pointer;
+        transition: background 0.3s;
+        width: 100%;
+    }
+    
+    .rsvp-btn:hover {
+        background-color: var(--color-accent);
+    }
+
+    /* --- FOOTER --- */
+    footer {
+        height: 50vh;
+        /* Use landscape photo or fallback */
+        background-image: url('{% if event.landscape_photo %}{{ event.landscape_photo.url }}{% else %}https://images.unsplash.com/photo-1510076857177-7470076d4098?q=80&w=2072&auto=format&fit=crop{% endif %}');
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding-bottom: 60px;
+    }
+    
+    footer h2 {
+        font-size: 3rem;
+        color: white;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+    <!-- HERO -->
+    <section id="hero" class="parallax-section">
+        <div class="overlay"></div>
+        <div class="parallax-content">
+            <h1>{{ event.bride_name|default:"Bride" }} & {{ event.groom_name|default:"Groom" }}</h1>
+            <p>{% translate "are getting married" %}</p>
+            
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
+                <i class="ph ph-arrow-down text-3xl"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- COUNTDOWN & INTRO -->
+    <section id="countdown-section" class="text-center">
+        <div class="container-custom">
+            <h3 class="text-xl uppercase mb-8 text-gray-500 tracking-widest">{% translate "Until the big day" %}</h3>
+            
+            <div class="countdown-grid" id="countdown" data-event-date="{{ event.date_time.isoformat }}">
+                <div class="time-block">
+                    <span class="time-number" id="days">00</span>
+                    <span class="time-label">{% translate "Days" %}</span>
+                </div>
+                <div class="time-block">
+                    <span class="time-number" id="hours">00</span>
+                    <span class="time-label">{% translate "Hours" %}</span>
+                </div>
+                <div class="time-block">
+                    <span class="time-number" id="minutes">00</span>
+                    <span class="time-label">{% translate "Minutes" %}</span>
+                </div>
+                <div class="time-block">
+                    <span class="time-number" id="seconds">00</span>
+                    <span class="time-label">{% translate "Seconds" %}</span>
+                </div>
+            </div>
+
+            <div class="max-w-2xl mx-auto text-lg sm:text-xl font-serif italic leading-relaxed">
+                <p>{{ event.invitation_wording|default:"We invite you to join us in the celebration of our love and commitment."|linebreaksbr }}</p>
+            </div>
+            
+            <!-- Guest Greeting -->
+            <div class="mt-8 text-gray-500 uppercase tracking-widest text-sm">
+                {% if guest.honorific == 'family' %}
+                    {% blocktranslate with name=guest.name %}Invite for The {{ name }} Family{% endblocktranslate %}
+                {% elif guest.honorific == 'couple' %}
+                    {% blocktranslate with name=guest.name %}Invite for The {{ name }} Couple{% endblocktranslate %}
+                {% else %}
+                     {% blocktranslate with name=guest.name %}Invite for {{ name }}{% endblocktranslate %}
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- SAVE THE DATE -->
+    <section id="save-date" class="parallax-section">
+        <div class="overlay"></div>
+        <div class="parallax-content">
+            <h3 class="uppercase tracking-[4px] text-sm mb-4">{% translate "Save The Date" %}</h3>
+            <h2>{{ event.date_time|date:"d . m . Y" }}</h2>
+            <p class="mt-4">
+                {{ event.ceremony_time|default:"16:00" }} <br>
+                {{ event.venue_name|default:"Venue Name" }}<br>
+                {{ event.venue_address }}
+            </p>
+        </div>
+    </section>
+
+    <!-- DETAILS -->
+    <section id="details">
+        <div class="container-custom">
+            <h2 class="section-header">{% translate "Details" %}</h2>
+
+            <div class="details-grid">
+                <div class="details-item">
+                    <h3>{% translate "Program" %}</h3>
+                    <!-- Display schedule text gracefully -->
+                    <div class="text-gray-600">
+                        {{ event.schedule_details|linebreaksbr }}
+                    </div>
+                </div>
+                
+                <div class="details-item">
+                    <h3>{% translate "Important Info" %}</h3>
+                    <div class="text-gray-600">
+                        {{ event.other_info|linebreaksbr }}
+                    </div>
+                    {% if event.party_maps_url %}
+                        <a href="{{ event.party_maps_url }}" target="_blank" class="inline-block mt-4 text-sm font-bold uppercase border-b border-black pb-1 hover:text-gray-600">
+                            {% translate "View Map" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAP -->
+    {% if event.Maps_embed_url %}
+    <section id="map-section">
+        <iframe src="{{ event.Maps_embed_url }}" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </section>
+    {% endif %}
+
+    <!-- RSVP -->
+    {% if not is_preview %}
+    <section id="rsvp-section">
+        <div class="rsvp-card">
+            <h2 class="font-serif text-4xl text-center mb-2">{% translate "R.S.V.P." %}</h2>
+            <p class="text-center text-gray-500 mb-8 text-sm uppercase tracking-wide">{% translate "Please respond by the date specified" %}</p>
+
+            <form method="POST" action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Attending Radios -->
+                <div class="flex justify-center gap-8 mb-6">
+                    {% for radio in form.attending %}
+                    <label class="flex items-center cursor-pointer">
+                        {{ radio.tag }}
+                        <span class="ml-2 uppercase tracking-wider text-sm">{{ radio.choice_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <!-- Conditional Inputs -->
+                <div id="attending_details" style="display:none;">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase text-gray-500 mb-1">{% translate "Number of Guests" %}</label>
+                            <input type="number" name="{{ form.number_attending.name }}" min="1" max="{{ guest.max_attendees }}" class="rsvp-input" placeholder="1">
+                            <p class="text-xs text-gray-400 -mt-4 mb-4">{% blocktranslate with max=guest.max_attendees %}Max: {{ max }}{% endblocktranslate %}</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs uppercase text-gray-500 mb-1">{% translate "Dietary Requirements" %}</label>
+                            <input type="text" name="{{ form.meal_preference.name }}" class="rsvp-input" placeholder="...">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs uppercase text-gray-500 mb-1">{% translate "Message" %}</label>
+                            <textarea name="{{ form.message.name }}" class="rsvp-input" rows="3" placeholder="..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="rsvp-btn">{% translate "Send Confirmation" %}</button>
+            </form>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- FOOTER -->
+    <footer class="parallax-section">
+        <div class="overlay"></div>
+        <div class="parallax-content">
+            <p class="italic text-2xl mb-2">{% translate "With Love," %}</p>
+            <h2>{{ event.bride_name }} & {{ event.groom_name }}</h2>
+        </div>
+    </footer>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Countdown Logic ---
+        const countdownEl = document.getElementById('countdown');
+        if (countdownEl) {
+            const eventDateStr = countdownEl.dataset.eventDate;
+            if(eventDateStr) {
+                const targetDate = new Date(eventDateStr).getTime();
+                const timer = setInterval(() => {
+                    const now = new Date().getTime();
+                    const distance = targetDate - now;
+
+                    if (distance < 0) {
+                        clearInterval(timer);
+                        return;
+                    }
+
+                    document.getElementById('days').innerText = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
+                    document.getElementById('hours').innerText = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+                    document.getElementById('minutes').innerText = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                    document.getElementById('seconds').innerText = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
+                }, 1000);
+            }
+        }
+
+        // --- RSVP Toggle Logic ---
+        const radios = document.querySelectorAll('input[name="attending"]');
+        const details = document.getElementById('attending_details');
+        
+        function toggleDetails() {
+            // Django RadioSelect typically uses True/False as values
+            const isYes = document.querySelector('input[name="attending"][value="True"]:checked');
+            if(details) details.style.display = isYes ? 'block' : 'none';
+        }
+
+        radios.forEach(r => r.addEventListener('change', toggleDetails));
+        toggleDetails(); // Run on load
+    });
+</script>
+{% endblock %}

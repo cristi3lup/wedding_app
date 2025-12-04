@@ -1,0 +1,119 @@
+{% extends "invapp/base.html" %}
+{% load i18n %}
+{% block title %}Table Assignments for {{ event.title }}{% endblock %}
+
+<!-- ============================================== -->
+<!-- === Custom Navigation for This Page        === -->
+<!-- ============================================== -->
+{% block nav_links %}
+    <a href="{% url 'invapp:dashboard' %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Dashboard" %}</a>
+    <a href="{% url 'invapp:guest_list' event_id=event.id %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Guest List" %}</a>
+    <a href="{% url 'invapp:table_list' event_id=event.id %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Table List" %}</a>
+    <a href="{% url 'invapp:table_assignment_ui' event_id=event.id %}" class="border-indigo-500 text-gray-900 dark:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Assign Guests" %}</a>
+{% endblock nav_links %}
+
+{% block mobile_nav_links %}
+    <a href="{% url 'invapp:dashboard' %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Dashboard" %}</a>
+    <a href="{% url 'invapp:guest_list' event_id=event.id %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Guest List" %}</a>
+    <a href="{% url 'invapp:table_list' event_id=event.id %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Table List" %}</a>
+    <a href="{% url 'invapp:table_assignment_ui' event_id=event.id %}" class="block pl-3 pr-4 py-2 border-l-4 bg-indigo-50 border-indigo-500 text-base font-medium text-indigo-700 dark:text-indigo-300 dark:bg-indigo-900/50">{% translate "Assign Guests" %}</a>
+{% endblock mobile_nav_links %}
+
+{% block page_header %}
+    <div class="sm:flex sm:justify-between sm:items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{% translate "Table Assignments" %}</h1>
+            <p class="mt-1 text-md text-gray-600 dark:text-gray-400">{% translate "Seating plan for:" %} <strong class="font-semibold">{{ event.title }}</strong></p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <a href="{% url 'invapp:export_assignments_csv' event_id=event.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                {% translate "Export to CSV" %}
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+
+        <!-- Left Column: Unassigned Guests & Assignment Form -->
+        <div class="lg:col-span-2">
+            <form method="post" class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-lg sticky top-24">
+                {% csrf_token %}
+                <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-3">{% translate "Unassigned Guests" %}</h2>
+
+                {% if assignment_form.non_field_errors %}
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4" role="alert">
+                        {% for error in assignment_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="space-y-1 max-h-96 overflow-y-auto pr-2">
+                    {% for checkbox in assignment_form.guests %}
+                        <label for="{{ checkbox.id_for_label }}" class="flex items-start p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border border-gray-200 dark:border-gray-600 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/50 has-[:checked]:border-indigo-400">
+                            {{ checkbox.tag }}
+                            <div class="ml-3 text-sm flex-grow text-gray-800 dark:text-gray-200">
+                                {{ checkbox.choice_label }}
+                            </div>
+                        </label>
+                    {% empty %}
+                        <p class="text-sm text-gray-500 dark:text-gray-400 p-4 text-center">{% translate "All attending guests have been assigned!" %}</p>
+                    {% endfor %}
+                </div>
+                {% for error in assignment_form.guests.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ error }}</p>
+                {% endfor %}
+
+                <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="mb-4">
+                        <label for="{{ assignment_form.table.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ assignment_form.table.label }}</label>
+                        <div class="mt-1">
+                            {{ assignment_form.table }}
+                        </div>
+                        {% for error in assignment_form.table.errors %}
+                             <p class="mt-2 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">{% translate "Assign Guest(s)" %}</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Column: Tables and Seated Guests -->
+        <div class="lg:col-span-3">
+            <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{% translate "Seating Plan" %}</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for table in tables %}
+                    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg shadow-lg">
+                        <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-600 pb-2 mb-3">
+                            <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100">{{ table.name }}</h3>
+                            <span class="text-sm font-medium text-gray-600 dark:text-gray-300">{% translate "Capacity:" %} {{ table.current_seated_count }} / {{ table.capacity }}</span>
+                        </div>
+                        <ul class="space-y-2">
+                            {% for assignment in table.assigned_guests.all %}
+                                <li class="flex justify-between items-center text-sm p-2 bg-white dark:bg-gray-700 rounded-md">
+                                    <div>
+                                        <span class="font-medium text-gray-900 dark:text-gray-100">{{ assignment.guest.name }}</span>
+                                        <span class="text-gray-500 dark:text-gray-400">({{ assignment.guest.attending_count }})</span>
+                                    </div>
+                                    <form method="post" action="{% url 'invapp:unassign_guest' event_id=event.id assignment_id=assignment.id %}" onsubmit="return confirm('Are you sure you want to unassign this guest?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="p-1.5 rounded-full text-red-500 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/50 dark:hover:text-red-400" title="Unassign Guest">
+                                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                        </button>
+                                    </form>
+                                </li>
+                            {% empty %}
+                                <li class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">{% translate "No guests assigned yet." %}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% empty %}
+                    <p class="md:col-span-2 text-center py-8 text-gray-500 dark:text-gray-400">{% translate "No tables have been created for this event yet." %} <a href="{% url 'invapp:table_list' event_id=event.id %}" class="text-indigo-600 dark:text-indigo-400 hover:underline">{% translate "Create tables now" %}</a>.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

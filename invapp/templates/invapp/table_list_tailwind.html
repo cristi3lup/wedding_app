@@ -1,0 +1,81 @@
+{% extends "invapp/base.html" %}
+{% load i18n %}
+
+{% block title %}Tables for {{ event.title }}{% endblock %}
+
+<!-- ============================================== -->
+<!-- === Custom Navigation for This Page        === -->
+<!-- ============================================== -->
+{% block nav_links %}
+    <a href="{% url 'invapp:dashboard' %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Dashboard" %}</a>
+    <a href="{% url 'invapp:guest_list' event_id=event.id %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Guest List" %}</a>
+    <a href="{% url 'invapp:table_list' event_id=event.id %}" class="border-indigo-500 text-gray-900 dark:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Table List" %}</a>
+    <a href="{% url 'invapp:table_assignment_ui' event_id=event.id %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Assign Guests" %}</a>
+{% endblock nav_links %}
+
+{% block mobile_nav_links %}
+    <a href="{% url 'invapp:dashboard' %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Dashboard" %}</a>
+    <a href="{% url 'invapp:guest_list' event_id=event.id %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Guest List" %}</a>
+    <a href="{% url 'invapp:table_list' event_id=event.id %}" class="block pl-3 pr-4 py-2 border-l-4 bg-indigo-50 border-indigo-500 text-base font-medium text-indigo-700 dark:text-indigo-300 dark:bg-indigo-900/50">{% translate "Table List" %}</a>
+    <a href="{% url 'invapp:table_assignment_ui' event_id=event.id %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Assign Guests" %}</a>
+{% endblock mobile_nav_links %}
+
+{% block page_header %}
+    <div class="sm:flex sm:justify-between sm:items-start">
+        <!-- Div for Title and Subtitle (on the left) -->
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{% translate "Table List" %}</h1>
+            <p class="mt-1 text-md text-gray-600 dark:text-gray-400">{% translate "Managing tables for:" %} <strong class="font-semibold">{{ event.title }}</strong></p>
+        </div>
+
+        <!-- Div for Action Buttons (on the right) -->
+        <div class="mt-4 sm:mt-0 sm:ml-4 sm:text-right">
+            <div class="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
+                <a href="{% url 'invapp:table_assignment_ui' event_id=event.id %}" class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    {% translate "Assign Guests" %}
+                </a>
+                <a href="{% url 'invapp:table_create' event_id=event.id %}" class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                    {% translate "Add New Table" %}
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-4 sm:p-6">
+            {% if tables %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for table in tables %}
+                        <div class="bg-white dark:bg-gray-700/50 shadow-md rounded-lg overflow-hidden">
+                            <div class="p-5">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ table.name }}</h3>
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                        {% if table.is_full %} bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 {% else %} bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 {% endif %}">
+                                        {{ table.current_seated_count }} / {{ table.capacity }}
+                                    </span>
+                                </div>
+                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ table.description|truncatewords:10 }}</p>
+                            </div>
+                            <div class="border-t border-gray-200 dark:border-gray-600 px-5 py-3 bg-gray-50 dark:bg-gray-700/50 text-right">
+                                <a href="{% url 'invapp:table_edit' pk=table.pk %}" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300">
+                                    {% translate "Edit Table" %}
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-12">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{% translate "You haven't created any tables for this event yet." %}</p>
+                    <a href="{% url 'invapp:table_create' event_id=event.id %}" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                        {% translate "Create Your First Table" %}
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

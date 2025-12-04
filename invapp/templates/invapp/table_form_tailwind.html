@@ -1,0 +1,86 @@
+{% extends "invapp/base.html" %}
+{% load i18n %}
+
+{% block title %}
+    {% if object %}
+        {% translate "Edit Table:" %} {{ object.name }}
+    {% else %}
+        {% translate "Add New Table" %}
+    {% endif %}
+{% endblock %}
+
+{% block page_header %}
+    <div class="sm:flex sm:justify-between sm:items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {% if object %}
+                    {% translate "Edit Table" %}
+                {% else %}
+                    {% translate "Add New Table" %}
+                {% endif %}
+            </h1>
+            <p class="mt-1 text-md text-gray-600 dark:text-gray-400">
+                {% translate "For event:" %} <strong class="font-semibold">{{ event.title }}</strong>
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <a href="{% url 'invapp:table_list' event_id=event.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                {% translate "Back to Table List" %}
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden max-w-lg mx-auto">
+        <div class="p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- This loop will render all the fields from your TableForm -->
+                {% for field in form %}
+                    <div>
+                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ field.label }}</label>
+                        <div class="mt-1">
+                            {{ field }}
+                        </div>
+                        {% if field.help_text %}
+                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <div class="pt-5">
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                        {% if object %}
+                            {% translate "Save Changes" %}
+                        {% else %}
+                            {% translate "Add Table" %}
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+
+            <!-- Delete Action (only shows on edit page) -->
+            {% if object %}
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-center">
+                <form action="{% url 'invapp:table_delete' pk=object.pk %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit"
+                            onclick="return confirm('Are you sure you want to permanently delete this table? This cannot be undone.');"
+                            class="text-sm font-medium text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                        {% translate "Delete this table" %}
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+

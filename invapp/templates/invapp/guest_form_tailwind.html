@@ -1,0 +1,206 @@
+{% extends "invapp/base.html" %}
+{% load i18n %}
+
+{% block title %}
+    {% if object %}{% translate "Edit Guest" %}{% else %}{% translate "Add New Guest" %}{% endif %}
+{% endblock %}
+
+{% block page_header %}
+    <div class="sm:flex sm:justify-between sm:items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 font-serif">
+                {% if object %}{% translate "Edit Guest" %}{% else %}{% translate "Add New Guest" %}{% endif %}
+            </h1>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                {% translate "Manage details for" %} <span class="font-semibold text-indigo-600 dark:text-indigo-400">{{ event.title }}</span>
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <a href="{% url 'invapp:guest_list' event_id=event.id %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 flex items-center gap-1">
+                &larr; {% translate "Back to Guest List" %}
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <form method="post" class="space-y-12">
+        {% csrf_token %}
+
+        <!-- Display Non-Field Errors -->
+        {% if form.non_field_errors %}
+            <div class="rounded-md bg-red-50 dark:bg-red-900/20 p-4 border-l-4 border-red-500">
+                <div class="flex">
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800 dark:text-red-200">{% translate "There were errors with your submission" %}</h3>
+                        <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                            {{ form.non_field_errors }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Section 1: Who are they? -->
+        <div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
+            <div class="px-4 sm:px-0">
+                <h2 class="text-base font-semibold leading-7 text-gray-900 dark:text-white">{% translate "Guest Identity" %}</h2>
+                <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    {% translate "Basic information about who you are inviting. Use 'Family' or 'Couple' titles to group people together." %}
+                </p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
+                <div class="px-4 py-6 sm:p-8">
+                    <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+
+                        <!-- Honorific -->
+                        <div class="sm:col-span-2">
+                            <label for="{{ form.honorific.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
+                                {{ form.honorific.label }}
+                            </label>
+                            <div class="mt-2">
+                                {{ form.honorific }}
+                            </div>
+                        </div>
+
+                        <!-- Name -->
+                        <div class="sm:col-span-4">
+                            <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
+                                {{ form.name.label }} <span class="text-red-500">*</span>
+                            </label>
+                            <div class="mt-2 relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                {{ form.name }}
+                            </div>
+                            {% if form.name.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Max Attendees -->
+                        <div class="sm:col-span-full">
+                            <label for="{{ form.max_attendees.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
+                                {{ form.max_attendees.label }}
+                            </label>
+                            <div class="mt-2 sm:w-1/3">
+                                {{ form.max_attendees }}
+                            </div>
+                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ form.max_attendees.help_text }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Contact Info -->
+        <div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
+            <div class="px-4 sm:px-0">
+                <h2 class="text-base font-semibold leading-7 text-gray-900 dark:text-white">{% translate "Contact Details" %}</h2>
+                <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    {% translate "How will you send the invitation? We use these details for digital sending features." %}
+                </p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
+                <div class="px-4 py-6 sm:p-8">
+                    <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+
+                        <!-- Email -->
+                        <div class="sm:col-span-4">
+                            <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
+                                {{ form.email.label }}
+                            </label>
+                            <div class="mt-2 relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
+                                        <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
+                                    </svg>
+                                </div>
+                                {{ form.email }}
+                            </div>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="sm:col-span-4">
+                            <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
+                                {{ form.phone_number.label }}
+                            </label>
+                            <div class="mt-2 relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                                    </svg>
+                                </div>
+                                {{ form.phone_number }}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Manual Controls (Conditional) -->
+        {% if form.manual_is_attending %}
+        <div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
+            <div class="px-4 sm:px-0">
+                <h2 class="text-base font-semibold leading-7 text-gray-900 dark:text-white">{% translate "Manual Override" %}</h2>
+                <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    {% translate "Use this section if you receive a verbal or phone confirmation. Data entered here overrides the digital RSVP." %}
+                </p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
+                <div class="px-4 py-6 sm:p-8">
+                    <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                        <div class="sm:col-span-3">
+                            <label for="{{ form.manual_is_attending.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">{{ form.manual_is_attending.label }}</label>
+                            <div class="mt-2">{{ form.manual_is_attending }}</div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="{{ form.manual_attending_count.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">{{ form.manual_attending_count.label }}</label>
+                            <div class="mt-2">{{ form.manual_attending_count }}</div>
+                        </div>
+
+                        <div class="sm:col-span-4">
+                            <label for="{{ form.invitation_method.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">{{ form.invitation_method.label }}</label>
+                            <div class="mt-2">{{ form.invitation_method }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-end gap-x-6 border-t border-gray-900/10 dark:border-gray-700 pt-8 px-4 sm:px-0 pb-20">
+            {% if object %}
+                <button type="button" onclick="if(confirm('{% translate 'Are you sure you want to permanently delete this guest?' %}')) { document.getElementById('delete-form').submit(); }" class="text-sm font-semibold leading-6 text-red-600 hover:text-red-500 mr-auto">
+                    {% translate "Delete Guest" %}
+                </button>
+            {% endif %}
+
+            <a href="{% url 'invapp:guest_list' event_id=event.id %}" class="text-sm font-semibold leading-6 text-gray-900 dark:text-gray-100">
+                {% translate "Cancel" %}
+            </a>
+            <button type="submit" class="rounded-md bg-indigo-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                {% if object %}{% translate "Save Changes" %}{% else %}{% translate "Add Guest" %}{% endif %}
+            </button>
+        </div>
+    </form>
+
+    {% if object %}
+        <form id="delete-form" action="{% url 'invapp:guest_delete' pk=object.pk %}" method="post" class="hidden">
+            {% csrf_token %}
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

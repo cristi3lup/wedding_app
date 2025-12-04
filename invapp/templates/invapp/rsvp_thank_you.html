@@ -1,0 +1,141 @@
+{% extends "invapp/base_invite.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Thank You!" %} - {{ event.title }}{% endblock %}
+
+{% block page_specific_fonts %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Matching the app's font stack -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-4 bg-gray-100 dark:bg-gray-900 transition-colors duration-300 font-sans">
+
+    <div class="max-w-lg w-full bg-white dark:bg-gray-800 p-8 sm:p-10 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+
+        <!-- Messages (Success/Error) -->
+        {% if messages %}
+            <div class="mb-8 space-y-2">
+                {% for message in messages %}
+                    <div class="p-4 rounded-md text-sm font-medium
+                                {% if message.tags == 'success' %} bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-300 {% endif %}
+                                {% if message.tags == 'error' %} bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300 {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Header Section -->
+        <div class="text-center">
+            <h1 class="font-serif text-4xl font-bold text-gray-900 dark:text-gray-100">
+                {% translate "Thank You," %} <span class="text-indigo-600 dark:text-indigo-400">{{ guest.name }}</span>!
+            </h1>
+            
+            <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">
+                {% translate "We look forward to celebrating with you at the wedding of" %}
+            </p>
+            
+            <p class="font-serif text-2xl text-gray-900 dark:text-white mt-2 font-medium">
+                {{ event.bride_name }} & {{ event.groom_name }}
+            </p>
+        </div>
+
+        <!-- Calendar Button -->
+        {% if guest.rsvp_details.attending and google_calendar_link %}
+            <div class="mt-8 flex justify-center">
+                <a href="{{ google_calendar_link }}" target="_blank" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    <svg class="-ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {% translate "Add to Google Calendar" %}
+                </a>
+            </div>
+        {% endif %}
+
+        <hr class="my-10 border-gray-200 dark:border-gray-700">
+
+        <!-- Contact Info Form -->
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white text-center">{% translate "Stay Updated" %}</h2>
+            <p class="mt-2 text-sm text-center text-gray-500 dark:text-gray-400">
+                {% translate "Optionally, provide your contact details below to receive important updates about the event." %}
+            </p>
+
+            <form method="POST" class="mt-6 space-y-5">
+                {% csrf_token %}
+                
+                <!-- Email Field -->
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {% translate "Email Address" %}
+                    </label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                            </svg>
+                        </div>
+                        <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" 
+                               value="{{ form.email.value|default:'' }}"
+                               class="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600 dark:placeholder:text-gray-500"
+                               placeholder="your@email.com">
+                    </div>
+                    {% if form.email.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Phone Field -->
+                <div>
+                    <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {% translate "Phone Number" %}
+                    </label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                            </svg>
+                        </div>
+                        <input type="text" name="{{ form.phone_number.name }}" id="{{ form.phone_number.id_for_label }}"
+                               value="{{ form.phone_number.value|default:'' }}"
+                               class="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600 dark:placeholder:text-gray-500"
+                               placeholder="+40...">
+                    </div>
+                    {% if form.phone_number.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.phone_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    {% translate "Save Contact Info" %}
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer Links -->
+        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-center flex flex-col space-y-4">
+
+            <!-- The Re-added "Back to Invitation" Button -->
+            <div>
+                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    {% translate "Need to change your RSVP?" %}
+                </p>
+                <a href="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                    {% translate "View Digital Invitation" %} &rarr;
+                </a>
+            </div>
+
+            <div class="pt-4">
+                <a href="{% url 'invapp:landing_page' %}" class="text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
+                   {% translate "Powered by InvApp" %}
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

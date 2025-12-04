@@ -1,0 +1,15 @@
+{% extends "invapp/base.html" %}
+
+{% block title %}{{ form_title|default:"Manage Event" }}{% endblock %}
+{% block header %}{{ form_title|default:"Manage Event" }}{% endblock %}
+
+{% block content %}
+    <p><a href="{% url 'invapp:dashboard' %}">&laquo; Back to Dashboard</a></p>
+
+{# --- ADD ENCTYPE TO THE FORM TAG --- #}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save Event Details</button>
+    </form>
+{% endblock %}

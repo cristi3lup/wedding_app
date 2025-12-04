@@ -1,0 +1,32 @@
+{% extends "invapp/base.html" %}
+
+{% block title %}Tables for {{ event.title }}{% endblock %}
+{% block header %}Manage Tables for {{ event.title }}{% endblock %}
+
+{% block content %}
+    <p><a href="{% url 'invapp:dashboard' %}">&laquo; Back to Dashboard</a></p>
+
+    <h3>Tables</h3>
+    {% if tables %}
+        <ul style="list-style: none; padding: 0;">
+            {% for table in tables %}
+                <li style="border: 1px solid #eee; padding: 10px; margin-bottom: 5px;">
+                    <strong>{{ table.name }}</strong> - Capacity: {{ table.capacity }}
+                    <a href="{% url 'invapp:table_edit' pk=table.pk %}" style="margin-left: 15px;">Edit</a>
+                    <form action="{% url 'invapp:table_delete' pk=table.pk %}" method="post" style="display: inline; margin-left: 10px;">
+                        {% csrf_token %}
+                        <button type="submit" onclick="return confirm('Are you sure you want to delete table {{ table.name }}?');" style="color: red; border: none; background: none; cursor: pointer;">Delete</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No tables created for this event yet.</p>
+    {% endif %}
+
+    <p><a href="{% url 'invapp:table_create' event_id=event.id %}" style="padding: 8px 15px; background-color: green; color: white; text-decoration: none; border-radius: 4px;">+ Add New Table</a></p>
+
+    <hr>
+    <p><a href="{% url 'invapp:table_assignment' event_id=event.id %}">Go to Table Assignments &raquo;</a></p> {# Link to assignment page #}
+
+{% endblock %}

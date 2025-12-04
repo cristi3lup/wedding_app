@@ -1,0 +1,135 @@
+from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
+from .models import Event, Godparent, Guest, RSVP, Table, TableAssignment, CardDesign, Plan, UserProfile, SpecialField, ScheduleItem
+from .forms import TableAssignmentAdminForm
+
+# --- ADD THIS INLINE CLASS ---
+class GodparentInline(admin.TabularInline):
+    model = Godparent
+    extra = 1
+
+# --- NEW: Schedule Item Inline ---
+class ScheduleItemInline(admin.TabularInline):
+    model = ScheduleItem
+    extra = 1
+    ordering = ('time',)
+
+# --- Inlines for the Event Detail Page ---
+class TableInline(admin.TabularInline):
+    model = Table
+    extra = 1
+
+class TableAssignmentInline(admin.TabularInline):
+    model = TableAssignment
+    form = TableAssignmentAdminForm
+    extra = 0
+    autocomplete_fields = ['guest', 'table']
+
+# --- Main Admin Classes ---
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ('title', 'owner', 'event_date', 'venue_name', 'view_guests_link')
+    search_fields = ('title', 'venue_name', 'owner__username')
+    list_filter = ('event_date',)
+    # Added ScheduleItemInline here
+    inlines = [TableInline, TableAssignmentInline, GodparentInline, ScheduleItemInline]
+
+    @admin.display(description='Guests')
+    def view_guests_link(self, obj):
+        count = obj.guests.count()
+        url = reverse('admin:invapp_guest_changelist') + f'?event__id__exact={obj.id}'
+        return format_html('<a href="{}">{} Guests</a>', url, count)
+
+# ... [Rest of the admin.py remains the same] ...
+@admin.register(Guest)
+class GuestAdmin(admin.ModelAdmin):
+    list_display = ('honorific', 'name', 'event', 'email', 'get_rsvp_status', 'get_assigned_table')
+    search_fields = ('name', 'email', 'event__title')
+    list_filter = ('event',)
+    readonly_fields = ('unique_id',)
+
+    @admin.display(description='RSVP Status')
+    def get_rsvp_status(self, obj):
+        try:
+            rsvp = obj.rsvp_details
+            if rsvp.attending is True: return f"Yes ({rsvp.number_attending or '?'})"
+            elif rsvp.attending is False: return "No"
+        except (RSVP.DoesNotExist, AttributeError): pass
+        return "No Response"
+
+    @admin.display(description='Assigned Table')
+    def get_assigned_table(self, obj):
+        try:
+            return obj.tableassignment.table.name
+        except (TableAssignment.DoesNotExist, AttributeError):
+            return "Not Assigned"
+
+@admin.register(Table)
+class TableAdmin(admin.ModelAdmin):
+    list_display = ('name', 'event', 'capacity')
+    search_fields = ('name', 'event__title')
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'get_user_email', 'plan', 'get_event_count')
+    list_filter = ('plan',)
+    search_fields = ('user__username', 'user__email')
+    list_select_related = ('user', 'plan')
+    list_editable = ('plan',)
+
+    @admin.display(description='Email Address', ordering='user__email')
+    def get_user_email(self, obj):
+        return obj.user.email
+
+    @admin.display(description='Events Created')
+    def get_event_count(self, obj):
+        return Event.objects.filter(owner=obj.user).count()
+
+admin.site.register(RSVP)
+@admin.register(TableAssignment)
+class TableAssignmentAdmin(admin.ModelAdmin):
+    form = TableAssignmentAdminForm
+    list_display = ('guest', 'table', 'get_event_title')
+    list_filter = ('event', 'table')
+    autocomplete_fields = ['guest', 'table']
+    search_fields = ('guest__name', 'table__name', 'event__title')
+
+    @admin.display(description='Event', ordering='event__title')
+    def get_event_title(self, obj):
+        if obj.event: return obj.event.title
+        return "—"
+
+@admin.register(SpecialField)
+class SpecialFieldAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+    search_fields = ('name',)
+
+
+@admin.register(CardDesign)
+class CardDesignAdmin(admin.ModelAdmin):
+    # UPDATED: Added 'display_plans' to the list
+    list_display = ('name', 'event_type', 'priority', 'is_multilanguage', 'display_plans', 'display_special_fields')
+
+    list_editable = ('priority', 'is_multilanguage',)
+    list_filter = ('event_type', 'available_on_plans', 'is_multilanguage')
+    search_fields = ('name', 'template_name')
+    filter_horizontal = ('available_on_plans', 'special_fields')
+
+    @admin.display(description='Special Fields')
+    def display_special_fields(self, obj):
+        return ", ".join([field.name for field in obj.special_fields.all()])
+
+    # NEW METHOD: Shows which plans have access to this design
+    @admin.display(description='Available Plans')
+    def display_plans(self, obj):
+        return ", ".join([plan.name for plan in obj.available_on_plans.all()])
+
+    @admin.display(description='Special Fields')
+    def display_special_fields(self, obj):
+        return ", ".join([field.name for field in obj.special_fields.all()])
+
+@admin.register(Plan)
+class PlanAdmin(admin.ModelAdmin):
+    list_display = ('name', 'price', 'max_events', 'featured', 'is_public', 'stripe_price_id')
+    list_editable = ('price', 'max_events', 'featured', 'is_public')

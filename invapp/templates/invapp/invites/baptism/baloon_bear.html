@@ -1,0 +1,516 @@
+{% extends "invapp/base_invite.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block page_specific_fonts %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;500;600;700&family=Nunito:wght@300;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block page_specific_styles %}
+<style>
+    /* --- VARIABLES --- */
+    :root {
+        --color-blue: #A2C4D6; /* Soft pastel blue */
+        --color-beige:  #6B5B52;
+        --color-text: #6B5B52; /* Soft Brownish-Grey */
+        --color-accent: #E8A87C;
+        --font-script: 'Great Vibes', cursive;
+        --font-body: 'Montserrat', sans-serif;
+        --font-details: 'Nunito', sans-serif;
+    }
+
+    body {
+        background-color: #f5f5f5;
+        font-family: var(--font-body);
+        color: var(--color-text);
+        overflow-x: hidden;
+        background-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
+    }
+
+    /* --- CARD CONTAINER --- */
+    .card-container {
+        width: 100%;
+        max-width: 550px; /* Optimal reading width */
+        margin: 20px auto;
+        background-color: white;
+        min-height: 95vh;
+        position: relative;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        padding-bottom: 60px;
+        overflow: hidden;
+        border-radius: 8px; /* Subtle rounding */
+
+        /* Default background behavior */
+        background-repeat: no-repeat;
+        background-position: center top;
+        background-size: cover;
+    }
+
+    /* --- DECORATIVE CLOUDS (Only shown if no custom bg) --- */
+    .cloud {
+        position: absolute;
+        background: #EBF7FC;
+        border-radius: 50%;
+        opacity: 0.8;
+        z-index: 0;
+        filter: blur(12px);
+        pointer-events: none;
+    }
+    .cloud-1 { width: 180px; height: 180px; top: -60px; left: -60px; }
+    .cloud-2 { width: 220px; height: 140px; top: 40px; right: -90px; }
+    .cloud-3 { width: 120px; height: 120px; bottom: 30px; left: -40px; }
+    .cloud-4 { width: 200px; height: 160px; bottom: -60px; right: -30px; }
+
+    /* --- CONTENT WRAPPER --- */
+    .content {
+        position: relative;
+        z-index: 1;
+        padding: 30px 20px;
+        text-align: center;
+    }
+
+    /* --- MAIN IMAGE (Bear) --- */
+    /* Only used if default bear is showing */
+    .hero-image-container {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+    }
+
+    .hero-image {
+        width: 85%;
+        max-width: 300px;
+        height: auto;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    /* --- TYPOGRAPHY --- */
+    /* Added text-shadow to ensure readability on custom backgrounds */
+    h1.name {
+        width: 50%;
+        text-align: center;
+        margin-left: 0;
+        font-family: var(--font-script);
+        font-size: 3.8rem;
+        color: var(--color-blue);
+        line-height: 1.1;
+        margin-bottom: 15px;
+        font-weight: 400;
+        text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+        font-size: clamp(2.5rem, 7vw, 3.8rem);
+        line-height: 1.2; /* Better spacing for 2 lines */
+        padding: 0 10px;  /* Prevents touching edges */
+        overflow-wrap: break-word; /* Ensures long names wrap */
+    }
+
+    .intro-text {
+        width: 50%;
+        text-align: center;
+        margin-left: 0;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 30px;
+        color: var(--color-text);
+        font-weight: 500; /* Made slightly bolder */
+        text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    }
+
+    .intro-text strong {
+        color: var(--color-text);
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    /* --- DATE SECTION --- */
+    .date-container {
+           display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 40px 0;
+            color: var(--color-blue);
+    }
+
+    .date-part {
+        padding: 0 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 500; /* Made slightly bolder */
+        font-size: 1.1rem;
+    }
+
+    .date-highlight {
+            font-size: 1.8rem;
+            font-weight: 700;
+            border-left: 2px solid #E8C4A8;
+            border-right: 2px solid #E8C4A8;
+    }
+
+    /* --- DETAILS SECTION --- */
+    .details-section {
+        font-family: var(--font-details);
+        margin-bottom: 40px;
+        color: var(--color-text);
+        font-size: 1rem;
+        line-height: 1.6;
+        background-color: rgba(255, 255, 255, 0.6); /* Slight transparency backing for readability */
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(2px);
+    }
+
+    .detail-block {
+        margin-bottom: 25px;
+    }
+
+    .detail-location {
+        font-weight: 800; /* Made bolder */
+        color: var(--color-text);
+        font-size: 1.1rem;
+    }
+
+    .detail-time {
+        font-weight: 800; /* Made bolder */
+        color: var(--color-text);
+    }
+
+    .icon-star {
+        color: #F4D03F;
+        font-size: 1.2rem;
+        margin-right: 6px;
+        vertical-align: middle;
+    }
+
+    /* --- FOOTER --- */
+    .footer-text {
+        font-family: var(--font-script);
+        font-size: 2.5rem;
+        color: var(--color-blue);
+        margin-top: 20px;
+        margin-bottom: 40px;
+        text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+    }
+
+    /* --- BUTTONS --- */
+    .btn-rsvp {
+        display: inline-block;
+        background-color: var(--color-blue);
+        color: white;
+        padding: 14px 40px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(162, 196, 214, 0.5);
+        border: 2px solid white;
+        cursor: pointer;
+    }
+    .btn-rsvp:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(162, 196, 214, 0.6);
+        background-color: #91b6ca;
+    }
+
+    /* --- MODAL STYLES --- */
+    .modal-input {
+        width: 100%;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 6px;
+        font-family: var(--font-details);
+        font-size: 16px; /* Prevents zoom on mobile input focus */
+    }
+    .modal-label {
+        display: block;
+        text-align: left;
+        font-size: 0.95rem;
+        color: var(--color-text);
+        margin-top: 15px;
+        font-weight: 600;
+    }
+
+    /* --- MOBILE RESPONSIVENESS --- */
+    @media (max-width: 600px) {
+        .card-container {
+            margin: 0;
+            border-radius: 0;
+            min-height: 100vh;
+            box-shadow: none;
+        }
+
+        .content {
+            padding: 20px 15px;
+        }
+
+        h1.name {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .intro-text {
+            font-size: 0.95rem;
+        }
+
+        /* UPDATED: Larger Date on Mobile */
+        .date-highlight {
+            font-size: 2.2rem; /* Increased size */
+            padding: 0 15px;
+             border-left: 2px solid #E8C4A8;
+             border-right: 2px solid #E8C4A8;
+        }
+        .date-part {
+            font-size: 1.2rem; /* Increased size */
+            padding: 0 8px;
+        }
+
+        .hero-image {
+            max-width: 280px;
+        }
+
+        .details-section {
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!--
+  x-data handles:
+  1. rsvpOpen: Modal visibility
+  2. langOpen: Language switcher visibility
+-->
+<div x-data="{ rsvpOpen: false, langOpen: false }">
+
+    <!-- ============================================== -->
+    <!-- === CARD CONTAINER (With Dynamic Background) == -->
+    <!-- ============================================== -->
+    <!--
+         THE FIX: Changed background-size from 'cover' (default in CSS) to '100% auto'
+         inline. This ensures the full width of the image fits the card, preventing zoom-in cropping.
+    -->
+    <div class="card-container"
+         style="background-image: url('{% static 'invapp/images/BaloonBear/BaloonBear.png' %}'); background-size: 100% auto;">
+
+        <!--
+           Language Switcher
+           Positioned absolutely within the card for consistent placement
+        -->
+        <div class="absolute top-4 right-4 z-40" @mouseenter="langOpen = true" @mouseleave="langOpen = false">
+            <div class="relative">
+                <button @click="langOpen = !langOpen" class="flex items-center justify-center space-x-1 bg-white/80 backdrop-blur-md border border-white/60 shadow-sm rounded-full px-3 py-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider hover:bg-white transition-all">
+                    <i class="fas fa-globe mr-1 text-blue-400"></i>
+                    <span>{{ LANGUAGE_CODE }}</span>
+                </button>
+
+                <!-- Dropdown -->
+                <div x-show="langOpen"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-2"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 translate-y-2"
+                     class="absolute right-0 mt-2 w-28 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-100 py-1 z-50"
+                     style="display: none;">
+
+                    <form action="{% url 'set_language' %}" method="post">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ redirect_to }}">
+
+                        <button type="submit" name="language" value="ro" class="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-blue-50 transition-colors {% if LANGUAGE_CODE == 'ro' %}font-bold text-blue-500{% endif %}">
+                            Română
+                        </button>
+                        <button type="submit" name="language" value="en" class="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-blue-50 transition-colors {% if LANGUAGE_CODE == 'en' %}font-bold text-blue-500{% endif %}">
+                            English
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!--
+           CONDITIONAL DECORATIONS
+           Only show clouds and bear if NO custom background is uploaded.
+           If user uploaded a bg, we assume it contains the design.
+        -->
+        {% if not event.main_invitation_image %}
+            <div class="cloud cloud-1"></div>
+            <div class="cloud cloud-2"></div>
+            <div class="cloud cloud-3"></div>
+            <div class="cloud cloud-4"></div>
+        {% endif %}
+
+        <div class="content">
+
+                <!-- Spacer to push text down if needed when using custom bg -->
+                <div style="height: 33vh;"></div>
+
+
+            <!-- Child's Name -->
+            <h1 class="name">{{ event.child_name|default:"Matei - Alexandru" }}</h1>
+
+            <!-- Introduction -->
+            <div class="intro-text">
+                {% translate "Împreună cu părinții mei" %}, <br>
+                <strong>{{ event.parents_names|default:"Raluca și Valentin" }}</strong><br>
+
+                {% if event.godparents.exists %}
+                    <div class="mt-2">
+                        {% translate "Având alături nașii" %}, <br>
+                        <strong>
+                            {% for gp in event.godparents.all %}
+                                {{ gp.name }}{% if not forloop.last %} & {% endif %}
+                            {% endfor %}
+                        </strong>
+                    </div>
+                {% endif %}
+
+
+            </div>
+                <span style="display:block; margin-top: 15px; font-style: italic;">
+                                    {{ event.invitation_wording|default:"Avem plăcerea de a vă invita" }}
+                                </span>
+            <!-- Date -->
+            <div class="date-container">
+                <div class="date-part uppercase">{{ event.date_time|date:"l" }}</div>
+                <div class="date-part date-highlight">{{ event.date_time|date:"d F" }}</div>
+                <div class="date-part">{{ event.date_time|date:"Y" }}</div>
+            </div>
+
+            <!-- Details -->
+            <div class="details-section">
+                <p style="margin-bottom: 20px;">{% translate "La botezul meu, care va avea loc la" %}</p>
+
+                <div class="detail-block">
+                    <i class="fas fa-star icon-star"></i>
+                    <span class="detail-location">{{ event.ceremony_location|default:"Biserica" }}</span><br>
+                    {% translate "începând cu ora" %} <span class="detail-time">{{ event.ceremony_time|time:"H:i"|default:"13:00" }}</span>.
+
+                    {% if event.ceremony_maps_url %}
+                        <br>
+                        <a href="{{ event.ceremony_maps_url }}" target="_blank" class="text-xs text-gray-500 hover:text-blue-500 underline mt-1 inline-block">{% translate "Vezi Harta" %}</a>
+                    {% endif %}
+                </div>
+
+                <div class="detail-block">
+                    {% translate "Vom sărbători apoi împreună la" %}<br>
+                    <span class="detail-location">{{ event.venue_name|default:"Restaurant" }}</span><br>
+                    <span class="text-sm">{{ event.venue_address }}</span><br>
+                    {% translate "începând cu ora" %}
+                    <span class="detail-time">{{ event.date_time|time:"H:i"|default:"15:30" }}</span>.
+
+                    {% if event.party_maps_url %}
+                        <br>
+                        <a href="{{ event.party_maps_url }}" target="_blank" class="text-xs text-gray-500 hover:text-blue-500 underline mt-1 inline-block">{% translate "Vezi Harta" %}</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="footer-text">
+                {% translate "Vă așteptăm cu drag!" %}
+            </div>
+
+            <!-- RSVP Trigger Button -->
+            {% if not is_preview %}
+            <div class="mt-6 mb-8">
+                <button @click="rsvpOpen = true" class="btn-rsvp">
+                    {% translate "Confirmă Prezența" %}
+                </button>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- === RSVP MODAL                             === -->
+    <!-- ============================================== -->
+    <div x-show="rsvpOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm"
+         style="display: none;">
+
+        <div @click.away="rsvpOpen = false" class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 relative overflow-y-auto max-h-[90vh]">
+            <!-- Close Button -->
+            <button @click="rsvpOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+
+            <h3 class="text-2xl font-bold text-center mb-2 text-[#6B5B52]" style="font-family: var(--font-script);">{% translate "Confirmare" %}</h3>
+            <p class="text-center text-sm text-gray-500 mb-6">{% translate "Te rugăm să completezi formularul de mai jos." %}</p>
+
+            <form method="POST" action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" class="space-y-4">
+                {% csrf_token %}
+
+                <!-- Attending Radio -->
+                <div class="text-center">
+                    <label class="block text-sm font-semibold mb-3 text-gray-600">{% translate "Vei participa?" %}</label>
+                    <div class="flex justify-center space-x-6">
+                        {% for radio in form.attending %}
+                            <div class="flex items-center space-x-2">
+                                {{ radio.tag }}
+                                <label for="{{ radio.id_for_label }}" class="text-sm text-gray-700 font-medium">{{ radio.choice_label }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Dynamic Details (Uses Alpine 'x-show' logic ideally, or JS below) -->
+                <div id="attending_details" style="display: none;">
+
+                    <label class="modal-label">{% translate "Număr de persoane" %}</label>
+                    <input type="number" name="{{ form.number_attending.name }}" min="1" max="{{ guest.max_attendees }}" class="modal-input" placeholder="1">
+                    <p class="text-xs text-gray-400 mt-1">{% blocktranslate with max=guest.max_attendees %}Maxim {{ max }} persoane{% endblocktranslate %}</p>
+
+                    <label class="modal-label">{% translate "Preferințe Meniu / Alergii" %}</label>
+                    <textarea name="{{ form.meal_preference.name }}" rows="2" class="modal-input" placeholder="..."></textarea>
+                </div>
+
+                <div>
+                    <label class="modal-label">{% translate "Mesaj pentru părinți" %}</label>
+                    <textarea name="{{ form.message.name }}" rows="2" class="modal-input" placeholder="..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-rsvp w-full mt-6 shadow-none hover:shadow-md">{% translate "Trimite Răspunsul" %}</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // RSVP Form Toggle Logic (Vanilla JS to supplement Alpine)
+    document.addEventListener('DOMContentLoaded', function() {
+        const radios = document.querySelectorAll('input[name="attending"]');
+        const details = document.getElementById('attending_details');
+
+        function toggleDetails() {
+            const isYes = document.querySelector('input[name="attending"][value="True"]:checked');
+            if(details) details.style.display = isYes ? 'block' : 'none';
+        }
+
+        radios.forEach(r => r.addEventListener('change', toggleDetails));
+        toggleDetails();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "invapp/base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Privacy Policy" %}{% endblock %}
+
+{% block page_header %}
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{% translate "Privacy Policy" %}</h1>
+    <p class="mt-1 text-md text-gray-600 dark:text-gray-400">{% translate "Last updated: October 20, 2025" %}</p>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 sm:p-8 prose dark:prose-invert max-w-none">
+    <h2>1. {% translate "Introduction" %}</h2>
+    <p>{% blocktranslate %}This Privacy Policy describes how [Your Company Name] ("we", "us", or "our") collects, uses, and discloses your information in connection with your use of our website and services (collectively, the "Service").{% endblocktranslate %}</p>
+
+    <h2>2. {% translate "Information We Collect" %}</h2>
+    <p><strong>{% translate "User Data:" %}</strong> {% blocktranslate %}We collect personal information you provide when you register for an account, such as your name, email address, and payment information.{% endblocktranslate %}</p>
+    <p><strong>{% translate "Guest Data:" %}</strong> {% blocktranslate %}We process personal information about your guests that you provide to us, including their names, email addresses, and phone numbers. We process this data on your behalf to provide the Service's core functionalities.{% endblocktranslate %}</p>
+
+    <h2>3. {% translate "How We Use Your Information" %}</h2>
+    <p>{% blocktranslate %}We use the information we collect to provide, maintain, and improve our Service, process transactions, and communicate with you. We use the Guest Data you provide solely to send invitations, track RSVPs, and provide other event management features on your behalf.{% endblocktranslate %}</p>
+
+    <h2>4. {% translate "Data Processing and GDPR" %}</h2>
+    <p>{% blocktranslate %}As a company operating in Romania, we are compliant with the General Data Protection Regulation (GDPR). When you upload your guests' data, you are the "Data Controller," and we act as the "Data Processor." It is your responsibility as the Data Controller to ensure you have a legal basis (such as consent) for processing your guests' data.{% endblocktranslate %}</p>
+
+    <h2>5. {% translate "Your Rights" %}</h2>
+    <p>{% blocktranslate %}You have the right to access, update, or delete your personal information at any time by logging into your account or contacting us. You also have the right to manage and delete the personal data of your guests.{% endblocktranslate %}</p>
+
+    <h2>6. {% translate "Contact Us" %}</h2>
+    <p>{% blocktranslate %}If you have any questions about this Privacy Policy, please contact us at {% endblocktranslate %}[your-contact-email@example.com].</p>
+</div>
+{% endblock %}

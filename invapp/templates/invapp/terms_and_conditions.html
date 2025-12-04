@@ -1,0 +1,39 @@
+{% extends "invapp/base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Terms and Conditions" %}{% endblock %}
+
+{% block page_header %}
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{% translate "Terms and Conditions" %}</h1>
+    <p class="mt-1 text-md text-gray-600 dark:text-gray-400">{% translate "Last updated: October 20, 2025" %}</p>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 sm:p-8 prose dark:prose-invert max-w-none">
+    <h2>1. {% translate "Agreement to Terms" %}</h2>
+    <p>{% blocktranslate %}By creating an account and using the InvApp service ("Service"), you agree to be bound by these Terms and Conditions. If you disagree with any part of the terms, then you may not access the Service.{% endblocktranslate %}</p>
+
+    <h2>2. {% translate "User Accounts" %}</h2>
+    <p>{% blocktranslate %}When you create an account with us, you must provide us with information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our Service.{% endblocktranslate %}</p>
+
+    <h2>3. {% translate "User and Guest Data" %}</h2>
+    <p><strong>{% blocktranslate %}You are solely responsible for the personal data of your guests that you upload to our Service.{% endblocktranslate %}</strong> {% blocktranslate %}This includes names, email addresses, and phone numbers. You represent and warrant that you have obtained all necessary consents from your guests to collect, use, and share their data within our Service for the purpose of sending invitations and managing your event.{% endblocktranslate %}</p>
+    <p>{% blocktranslate %}Our Service will only use this guest data to provide the functionalities of the app, such as sending invitation links and managing RSVP responses. We will not use guest data for any other purpose.{% endblocktranslate %}</p>
+
+    <h2>4. {% translate "Payments and Plans" %}</h2>
+    <p>{% blocktranslate %}Some parts of the Service are billed on a one-time or subscription basis ("Paid Plans"). You will be billed in advance for the Paid Plans. All payments are handled by our third-party payment processor, Stripe.{% endblocktranslate %}</p>
+
+    <h2>5. {% translate "Limitation of Liability" %}</h2>
+    <p>{% blocktranslate %}In no event shall [Your Company Name], nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.{% endblocktranslate %}</p>
+
+    <h2>6. {% translate "Governing Law" %}</h2>
+    <p>{% blocktranslate %}These Terms shall be governed and construed in accordance with the laws of Romania, without regard to its conflict of law provisions.{% endblocktranslate %}</p>
+
+    <h2>7. {% translate "Contact Us" %}</h2>
+    <p>{% blocktranslate %}If you have any questions about these Terms, please contact us at {% endblocktranslate %}[your-contact-email@example.com].</p>
+
+    <h2>8. {% translate "Termination and Account Abuse" %}</h2>
+<p>{% blocktranslate %}We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.{% endblocktranslate %}</p>
+<p>{% blocktranslate %}Abusing the Free Plan by repeatedly editing a single event to represent multiple, distinct events (e.g., changing a "Wedding" to a "Baptism") is a direct violation of these Terms and will result in immediate account termination.{% endblocktranslate %}</p>
+</div>
+{% endblock %}

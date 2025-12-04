@@ -1,0 +1,15 @@
+{% extends "invapp/base.html" %} {# Or your project-wide base template #}
+
+{% block title %}Sign Up{% endblock %}
+{% block header %}Create an Account{% endblock %}
+
+{% block content %}
+  <h2>Sign Uppppp</h2>
+  <p>Create your account to manage your event invitation.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }} {# Render the form fields (username, password, password confirmation) #}
+    <button type="submit">Sign Up</button>
+  </form>
+  <p>Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+{% endblock %}

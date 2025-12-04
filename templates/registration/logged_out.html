@@ -1,0 +1,9 @@
+{% extends "invapp/base.html" %} {# Or a new project-wide base.html #}
+
+{% block title %}Logged Out{% endblock %}
+{% block header %}Logged Out{% endblock %}
+
+{% block content %}
+  <p>You have been successfully logged out.</p>
+  <p><a href="{% url 'login' %}">Log in again</a></p>
+{% endblock %}

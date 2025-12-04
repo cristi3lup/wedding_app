@@ -1,0 +1,79 @@
+{% extends "invapp/base.html" %}
+{% load static %}
+{% block title %}Your Dashboard{% endblock %}
+
+{% block page_header %}
+    <div class="sm:flex sm:justify-between sm:items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Your Events</h1>
+            <p class="mt-1 text-md text-gray-600 dark:text-gray-400">Here are all the events you are currently planning.</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <a href="{% url 'invapp:event_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Create New Event
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <!-- THE FIX: The event grid is now wrapped in a container card -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-4 sm:p-6">
+            {% if events %}
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {% for event in events %}
+                        <!-- The entire card is a link to the guest list (management) page -->
+                        <a href="{% url 'invapp:guest_list' event_id=event.id %}" class="group block bg-white dark:bg-gray-700/50 shadow-md rounded-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+                            <div class="flex flex-col h-full">
+                                <!-- Image Preview Section -->
+                                <div class="aspect-square bg-slate-100 dark:bg-gray-700">
+                                    {% if event.selected_design and event.selected_design.preview_image_path %}
+                                        <img src="{% static event.selected_design.preview_image_path %}" alt="{{ event.selected_design.name }} preview" class="w-full h-full object-contain p-2">
+                                    {% else %}
+                                        <div class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">No Design Preview</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Card Content -->
+                                <div class="p-5 flex-grow flex flex-col">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ event.title }}</h3>
+
+                                    <div class="mt-3 flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                        <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg>
+                                        <span>{{ event.date_time|date:"F j, Y" }}</span>
+                                    </div>
+
+                                    <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                        <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>
+                                        <span>{{ event.guests.count }} Guest(s)</span>
+                                    </div>
+
+                                    <div class="flex-grow"></div>
+
+                                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                        <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            Manage Event &rarr;
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-12">
+                    <h3 class="mt-2 text-xl font-medium text-gray-900 dark:text-gray-100">No events found</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by creating your first event.</p>
+                    <div class="mt-6">
+                        <a href="{% url 'invapp:event_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">+ Create New Event</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+

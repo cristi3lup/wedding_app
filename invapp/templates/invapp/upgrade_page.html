@@ -1,0 +1,123 @@
+{% extends "invapp/base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Upgrade Your Plan" %}{% endblock %}
+
+{% block page_header %}
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{% translate "Upgrade to" %} {{ plan.name }}</h1>
+    <p class="mt-1 text-md text-gray-600 dark:text-gray-400">{% translate "We're excited to have you on board!" %}</p>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 sm:p-8">
+
+    <!-- NEW: Personalized Header -->
+    <div class="text-center p-6 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <p class="text-lg font-medium text-gray-600 dark:text-gray-300">{% translate "You have selected the" %}</p>
+        <h2 class="text-3xl font-semibold text-indigo-600 dark:text-indigo-400 mt-1">{{ plan.name }}</h2>
+        <p class="mt-2 text-4xl font-bold text-gray-900 dark:text-gray-100">{{ plan.price }} <span class="text-2xl font-medium text-gray-500 dark:text-gray-400">RON</span></p>
+    </div>
+
+    <p class="mt-6 text-gray-600 dark:text-gray-300">{% blocktranslate %}To activate your plan, please follow these simple steps. We are currently processing upgrades manually to ensure the highest quality of service.{% endblocktranslate %}</p>
+
+    <!-- Step-by-step list -->
+    <div class="mt-10 space-y-12">
+
+        <!-- Step 1: Make Your Payment -->
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <span class="flex items-center justify-center h-12 w-12 rounded-full bg-indigo-600 text-white font-bold text-xl">1</span>
+            </div>
+            <div class="ml-4">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{% translate "Step 1: Make Your Payment" %}</h4>
+                <!-- NEW: Dynamic Price -->
+                <p class="mt-2 text-gray-600 dark:text-gray-300">{% blocktranslate with amount=plan.price %}Please transfer the amount of <strong>{{ amount }} RON</strong> to one of the following accounts:{% endblocktranslate %}</p>
+                <div class="mt-4 space-y-4">
+                    <!-- Revolut Item -->
+                    <div class="flex items-start space-x-3">
+                        <svg class="h-6 w-6 flex-shrink-0 text-gray-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <strong>Revolut:</strong> +40 0770169257 (@your-revolut-tag)
+                        </span>
+                    </div>
+                    <!-- Bank Transfer Item -->
+                    <div class="flex items-start space-x-3">
+                        <svg class="h-6 w-6 flex-shrink-0 text-gray-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h6m3-3.75l-3 3m0 0l-3-3m3 3V1.5m6 5.25v11.25m6-11.25v11.25c0 1.242-.99 2.25-2.22 2.25H4.47C3.23 21 2.24 20.01 2.24 18.75V6.75A2.25 2.25 0 014.47 4.5h15.06c1.23 0 2.22.99 2.22 2.25z" /></svg>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <strong>Bank Transfer (IBAN):</strong> RO00 INGB 1234 5678 9012 3456<br>
+                            <strong>{% translate "Recipient Name" %}:</strong> [Lupuleasa Cristian / InvApp]
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Send Us Your Receipt -->
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <span class="flex items-center justify-center h-12 w-12 rounded-full bg-indigo-600 text-white font-bold text-xl">2</span>
+            </div>
+            <div class="ml-4">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{% translate "Step 2: Send Us Your Receipt" %}</h4>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">{% blocktranslate %}After you have made the payment, please send a screenshot or a copy of your receipt to us via email or WhatsApp.{% endblocktranslate %}</p>
+                <div class="mt-4 space-y-4">
+                    <!-- Email Item -->
+                    <div class="flex items-start space-x-3">
+                        <svg class="h-6 w-6 flex-shrink-0 text-gray-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <strong>Email:</strong> <strong>your-email@yourdomain.com</strong>
+                        </span>
+                    </div>
+                    <!-- WhatsApp Item -->
+                    <div class="flex items-start space-x-3">
+                         <svg class="h-6 w-6 flex-shrink-0 text-gray-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <strong>WhatsApp:</strong> <strong>+40 712 345 678</strong>
+                        </span>
+                    </div>
+                </div>
+                <!-- Important Note -->
+                <div class="mt-4 p-4 rounded-md bg-yellow-50 dark:bg-yellow-900/50 border-l-4 border-yellow-400">
+                    <p class="text-sm text-yellow-700 dark:text-yellow-300">
+                        <strong>{% translate "Important:" %}</strong> {% blocktranslate %}Please include the email address you used to sign up for your InvApp account so we can find you!{% endblocktranslate %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: We Activate Your Plan -->
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <span class="flex items-center justify-center h-12 w-12 rounded-full bg-indigo-600 text-white font-bold text-xl">3</span>
+            </div>
+            <div class="ml-4">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{% translate "Step 3: We Activate Your Plan" %}</h4>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">{% blocktranslate %}Once we receive your receipt, we will manually activate your Premium Plan within a few hours (usually much faster). We will send you a confirmation email as soon as your account is upgraded.{% endblocktranslate %}</p>
+                <p class="mt-4 text-gray-600 dark:text-gray-300">{% blocktranslate %}Thank you for your understanding and for choosing InvApp!{% endblocktranslate %}</p>
+            </div>
+        </div>
+
+    </div>
+        <!-- ============================================== -->
+    <!-- === NEW: "OR" DIVIDER AND STRIPE BUTTON    === -->
+    <!-- ============================================== -->
+    <div class="relative my-10">
+        <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
+        </div>
+        <div class="relative flex justify-center">
+            <span class="bg-white dark:bg-gray-800 px-3 text-lg font-medium text-gray-900 dark:text-gray-100"> OR </span>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{% translate "Pay Instantly with Card" %}</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-300">{% translate "Pay securely with your credit card. Your plan will be activated automatically." %}</p>
+        <a href="{% url 'invapp:create_checkout_session' plan_id=plan.id %}" class="mt-6 inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+            <svg class="-ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M21.35,9.13a.5.5,0,0,0-.4-.45L15.69,7.83l-.75-5.32a.5.5,0,0,0-.94,0L13.25,7.83,8.08,8.68a.5.5,0,0,0-.4.45L7.23,14a.5.5,0,0,0,.49.55l5.22-.89.75,5.32a.5.5,0,0,0,.94,0l.75-5.32,5.22.89a.5.5,0,0,0,.49-.55Z" /><path d="M6.77,12.57a.5.5,0,0,0-.49.55l.75,5.32a.5.5,0,0,0,.94,0L8.72,13.12l5.17.88a.5.5,0,0,0,.49-.55L13.63,8a.5.5,0,0,0-.4-.45L8.06,8.44a.5.5,0,0,0-.4.45Z" /></svg>
+            {% translate "Pay with Stripe" %}
+        </a>
+        <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">{% translate "(Note: This automated service may include an additional processing fee.)" %}</p>
+    </div>
+</div>
+{% endblock %}

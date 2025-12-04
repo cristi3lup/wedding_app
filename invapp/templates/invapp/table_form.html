@@ -1,0 +1,21 @@
+{% extends "invapp/base.html" %}
+
+{% block title %}{{ form_title|default:"Manage Table" }}{% endblock %}
+{% block header %}{{ form_title|default:"Manage Table" }}{% endblock %}
+
+{% block content %}
+    {# Determine cancel URL based on whether we are editing (object exists) or creating #}
+    {% if object %}
+        <p><a href="{% url 'invapp:table_list' event_id=object.event.id %}">&laquo; Cancel and Back to Table List</a></p>
+    {% elif event %}
+         <p><a href="{% url 'invapp:table_list' event_id=event.id %}">&laquo; Cancel and Back to Table List</a></p>
+    {% else %}
+        <p><a href="{% url 'invapp:dashboard' %}">&laquo; Back to Dashboard</a></p> {# Fallback #}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save Table</button>
+    </form>
+{% endblock %}

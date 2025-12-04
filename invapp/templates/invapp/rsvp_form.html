@@ -1,0 +1,78 @@
+{% extends "invapp/base.html" %}
+
+{% block title %}RSVP for {{ guest.name }}{% endblock %}
+{% block header %}RSVP for {{ guest.name }}{% endblock %}
+
+{% block content %}
+    <p>Please respond by [insert RSVP deadline here if you have one].</p>
+
+    <form method="post">
+        {% csrf_token %} {# Required for Django forms #}
+        <form method="post">
+     {% csrf_token %} {# Required for Django forms #}
+
+     {# Render 'attending' field (RadioSelect) #}
+     <div class="form-group">
+         <p><strong>{{ form.attending.label }}:</strong></p>
+         {{ form.attending }}
+         {% if form.attending.errors %}<p style="color: red;">{{ form.attending.errors|striptags }}</p>{% endif %}
+     </div>
+
+     {# Fields to hide/show #}
+     <div id="attending_details" style="display: none;"> {# Hide this container initially #}
+         <div class="form-group">
+             <p><label for="{{ form.number_attending.id_for_label }}">{{ form.number_attending.label }}:</label></p>
+             {{ form.number_attending }}
+             {% if form.number_attending.errors %}<p style="color: red;">{{ form.number_attending.errors|striptags }}</p>{% endif %}
+             <small>(Up to {{ guest.max_attendees }} allowed for your invitation)</small>
+         </div>
+
+         <div class="form-group">
+             <p><label for="{{ form.meal_preference.id_for_label }}">{{ form.meal_preference.label }}:</label></p>
+             {{ form.meal_preference }}
+              {% if form.meal_preference.errors %}<p style="color: red;">{{ form.meal_preference.errors|striptags }}</p>{% endif %}
+         </div>
+     </div>
+
+     {# Render 'message' field #}
+     <div class="form-group">
+         <p><label for="{{ form.message.id_for_label }}">{{ form.message.label }}:</label></p>
+         {{ form.message }}
+          {% if form.message.errors %}<p style="color: red;">{{ form.message.errors|striptags }}</p>{% endif %}
+     </div>
+
+     <button type="submit">Submit RSVP</button>
+ </form>
+
+ {# Add JavaScript at the bottom #}
+ <script>
+     // Get references to the relevant elements
+     const attendingRadios = document.querySelectorAll('input[name="attending"]');
+     const attendingDetailsDiv = document.getElementById('attending_details');
+     const attendingYesRadio = document.querySelector('input[name="attending"][value="True"]'); // Django uses 'True'/'False' for BooleanField RadioSelect
+
+     // Function to show/hide the details section
+     function toggleAttendingDetails() {
+         // Check if the 'Yes' radio button is selected
+         if (attendingYesRadio && attendingYesRadio.checked) {
+             attendingDetailsDiv.style.display = 'block'; // Show details
+         } else {
+             attendingDetailsDiv.style.display = 'none'; // Hide details
+         }
+     }
+
+     // Add event listeners to both radio buttons
+     attendingRadios.forEach(radio => {
+         radio.addEventListener('change', toggleAttendingDetails);
+     });
+
+     // Initial check when the page loads (in case form is pre-filled)
+     toggleAttendingDetails();
+ </script>
+
+    </form>
+
+    <p>
+        <a href="{% url 'invapp:invitation_detail' %}">Back to Invitation</a>
+    </p>
+{% endblock %}

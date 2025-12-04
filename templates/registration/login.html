@@ -1,0 +1,56 @@
+{% extends "invapp/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load allauth %}
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - InviteMe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="h-full">
+    <div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <h1 class="mt-6 text-center text-3xl font-serif font-bold tracking-tight text-gray-900">
+                <a href="{% url 'invapp:landing_page' %}">InviteMe</a>
+            </h1>
+            <h2 class="mt-2 text-center text-xl tracking-tight text-gray-800">
+                Sign in to your account
+            </h2>
+        </div>
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                <!-- Social Login Buttons -->
+                <div class="space-y-3">
+                    <a href="{% provider_login_url 'google' %}" class="flex w-full items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent">
+                        <svg class="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24"><path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L19.5403 3.61C17.4803 1.69 14.9303 0.75 12.0003 0.75C7.75033 0.75 4.12033 3.4 2.56033 7.06L5.84033 9.42C6.72033 6.71 9.11033 4.75 12.0003 4.75Z" fill="#EA4335"></path><path d="M12.0003 23.25C14.9303 23.25 17.4803 22.31 19.5403 20.39L16.6003 17.45C15.3553 18.64 13.7703 19.25 12.0003 19.25C9.11033 19.25 6.72033 17.29 5.84033 14.58L2.56033 16.94C4.12033 20.6 7.75033 23.25 12.0003 23.25Z" fill="#34A853"></path><path d="M5.84033 14.58C5.54033 13.73 5.38033 12.87 5.38033 12C5.38033 11.13 5.54033 10.27 5.84033 9.42L2.56033 7.06C1.96033 8.48 1.62033 10.16 1.62033 12C1.62033 13.84 1.96033 15.52 2.56033 16.94L5.84033 14.58Z" fill="#FBBC05"></path><path d="M12.0003 19.25C13.7703 19.25 15.3553 18.64 16.6053 17.45L19.5403 20.39C17.4803 22.31 14.9303 23.25 12.0003 23.25C7.75033 23.25 4.12033 20.6 2.56033 16.94L5.84033 14.58C6.72033 17.29 9.11033 19.25 12.0003 19.25Z" fill="#4285F4"></path></svg>
+                        <span class="text-sm font-semibold leading-6">Continue with Google</span>
+                    </a>
+                    <a href="{% provider_login_url 'facebook' method='oauth2' %}" class="flex w-full items-center justify-center gap-3 rounded-md bg-[#1877F2] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#166fe5] focus-visible:ring-transparent">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd"></path></svg>
+                        <span class="text-sm font-semibold leading-6">Continue with Facebook</span>
+                    </a>
+                </div>
+
+                <div class="relative mt-6">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-300"></div></div>
+                    <div class="relative flex justify-center text-sm"><span class="bg-white px-2 text-gray-500">Or sign in with email</span></div>
+                </div>
+
+                <!-- Email Sign In Form -->
+                <form class="mt-6 space-y-6" action="{% url 'account_login' %}" method="POST">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">Sign in</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

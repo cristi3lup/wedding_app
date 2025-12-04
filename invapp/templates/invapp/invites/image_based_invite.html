@@ -1,0 +1,170 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% translate "You're Invited!" %} - {{ event.title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans text-gray-900">
+
+    <div class="max-w-2xl mx-auto my-8 bg-white shadow-xl sm:rounded-lg overflow-hidden">
+
+        <!-- Section 1: The Uploaded Canva Image -->
+        <section id="main-visual">
+            {% if event.main_invitation_image %}
+                <img src="{{ event.main_invitation_image.url }}" alt="{{ event.title }} Invitation" class="w-full h-auto">
+            {% else %}
+                <div class="h-96 bg-gray-200 flex items-center justify-center">
+                    <p class="text-gray-500 italic">{% translate "Invitation image will be displayed here." %}</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- Section 2: Interactive Content -->
+        <div class="p-6 sm:p-10 space-y-12">
+
+            <!-- Map Section (Optional) -->
+            {% if event.Maps_embed_url %}
+            <section id="map">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 text-center">{% translate "Location" %}</h2>
+                <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-md bg-gray-100">
+                    <iframe src="{{ event.Maps_embed_url }}" class="w-full h-full" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </section>
+            {% endif %}
+
+
+            {% if not is_preview %}
+            <!-- RSVP Section -->
+            <section id="rsvp" class="border-t border-gray-200 pt-10">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-2 text-center">{% translate "Kindly Respond" %}</h2>
+                <p class="text-center text-gray-600 mb-8">
+                    {% translate "This invitation is for:" %} <strong class="font-semibold text-indigo-600">{{ guest.name }}</strong>
+                </p>
+
+                <div class="max-w-lg mx-auto">
+                    <!--
+                       Added data-manual-status to track if the guest was manually updated by the host.
+                    -->
+                    <form id="rsvp-form" class="space-y-6" action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" method="POST"
+                          data-manual-status="{% if guest.manual_is_attending is not None %}true{% else %}false{% endif %}">
+                        {% csrf_token %}
+
+                        <!-- Main RSVP Question -->
+                        <fieldset>
+                            <legend class="block text-base font-medium text-gray-700 mb-3 text-center">{{ form.attending.label }}</legend>
+                            <div class="flex items-center justify-center space-x-6">
+                                {% for radio in form.attending %}
+                                    <div class="flex items-center">
+                                        {{ radio.tag }}
+                                        <label for="{{ radio.id_for_label }}" class="ml-2 block text-base text-gray-700 cursor-pointer">{{ radio.choice_label }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </fieldset>
+
+                        <!-- Dynamic Fields for Attending Guests -->
+                        <div id="attending_details" class="space-y-6 bg-gray-50 p-6 rounded-lg border border-gray-200" style="display: none;">
+
+                            <!-- Number of Attendees -->
+                            <div>
+                                <label for="{{ form.number_attending.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ form.number_attending.label }}</label>
+                                <div class="mt-1">
+                                    <input type="number"
+                                           name="{{ form.number_attending.name }}"
+                                           id="{{ form.number_attending.id_for_label }}"
+                                           min="1"
+                                           max="{{ guest.max_attendees }}"
+                                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5"
+                                           placeholder="e.g., 2"
+                                           oninvalid="this.setCustomValidity('{% translate "Value must be less than or equal to" %} ' + this.max + ', {% translate "please contact event host" %}')"
+                                           oninput="this.setCustomValidity('')">
+                                    <p class="mt-2 text-xs text-gray-500">
+                                        {% blocktranslate with max=guest.max_attendees %}Maximum allowed: {{ max }}{% endblocktranslate %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Meal Preferences -->
+                            <div>
+                                <label for="{{ form.meal_preference.id_for_label }}" class="block text-sm font-medium text-gray-700">{% translate "Meal Preferences / Allergies" %}</label>
+                                <div class="mt-1">
+                                    <textarea name="{{ form.meal_preference.name }}" id="{{ form.meal_preference.id_for_label }}" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5" placeholder="{% translate 'Vegetarian, Gluten-free, etc.' %}"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Message -->
+                            <div>
+                                <label for="{{ form.message.id_for_label }}" class="block text-sm font-medium text-gray-700">{% translate "Message for the hosts" %}</label>
+                                <div class="mt-1">
+                                    <textarea name="{{ form.message.name }}" id="{{ form.message.id_for_label }}" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5" placeholder="{% translate 'We are so happy for you...' %}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                                {% translate "Send RSVP" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Updated JavaScript for Conditional Logic & Confirmation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rsvpForm = document.getElementById('rsvp-form');
+
+            if (rsvpForm) {
+                const attendingRadios = document.querySelectorAll('input[name="attending"]');
+                const attendingDetailsDiv = document.getElementById('attending_details');
+                // Note: Ensure the value matches what Django renders (usually "True" for BooleanField)
+                const attendingYesRadio = document.querySelector('input[name="attending"][value="True"]');
+
+                // Check state for confirmation dialogs
+                const hasInitialResponse = "{{ guest.rsvp_details.attending|default:'None' }}" !== "None";
+                const hasManualUpdate = rsvpForm.getAttribute('data-manual-status') === 'true';
+
+                function toggleAttendingDetails() {
+                    if (attendingYesRadio && attendingDetailsDiv) {
+                        if (attendingYesRadio.checked) {
+                            attendingDetailsDiv.style.display = 'block';
+                            // Optional: Add a slide-down animation class here if using Tailwind plugins
+                        } else {
+                            attendingDetailsDiv.style.display = 'none';
+                        }
+                    }
+                }
+
+                attendingRadios.forEach(radio => radio.addEventListener('change', toggleAttendingDetails));
+                toggleAttendingDetails(); // Initial check
+
+                // Confirmation on Submit
+                rsvpForm.addEventListener('submit', function(event) {
+                    let message = "";
+
+                    if (hasManualUpdate) {
+                        message = "{% translate 'The event host has manually updated your attendance. Submitting this form will override that update. Do you want to continue?' %}";
+                    } else if (hasInitialResponse) {
+                        message = "{% translate 'You have already submitted an RSVP. Are you sure you want to change your response?' %}";
+                    }
+
+                    if (message && !confirm(message)) {
+                        event.preventDefault();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

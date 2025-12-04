@@ -1,0 +1,21 @@
+{% extends "invapp/base.html" %}
+
+{% block title %}{{ form_title|default:"Manage Guest" }}{% endblock %}
+{% block header %}{{ form_title|default:"Manage Guest" }}{% endblock %}
+
+{% block content %}
+    {# Determine cancel URL based on whether we are editing (object exists) or creating #}
+    {% if guest %} {# 'guest' is the context_object_name for UpdateView #}
+        <p><a href="{% url 'invapp:guest_list' event_id=guest.event.id %}">&laquo; Cancel and Back to Guest List</a></p>
+    {% elif event %} {# 'event' is passed in context for CreateView #}
+         <p><a href="{% url 'invapp:guest_list' event_id=event.id %}">&laquo; Cancel and Back to Guest List</a></p>
+    {% else %}
+        <p><a href="{% url 'invapp:dashboard' %}">&laquo; Back to Dashboard</a></p> {# Fallback #}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save Guest</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "invapp/base.html" %}
+{% load i18n %}
+{# Use guest's name in the title if available #}
+{% block title %}{% translate "Invitation for" %} {{ guest.name }}{% endblock %}
+{% block header %}{% translate "Hello" {{ guest.name }}, {% translate "You are invited!" %}{% endblock %}
+
+{% block content %}
+    {# --- Event Details --- #}
+    <h2>{{ event.title }}</h2>
+    <p><strong>{% translate "When:" %}</strong> {{ event.date_time|date:"l, F j, Y" }} {% translate "at" %} {{ event.date_time|time:"g:i A" }}</p>
+    <p><strong>{% translate "Where:" %}</strong> {{ event.venue_name }}</p>
+    <p><strong>{% translate "Address:" %}</strong> {{ event.venue_address }}</p>
+    {% if google_calendar_link %}
+        <p>
+            <a href="{{ google_calendar_link }}" target="_blank" rel="noopener noreferrer" style="padding: 8px 15px; background-color: #4285F4; color: white; text-decoration: none; border-radius: 4px;">
+                {% translate "Add to Google Calendar" %}
+            </a>
+        </p>
+    {% endif %}
+
+    {# --- Map --- #}
+    {% if event.Maps_embed_url %}
+    <h2>{% translate "Location Map" %}</h2>
+    <div class="map-container" style="width: 100%; max-width: 600px; margin: 1em 0;">
+        <iframe src="{{ event.Maps_embed_url }}" width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+    {% endif %}
+
+    <hr>
+
+    {# --- RSVP Form --- #}
+    <h2>{% translate "Your RSVP" %}</h2>
+    <p>{% translate "Please respond by [Your RSVP Deadline]. Your invitation includes up to" %} {{ guest.max_attendees }} {% translate "attendee(s)." %}</p>
+
+    {# Use the SAME URL for the form action #}
+    <form method="post" action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}">
+        {% csrf_token %}
+
+        {# Render form fields individually for JS interaction #}
+        <div class="form-group">
+            <p><strong>{{ form.attending.label }}:</strong></p>
+            {{ form.attending }} {# Renders radio buttons #}
+            {% if form.attending.errors %}<p style="color: red;">{{ form.attending.errors|striptags }}</p>{% endif %}
+        </div>
+
+        <div id="attending_details" style="display: none;"> {# Hide this container initially #}
+            <div class="form-group">
+                <p><label for="{{ form.number_attending.id_for_label }}">{{ form.number_attending.label }}:</label></p>
+                {{ form.number_attending }}
+                {% if form.number_attending.errors %}<p style="color: red;">{{ form.number_attending.errors|striptags }}</p>{% endif %}
+                <small>(Max: {{ guest.max_attendees }})</small>
+            </div>
+            <div class="form-group">
+                <p><label for="{{ form.meal_preference.id_for_label }}">{{ form.meal_preference.label }}:</label></p>
+                {{ form.meal_preference }}
+                {% if form.meal_preference.errors %}<p style="color: red;">{{ form.meal_preference.errors|striptags }}</p>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <p><label for="{{ form.message.id_for_label }}">{{ form.message.label }}:</label></p>
+            {{ form.message }}
+            {% if form.message.errors %}<p style="color: red;">{{ form.message.errors|striptags }}</p>{% endif %}
+        </div>
+
+        <button type="submit">{% translate "Submit RSVP" %}</button>
+    </form>
+
+    {# --- JavaScript for conditional fields (same as before) --- #}
+    <script>
+        const attendingRadios = document.querySelectorAll('input[name="attending"]');
+        const attendingDetailsDiv = document.getElementById('attending_details');
+        const attendingYesRadio = document.querySelector('input[name="attending"][value="True"]');
+
+        function toggleAttendingDetails() {
+            if (attendingYesRadio && attendingYesRadio.checked) {
+                attendingDetailsDiv.style.display = 'block';
+            } else {
+                attendingDetailsDiv.style.display = 'none';
+            }
+        }
+        attendingRadios.forEach(radio => { radio.addEventListener('change', toggleAttendingDetails); });
+        toggleAttendingDetails(); // Initial check
+    </script>
+{% endblock %}
