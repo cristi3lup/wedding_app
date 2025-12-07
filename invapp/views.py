@@ -751,16 +751,39 @@ def mark_invitation_sent_view(request, guest_id):
 def create_checkout_session_view(request, plan_id):
     plan = get_object_or_404(Plan, id=plan_id)
     stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    # --- LOGIC FOR SUBSCRIPTIONS ---
+    # We check if the plan is marked as recurring in the database.
+    # If you haven't added the 'is_recurring' field to models.py yet,
+    # this defaults to False (standard one-time payment).
+    if getattr(plan, 'is_recurring', False):
+        checkout_mode = 'subscription'
+    else:
+        checkout_mode = 'payment'
+
     try:
         session = stripe.checkout.Session.create(
             customer_email=request.user.email,
-            metadata={'user_id': request.user.id, 'plan_id': plan.id},
+
+            # Metadata is critical for the Webhook to identify the user later
+            metadata={
+                'user_id': request.user.id,
+                'plan_id': plan.id
+            },
+
             success_url=request.build_absolute_uri(reverse('invapp:payment_success')),
             cancel_url=request.build_absolute_uri(reverse('invapp:payment_cancel')),
-            mode='payment',
-            line_items=[{'price': plan.stripe_price_id, 'quantity': 1}]
+
+            # Dynamic Mode: Switches between 'payment' and 'subscription' automatically
+            mode=checkout_mode,
+
+            line_items=[{
+                'price': plan.stripe_price_id,
+                'quantity': 1
+            }]
         )
         return redirect(session.url, code=303)
+
     except Exception as e:
         messages.error(request, f"Stripe Error: {e}")
         return redirect(reverse('invapp:landing_page') + '#pricing')
@@ -770,30 +793,95 @@ def create_checkout_session_view(request, plan_id):
 def stripe_webhook(request):
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    event = None
+
+    print("\n=== STRIPE WEBHOOK RECEIVED ===")  # Debug print
+
     try:
-        event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
-    except:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError as e:
+        print(f"❌ Error: Invalid payload")
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError as e:
+        print(f"❌ Error: Signature verification failed. Check STRIPE_WEBHOOK_SECRET in settings.py")
         return HttpResponse(status=400)
 
+    # Handle the event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
-        uid = session.get('metadata', {}).get('user_id')
-        pid = session.get('metadata', {}).get('plan_id')
-        if uid and pid:
+
+        # Debug prints to see what Stripe sent us
+        print(f"💰 Payment Succeeded for Session ID: {session.get('id')}")
+
+        user_id = session.get('metadata', {}).get('user_id')
+        plan_id = session.get('metadata', {}).get('plan_id')
+
+        print(f"👤 Metadata Found -> User ID: {user_id}, Plan ID: {plan_id}")
+
+        if user_id and plan_id:
             try:
-                user = User.objects.get(id=uid)
-                plan = Plan.objects.get(id=pid)
-                if not hasattr(user, 'userprofile'): UserProfile.objects.create(user=user)
-                user.userprofile.plan = plan
+                user = User.objects.get(id=user_id)
+                new_plan = Plan.objects.get(id=plan_id)
+
+                # Check if profile exists, creating it if necessary logic should be handled by signals,
+                # but we add a safety net here.
+                if not hasattr(user, 'userprofile'):
+                    print("⚠️ UserProfile missing! Creating one now...")
+                    UserProfile.objects.create(user=user)
+
+                profile = user.userprofile
+                profile.plan = new_plan
+                profile.save()
+
+                print(f"✅ SUCCESS: Upgraded {user.username} to plan '{new_plan.name}'")
+            except User.DoesNotExist:
+                print(f"❌ CRITICAL ERROR: User with ID {user_id} not found in database.")
+                return HttpResponse(status=404)
+            except Plan.DoesNotExist:
+                print(f"❌ CRITICAL ERROR: Plan with ID {plan_id} not found in database.")
+                return HttpResponse(status=404)
+            except Exception as e:
+                print(f"❌ UNEXPECTED ERROR updating DB: {str(e)}")
+                # Return 200 anyway to stop Stripe from retrying endlessly if it's a code bug
+                return HttpResponse(status=200)
+        else:
+            print("❌ Error: Metadata (user_id or plan_id) is MISSING in the Stripe Session.")
+
+    # --- NEW: Subscription Cancellation Logic ---
+    elif event['type'] == 'customer.subscription.deleted':
+        subscription = event['data']['object']
+        customer_id = subscription.get('customer')
+
+        print(f"⚠️ Subscription Cancelled for Customer ID: {customer_id}")
+
+        # We need to find the user. Since UserProfile doesn't store stripe_customer_id in V1,
+        # we try to retrieve the customer email from Stripe to find the user.
+        try:
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            customer = stripe.Customer.retrieve(customer_id)
+            email = customer.get('email')
+
+            if email:
+                user = User.objects.get(email=email)
+                # Downgrade to None or a Free plan if you have one
+                user.userprofile.plan = None
                 user.userprofile.save()
-            except:
-                pass
+                print(f"✅ SUCCESS: Downgraded user {email} (Subscription Ended)")
+            else:
+                print("❌ Could not find email in Stripe Customer object.")
+
+        except Exception as e:
+            print(f"❌ Error handling cancellation: {e}")
+            return HttpResponse(status=200)  # Return 200 to stop retries even if logic fails
+
     return HttpResponse(status=200)
 
 
 @login_required
 def payment_success_view(request):
-    messages.success(request, "Payment successful! Plan upgraded.")
+    messages.success(request, "Payment successful! Your plan has been upgraded.")
     return redirect('invapp:dashboard')
 
 

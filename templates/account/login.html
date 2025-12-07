@@ -8,7 +8,6 @@
 {% block content %}
 <div class="flex min-h-[80vh] flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <!-- Logo / Title -->
         <h1 class="text-center text-4xl font-serif font-bold tracking-tight text-gray-900 dark:text-white">
             InvApp
         </h1>
@@ -20,7 +19,7 @@
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div class="bg-white dark:bg-gray-800 py-8 px-4 shadow-xl shadow-gray-200/50 dark:shadow-none sm:rounded-xl sm:px-10 border border-gray-100 dark:border-gray-700">
 
-            <!-- Social Login Buttons -->
+            <!-- Social Login -->
             <div class="space-y-3">
                 <a href="{% provider_login_url 'google' %}" class="flex w-full items-center justify-center gap-3 rounded-md bg-white dark:bg-gray-700 px-3 py-2.5 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors focus-visible:ring-transparent">
                     <svg class="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24"><path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L19.5403 3.61C17.4803 1.69 14.9303 0.75 12.0003 0.75C7.75033 0.75 4.12033 3.4 2.56033 7.06L5.84033 9.42C6.72033 6.71 9.11033 4.75 12.0003 4.75Z" fill="#EA4335"></path><path d="M12.0003 23.25C14.9303 23.25 17.4803 22.31 19.5403 20.39L16.6003 17.45C15.3553 18.64 13.7703 19.25 12.0003 19.25C9.11033 19.25 6.72033 17.29 5.84033 14.58L2.56033 16.94C4.12033 20.6 7.75033 23.25 12.0003 23.25Z" fill="#34A853"></path><path d="M5.84033 14.58C5.54033 13.73 5.38033 12.87 5.38033 12C5.38033 11.13 5.54033 10.27 5.84033 9.42L2.56033 7.06C1.96033 8.48 1.62033 10.16 1.62033 12C1.62033 13.84 1.96033 15.52 2.56033 16.94L5.84033 14.58Z" fill="#FBBC05"></path><path d="M12.0003 19.25C13.7703 19.25 15.3553 18.64 16.6053 17.45L19.5403 20.39C17.4803 22.31 14.9303 23.25 12.0003 23.25C7.75033 23.25 4.12033 20.6 2.56033 16.94L5.84033 14.58C6.72033 17.29 9.11033 19.25 12.0003 19.25Z" fill="#4285F4"></path></svg>
@@ -43,11 +42,12 @@
             <form class="mt-6 space-y-6" id="login-form" action="{% url 'account_login' %}" method="POST">
                 {% csrf_token %}
 
+                <!-- Errors -->
                 {% if form.errors %}
                     <div class="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
                         <div class="flex">
                             <div class="ml-3">
-                                <h3 class="text-sm font-medium text-red-800 dark:text-red-200">{% trans "There were errors with your login" %}</h3>
+                                <h3 class="text-sm font-medium text-red-800 dark:text-red-200">{% trans "Please check your details" %}</h3>
                                 <div class="mt-2 text-sm text-red-700 dark:text-red-300">
                                     {{ form.non_field_errors }}
                                 </div>
@@ -62,14 +62,20 @@
                         {% trans "E-mail" %}
                     </label>
                     <div class="mt-2">
-                        {{ form.login }}
+                        <input type="email"
+                               name="login"
+                               id="id_login"
+                               autocomplete="email"
+                               required
+                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                               value="{{ form.login.value|default:'' }}">
                         {% if form.login.errors %}
                             <p class="mt-2 text-sm text-red-600">{{ form.login.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Password Field -->
+                <!-- Password Field (HARDCODED INPUT) -->
                 <div>
                     <div class="flex items-center justify-between">
                         <label for="id_password" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
@@ -82,14 +88,20 @@
                         </div>
                     </div>
                     <div class="mt-2">
-                        {{ form.password }}
+                        <!-- Explicit input tag ensures it always renders -->
+                        <input type="password"
+                               name="password"
+                               id="id_password"
+                               autocomplete="current-password"
+                               required
+                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600">
                         {% if form.password.errors %}
                             <p class="mt-2 text-sm text-red-600">{{ form.password.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Remember Me (if enabled in settings) -->
+                <!-- Remember Me -->
                 {% if redirect_field_value %}
                     <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
                 {% endif %}
@@ -108,20 +120,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // This script automatically applies your custom Tailwind classes to the Allauth form fields
-    // so they match the rest of your application without needing to modify backend code.
-    document.addEventListener('DOMContentLoaded', function() {
-        const inputClasses = "block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 bg-gray-50 dark:bg-gray-700 dark:text-white dark:ring-gray-600";
-
-        const inputs = document.querySelectorAll('#login-form input[type="text"], #login-form input[type="email"], #login-form input[type="password"]');
-
-        inputs.forEach(input => {
-            input.className = inputClasses;
-        });
-    });
-</script>
 {% endblock %}

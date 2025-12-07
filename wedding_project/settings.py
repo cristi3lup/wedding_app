@@ -13,7 +13,10 @@ import os # Make sure os is imported at the top
 from django.utils.translation import gettext_lazy as _
 import dj_database_url
 from pathlib import Path
+import dotenv # Import dotenv to load local .env file
 
+# Load environment variables from .env file (if it exists)
+dotenv.load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,6 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# Reads from .env or environment, falls back to insecure default for dev
 SECRET_KEY = os.environ.get('SECRET_KEY','django-insecure-at@6r*k2s1sbfl8p6&=719^!)*nwuwrf9v$4sj+)8a&78@pkb2')
 
 # If 'RENDER' is set, we are live, so Debug is False. Otherwise True.
@@ -38,21 +42,21 @@ if RENDER_EXTERNAL_HOSTNAME:
 # Application definition
 
 INSTALLED_APPS = [
+    # 'invapp' must be ABOVE 'allauth' to override templates
+    'invapp',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'invapp',
-    'djstripe',
+    # 'djstripe', # Commented out as we are using direct integration
     # Add these new apps for allauth
     'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     #'django_extensions',
-
 
     # Add the specific providers you want to use
     'allauth.socialaccount.providers.google',
@@ -70,7 +74,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-
 ]
 
 ROOT_URLCONF = 'wedding_project.urls'
@@ -190,28 +193,35 @@ SITE_ID = 1
 
 # URL to redirect to after a successful login
 LOGIN_REDIRECT_URL = '/dashboard/'
-# New Allauth Settings
-ACCOUNT_LOGIN_METHODS = {'email'}  # Use a set
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'first_name', 'last_name'] # Define which fields are on the signup form
-# Note: The password fields are added automatically by default.
-# If you want to strictly follow the warning suggestion for required fields (*):
-# ACCOUNT_SIGNUP_FIELDS = ['email*']
-# URL to redirect to after a successful logout
-ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 
-# Require email and set verification to optional (or 'mandatory')
-#ACCOUNT_EMAIL_REQUIRED = True
-#ACCOUNT_EMAIL_VERIFICATION = 'optional'
-#ACCOUNT_USERNAME_REQUIRED = False # Users will log in with email
-#ACCOUNT_AUTHENTICATION_METHOD = 'email' # Log in with email instead of username
+# --- CRITICAL FIX FOR REDIRECTS ---
+# We disable the new 'ACCOUNT_LOGIN_METHODS' because it triggers passwordless flows.
+# We use the explicit legacy settings to force Email+Password.
+
+# ACCOUNT_LOGIN_METHODS = {'email'}  <-- COMMENTED OUT TO FIX REDIRECT
+# ACCOUNT_SIGNUP_FIELDS = ['email*', 'first_name', 'last_name'] <-- COMMENTED OUT
+
+# 1. Force standard password login
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_PASSWORD_REQUIRED = True
+
+# 2. Explicitly DISABLE "Magic Code" / Passwordless Login
+ACCOUNT_LOGIN_BY_CODE_ENABLED = False
+
+# 3. Disable Verification for Development to allow instant login
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-ACCOUNT_FORMS = {
-    'signup': 'invapp.forms.CustomSignupForm',
-}
+# --- ACCOUNT FORMS ---
+# Ensure this is commented out so we don't use the broken CustomSignupForm
+# ACCOUNT_FORMS = {
+#    'signup': 'invapp.forms.CustomSignupForm',
+# }
 
 # ==========================================================
 # === STRIPE CONFIGURATION (SECURED)                     ===
@@ -221,9 +231,10 @@ ACCOUNT_FORMS = {
 STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "")
 
 # NOTICE: The actual 'sk_test_...' string is GONE from here. GitHub will be happy.
-
-STRIPE_LIVE_PUBLISHABLE_KEY = os.environ.get("STRIPE_LIVE_PUBLISHABLE_KEY", "")
+# FIX: Added these lines so STRIPE_TEST_SECRET_KEY is explicitly defined before use
+STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "")
 STRIPE_TEST_PUBLISHABLE_KEY = os.environ.get("STRIPE_TEST_PUBLISHABLE_KEY", "")
+STRIPE_LIVE_PUBLISHABLE_KEY = os.environ.get("STRIPE_LIVE_PUBLISHABLE_KEY", "")
 
 STRIPE_TEST_MODE = True
 
@@ -235,4 +246,4 @@ else:
     STRIPE_PUBLIC_KEY = STRIPE_LIVE_PUBLISHABLE_KEY
 
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-DOMAIN_URL = 'http://127.0.0.1:8000' # You will change this on Render laterc
+DOMAIN_URL = 'http://127.0.0.1:8000' # You will change this on Render later
