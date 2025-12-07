@@ -41,10 +41,23 @@ def export_assignments_csv(request, event_id):
     response[
         'Content-Disposition'] = f'attachment; filename="event_{event.title.replace(" ", "_")}_table_assignments.csv"'
 
+    # Add BOM (Byte Order Mark) for Excel to recognize UTF-8 (Special characters like ă, î, ș, ț)
+    response.write(u'\ufeff'.encode('utf8'))
+
     writer = csv.writer(response)
+
+    # TRANSLATED HEADERS
+    # We wrap them in _() to mark them for translation.
+    # We use str() to ensure the translation is evaluated immediately for the CSV.
     writer.writerow([
-        'Guest Name', 'Phone Number', 'Email', 'Assigned Table',
-        'Number Attending', 'Invitation Method', 'Type', 'Meal Preferences'
+        str(_('Type')),
+        str(_('Guest Name')),
+        str(_('Phone Number')),
+        str(_('Email')),
+        str(_('Assigned Table')),
+        str(_('Number Attending')),
+        str(_('Invitation Method')),
+        str(_('Meal Preferences'))
     ])
 
     assignments = TableAssignment.objects.filter(table__event=event) \
@@ -54,13 +67,13 @@ def export_assignments_csv(request, event_id):
     for assignment in assignments:
         guest = assignment.guest
         writer.writerow([
+            guest.get_honorific_display(),
             guest.name,
             guest.phone_number if guest.phone_number else '',
             guest.email if guest.email else '',
             assignment.table.name,
             guest.attending_count,
             guest.get_invitation_method_display(),
-            guest.get_honorific_display(),  # Assuming gender/honorific logic
             guest.rsvp_details.meal_preference if hasattr(guest, 'rsvp_details') else '',
         ])
     return response
