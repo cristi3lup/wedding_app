@@ -30,7 +30,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY','django-insecure-at@6r*k2s1sbfl8p6&=719^!)*nwuwrf9v$4sj+)8a&78@pkb2')
 
 # If 'RENDER' is set, we are live, so Debug is False. Otherwise True.
-DEBUG = 'RENDER' not in os.environ
+#DEBUG = 'RENDER' not in os.environ
+DEBUG = True
 
 # Allow the server URL to access the app
 ALLOWED_HOSTS = []
@@ -158,7 +159,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 # Enable WhiteNoise compression
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Change from 'CompressedManifestStaticFilesStorage' to this:
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+  STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
