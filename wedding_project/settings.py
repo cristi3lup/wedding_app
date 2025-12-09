@@ -30,8 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY','django-insecure-at@6r*k2s1sbfl8p6&=719^!)*nwuwrf9v$4sj+)8a&78@pkb2')
 
 # If 'RENDER' is set, we are live, so Debug is False. Otherwise True.
-#DEBUG = 'RENDER' not in os.environ
-DEBUG = True
+DEBUG = 'RENDER' not in os.environ
 
 # Allow the server URL to access the app
 ALLOWED_HOSTS = []
@@ -68,6 +67,8 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # --- Custom Middleware to force Romanian default on phones ---
+    'invapp.middleware.ForceDefaultLanguageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -157,9 +158,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 # Enable WhiteNoise compression
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-# Change from 'CompressedManifestStaticFilesStorage' to this:
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -197,31 +196,25 @@ SITE_ID = 1
 # URL to redirect to after a successful login
 LOGIN_REDIRECT_URL = '/dashboard/'
 
-# --- CRITICAL FIX FOR REDIRECTS ---
-# We disable the new 'ACCOUNT_LOGIN_METHODS' because it triggers passwordless flows.
-# We use the explicit legacy settings to force Email+Password.
+# New Allauth Settings (REPLACES DEPRECATED SETTINGS)
+ACCOUNT_LOGIN_METHODS = {'email'}  # This implies USERNAME_REQUIRED=False and AUTHENTICATION_METHOD='email'
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'first_name', 'last_name'] # The '*' makes email required
 
-# ACCOUNT_LOGIN_METHODS = {'email'}  <-- COMMENTED OUT TO FIX REDIRECT
-# ACCOUNT_SIGNUP_FIELDS = ['email*', 'first_name', 'last_name'] <-- COMMENTED OUT
-
-# 1. Force standard password login
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_PASSWORD_REQUIRED = True
-
-# 2. Explicitly DISABLE "Magic Code" / Passwordless Login
-ACCOUNT_LOGIN_BY_CODE_ENABLED = False
-
-# 3. Disable Verification for Development to allow instant login
+# Disable Verification for Development/Testing to stop redirects to /accounts/confirm-email/
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+# --- REMOVED DEPRECATED SETTINGS ---
+# ACCOUNT_EMAIL_REQUIRED, ACCOUNT_USERNAME_REQUIRED, ACCOUNT_AUTHENTICATION_METHOD
+# are removed to fix system check warnings.
+
+# --- FIX: Force Password Requirement ---
+ACCOUNT_PASSWORD_REQUIRED = True
 
 LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-# --- ACCOUNT FORMS ---
-# Ensure this is commented out so we don't use the broken CustomSignupForm
+# --- FIX: Disable this custom form. It conflicts with Allauth's email-only login flow. ---
 # ACCOUNT_FORMS = {
 #    'signup': 'invapp.forms.CustomSignupForm',
 # }
@@ -249,4 +242,26 @@ else:
     STRIPE_PUBLIC_KEY = STRIPE_LIVE_PUBLISHABLE_KEY
 
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-DOMAIN_URL = 'http://127.0.0.1:8000' # You will change this on Render later
+
+# ==========================================================
+# === SECURITY & PROXY SETTINGS (FIX FACEBOOK LOGIN)     ===
+# ==========================================================
+
+# This tells Django to trust the 'X-Forwarded-Proto' header set by Render
+# This ensures that request.is_secure() returns True, and social auth uses HTTPS.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Force HTTPS for all social account redirects
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
+
+# Optional but recommended for production security:
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+# --- DYNAMIC DOMAIN URL ---
+# Uses Render's hostname if available, otherwise defaults to localhost
+if RENDER_EXTERNAL_HOSTNAME:
+    DOMAIN_URL = f'https://{RENDER_EXTERNAL_HOSTNAME}'
+else:
+    DOMAIN_URL = 'http://127.0.0.1:8000'
