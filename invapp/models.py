@@ -538,7 +538,10 @@ class UserProfile(models.Model):
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        UserProfile.objects.create(user=instance)
+        # --- FIX: Auto-assign Free Plan (Price = 0) ---
+        # This ensures new users (Social or Email) start with a plan visible in dashboard
+        free_plan = Plan.objects.filter(price=0).first()
+        UserProfile.objects.create(user=instance, plan=free_plan)
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
