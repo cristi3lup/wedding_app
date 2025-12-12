@@ -218,57 +218,49 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 # === SECURITY & PROXY SETTINGS (FIX FACEBOOK LOGIN)     ===
 # ==========================================================
 
-# This tells Django to trust the 'X-Forwarded-Proto' header set by Render
-# This ensures that request.is_secure() returns True, and social auth uses HTTPS.
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# --- FIX: DYNAMIC PROTOCOL ---
-# Use 'http' locally to fix the "Secure Connection" error.
-# Use 'https' on Render for security.
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https' if not DEBUG else 'http'
-
-# Trust the host header from Render (Crucial for generating correct links)
-USE_X_FORWARDED_HOST = True
-USE_X_FORWARDED_PORT = True
-
-# Optional but recommended for production security:
 if not DEBUG:
+    # --- PRODUCTION (RENDER) SETTINGS ---
+
+    # 1. Trust the 'X-Forwarded-Proto' header set by Render
+    # This is CRITICAL. It tells Django "Even if you see HTTP, it's actually HTTPS".
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    # 2. Force HTTPS for all social account redirects (Allauth specific)
+    ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
+
+    # 3. Trust the host header from Render
+    USE_X_FORWARDED_HOST = True
+    USE_X_FORWARDED_PORT = True
+
+    # 4. Security cookies
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    # Force all non-HTTPS requests to redirect to HTTPS
+
+    # 5. Force SSL Redirect (Standard Django)
     SECURE_SSL_REDIRECT = True
 
 else:
     # --- LOCAL DEVELOPMENT SETTINGS ---
-
-    # Use HTTP locally. Using 'https' here breaks local dev without certificates.
-    # Facebook Dev Mode allows http://localhost
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
-
-    # Ensure these are FALSE locally to prevent redirect loops or blocked cookies
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
-
 # --- DYNAMIC DOMAIN URL ---
-# Uses Render's hostname if available, otherwise defaults to localhost
 if RENDER_EXTERNAL_HOSTNAME:
     DOMAIN_URL = f'https://{RENDER_EXTERNAL_HOSTNAME}'
 else:
-    # Important: Use localhost instead of 127.0.0.1 for Facebook Dev Mode
     DOMAIN_URL = 'http://localhost:8000'
 
 # ==========================================================
 # === SOCIAL ACCOUNT PROVIDERS CONFIGURATION             ===
 # ==========================================================
-# Explicitly define scopes to match Facebook/Google Console settings
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 SOCIALACCOUNT_PROVIDERS = {
     'facebook': {
         'METHOD': 'oauth2',
-        # Simple, standard scope. Removed 'auth_type': 'reauthenticate' for smoother login.
+        # Simple, standard scope.
         'SCOPE': ['email', 'public_profile'],
         'INIT_PARAMS': {'cookie': True},
         'FIELDS': [
@@ -280,6 +272,7 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
         'EXCHANGE_TOKEN': True,
         'VERIFIED_EMAIL': False,
+        'VERSION': 'v17.0',  # Explicit version can sometimes help stability
     },
     'google': {
         'SCOPE': [
