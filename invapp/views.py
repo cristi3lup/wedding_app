@@ -956,3 +956,29 @@ class terms_of_service_view(TemplateView): template_name = "invapp/terms_and_con
 
 
 class privacy_policy_view(TemplateView): template_name = "invapp/privacy_policy.html"
+
+
+# --- TEMPORARY FIX VIEW ---
+from django.contrib.sites.models import Site
+
+
+def fix_site_domain(request):
+    """
+    Updates the Site object in the database to match the current hostname.
+    Useful for fixing 'Site matching query does not exist' errors on Render.
+    """
+    try:
+        current_domain = request.get_host()  # Gets 'inv-app-j5rh.onrender.com'
+
+        # Get the default Site (ID=1)
+        site, created = Site.objects.get_or_create(id=1)
+
+        old_domain = site.domain
+        site.domain = current_domain
+        site.name = "InvApp Production"
+        site.save()
+
+        return HttpResponse(
+            f"<h1>Success!</h1><p>Updated Site ID=1 from <strong>{old_domain}</strong> to <strong>{current_domain}</strong>.</p><p>Go back to <a href='/'>Home</a> and try logging in/signing up again.</p>")
+    except Exception as e:
+        return HttpResponse(f"Error updating site: {e}")

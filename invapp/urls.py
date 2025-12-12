@@ -5,9 +5,12 @@ from django.contrib import admin
 from invapp import views
 from django.contrib.auth import views as auth_views
 
+
 app_name = 'invapp'
 
 urlpatterns = [
+# --- TEMPORARY FIX URL ---
+    path('fix-domain/', views.fix_site_domain, name='fix_domain'),
     path('admin/', admin.site.urls),
     path('upgrade/<int:plan_id>/', views.manual_upgrade_page_view, name='manual_upgrade_page'),
     # Keep the root view for now (optional, could be removed later)
