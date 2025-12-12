@@ -33,16 +33,13 @@ SECRET_KEY = os.environ.get('SECRET_KEY','django-insecure-at@6r*k2s1sbfl8p6&=719
 DEBUG = 'RENDER' not in os.environ
 
 # Allow the server URL to access the app
+# FIX: Added '127.0.0.1' back so you can access admin via IP,
+# but remember to use 'localhost' for Facebook Login.
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-
-# --- FIX: CSRF TRUSTED ORIGINS ---
-# Critical for form submissions (Login/RSVP) to work on HTTPS Render
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
-
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
 
 
 # Application definition
@@ -218,26 +215,29 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 # === SECURITY & PROXY SETTINGS (FIX FACEBOOK LOGIN)     ===
 # ==========================================================
 
-if not DEBUG:
-    # --- PRODUCTION (RENDER) SETTINGS ---
+# NOTE: We use RENDER_EXTERNAL_HOSTNAME to detect production,
+# so these security headers apply even if DEBUG=True (for debugging on Render)
 
-    # 1. Trust the 'X-Forwarded-Proto' header set by Render
-    # This is CRITICAL. It tells Django "Even if you see HTTP, it's actually HTTPS".
+if RENDER_EXTERNAL_HOSTNAME:
+    # --- PRODUCTION (RENDER) SETTINGS ---
+    # Trust the 'X-Forwarded-Proto' header set by Render. CRITICAL for Facebook OAuth.
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-    # 2. Force HTTPS for all social account redirects (Allauth specific)
+    # Force HTTPS for all social account redirects
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
 
-    # 3. Trust the host header from Render
+    # Trust the host header from Render
     USE_X_FORWARDED_HOST = True
     USE_X_FORWARDED_PORT = True
 
-    # 4. Security cookies
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-
-    # 5. Force SSL Redirect (Standard Django)
-    SECURE_SSL_REDIRECT = True
+    # Security cookies (Only enable if not debugging, or test carefully)
+    if not DEBUG:
+        SESSION_COOKIE_SECURE = True
+        CSRF_COOKIE_SECURE = True
+        SECURE_SSL_REDIRECT = True
+    else:
+        # If Debugging on Render, we still need Proxy Headers but can relax Strict SSL Redirects
+        SECURE_SSL_REDIRECT = False
 
 else:
     # --- LOCAL DEVELOPMENT SETTINGS ---
@@ -245,6 +245,7 @@ else:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
+
 
 # --- DYNAMIC DOMAIN URL ---
 if RENDER_EXTERNAL_HOSTNAME:
@@ -255,6 +256,7 @@ else:
 # ==========================================================
 # === SOCIAL ACCOUNT PROVIDERS CONFIGURATION             ===
 # ==========================================================
+# Explicitly define scopes to match Facebook/Google Console settings
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 SOCIALACCOUNT_PROVIDERS = {
@@ -272,7 +274,6 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
         'EXCHANGE_TOKEN': True,
         'VERIFIED_EMAIL': False,
-        'VERSION': 'v17.0',  # Explicit version can sometimes help stability
     },
     'google': {
         'SCOPE': [
@@ -296,8 +297,6 @@ if not DEBUG:
     DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@invapp.com')
 
     # --- SAFETY CHECK FOR PRODUCTION ---
-    # If no email host user is defined (you haven't set up SendGrid yet),
-    # disable verification to prevent crash/lockout.
     if not EMAIL_HOST_USER:
         ACCOUNT_EMAIL_VERIFICATION = 'none'
     else:
