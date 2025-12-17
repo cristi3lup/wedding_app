@@ -37,6 +37,9 @@ DEBUG = 'RENDER' not in os.environ
 # but remember to use 'localhost' for Facebook Login.
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
+ALLOWED_HOSTS.append('invapp-romania.ro')
+ALLOWED_HOSTS.append('www.invapp-romania.ro')
+
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
@@ -174,8 +177,11 @@ LOGIN_REDIRECT_URL = 'invapp:dashboard' # Use the URL name defined in invapp/url
 LOGOUT_REDIRECT_URL = '/'
 
 # --- Allauth Specific Settings ---
-# Strict Legacy Configuration (Guarantees Password)
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+LOGIN_REDIRECT_URL = '/dashboard/'
+
+# Fix: Allow login with Username OR Email
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_PASSWORD_REQUIRED = True
@@ -215,54 +221,61 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 # === SECURITY & PROXY SETTINGS (FIX FACEBOOK LOGIN)     ===
 # ==========================================================
 
-# NOTE: We use RENDER_EXTERNAL_HOSTNAME to detect production,
-# so these security headers apply even if DEBUG=True (for debugging on Render)
+# This tells Django to trust the 'X-Forwarded-Proto' header set by Render
+# This ensures that request.is_secure() returns True, and social auth uses HTTPS.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-if RENDER_EXTERNAL_HOSTNAME:
-    # --- PRODUCTION (RENDER) SETTINGS ---
-    # Trust the 'X-Forwarded-Proto' header set by Render. CRITICAL for Facebook OAuth.
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# --- FIX: DYNAMIC PROTOCOL ---
+# Use 'http' locally to fix the "Secure Connection" error.
+# Use 'https' on Render for security.
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https' if not DEBUG else 'http'
 
-    # Force HTTPS for all social account redirects
-    ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
+# Trust the host header from Render (Crucial for generating correct links)
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
 
-    # Trust the host header from Render
-    USE_X_FORWARDED_HOST = True
-    USE_X_FORWARDED_PORT = True
-
-    # Security cookies (Only enable if not debugging, or test carefully)
-    if not DEBUG:
-        SESSION_COOKIE_SECURE = True
-        CSRF_COOKIE_SECURE = True
-        SECURE_SSL_REDIRECT = True
-    else:
-        # If Debugging on Render, we still need Proxy Headers but can relax Strict SSL Redirects
-        SECURE_SSL_REDIRECT = False
+# Optional but recommended for production security:
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Force all non-HTTPS requests to redirect to HTTPS
+    SECURE_SSL_REDIRECT = True
 
 else:
     # --- LOCAL DEVELOPMENT SETTINGS ---
+
+    # Use HTTP locally. Using 'https' here breaks local dev without certificates.
+    # Facebook Dev Mode allows http://localhost
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
+
+    # Ensure these are FALSE locally to prevent redirect loops or blocked cookies
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
 
 # --- DYNAMIC DOMAIN URL ---
+# Uses Render's hostname if available, otherwise defaults to localhost
 if RENDER_EXTERNAL_HOSTNAME:
     DOMAIN_URL = f'https://{RENDER_EXTERNAL_HOSTNAME}'
 else:
+    # Important: Use localhost instead of 127.0.0.1 for Facebook Dev Mode
     DOMAIN_URL = 'http://localhost:8000'
 
 # ==========================================================
 # === SOCIAL ACCOUNT PROVIDERS CONFIGURATION             ===
 # ==========================================================
-# Explicitly define scopes to match Facebook/Google Console settings
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# --- FIX: AUTO SIGNUP ---
+# This ensures that when a user logs in with Facebook, they are NOT asked
+# to create a username or password. Django generates them automatically
+# based on the Facebook data (Name/Email).
+SOCIALACCOUNT_AUTO_SIGNUP = True
 
 SOCIALACCOUNT_PROVIDERS = {
     'facebook': {
         'METHOD': 'oauth2',
-        # Simple, standard scope.
         'SCOPE': ['email', 'public_profile'],
         'INIT_PARAMS': {'cookie': True},
         'FIELDS': [
@@ -286,24 +299,32 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-# --- EMAIL CONFIGURATION ---
-if not DEBUG:
+# --- EMAIL CONFIGURATION (DYNAMIC & SAFE) ---
+# If you provide credentials in .env (Local) or Render (Prod), it uses Real Emails.
+# If not, it falls back to Console logs and disables verification.
+
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    # 1. Real Email Mode (SMTP)
+    # Works for both Local (if .env has keys) and Production
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.sendgrid.net')
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.sendgrid.net') # Default to SendGrid, change if using Gmail/Outlook
     EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
     EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
     DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@invapp.com')
 
-    # --- SAFETY CHECK FOR PRODUCTION ---
-    if not EMAIL_HOST_USER:
-        ACCOUNT_EMAIL_VERIFICATION = 'none'
-    else:
-        ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+    # Enforce verification since we can actually send the emails
+    ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 else:
+    # 2. Development / Fallback Mode (No Credentials)
+    # Prints emails to the Terminal (Console) instead of sending them.
+    # Prevents "Server Error 500" if you haven't set up SendGrid yet.
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     DEFAULT_FROM_EMAIL = 'noreply@invapp.com'
+
+    # Disable verification so you don't get locked out if you can't receive the mail
     ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 MEDIA_URL = '/media/'
