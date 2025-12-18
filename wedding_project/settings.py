@@ -171,23 +171,24 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = 'invapp:dashboard' # Use the URL name defined in invapp/urls.py
-
-# Redirect to home page after logout
-LOGOUT_REDIRECT_URL = '/'
-
 # --- Allauth Specific Settings ---
 LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
 
-# Fix: Allow login with Username OR Email
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+# New Allauth Settings
+# ACCOUNT_LOGIN_METHODS = {'email'}  <-- Commented to prevent auto-magic-code
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'first_name', 'last_name']
 
+# --- AUTHENTICATION CONFIGURATION (Strict Email + Password) ---
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_PASSWORD_REQUIRED = True
-ACCOUNT_LOGIN_BY_CODE_ENABLED = False  # Explicitly Disable Code Login
+ACCOUNT_LOGIN_BY_CODE_ENABLED = False
 
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'first_name', 'last_name']
+# --- FIX: Instant Confirmation ---
+# Când userul dă click pe link-ul din mail, se confirmă direct.
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
 LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
