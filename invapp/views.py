@@ -958,27 +958,24 @@ class terms_of_service_view(TemplateView): template_name = "invapp/terms_and_con
 class privacy_policy_view(TemplateView): template_name = "invapp/privacy_policy.html"
 
 
-# --- TEMPORARY FIX VIEW ---
-from django.contrib.sites.models import Site
-
-
+# --- TEMPORARY FIX VIEW (Add this at the bottom) ---
 def fix_site_domain(request):
     """
-    Updates the Site object in the database to match the current hostname.
-    Useful for fixing 'Site matching query does not exist' errors on Render.
+    Updates the Site object in the database to match the current hostname (invapp-romania.ro).
+    Useful for fixing 'Site matching query does not exist' errors after domain change.
     """
     try:
-        current_domain = request.get_host()  # Gets 'inv-app-j5rh.onrender.com'
+        current_domain = request.get_host()  # Should capture 'invapp-romania.ro'
 
-        # Get the default Site (ID=1)
+        # Get the default Site (ID=1) - create if missing
         site, created = Site.objects.get_or_create(id=1)
 
         old_domain = site.domain
         site.domain = current_domain
-        site.name = "InvApp Production"
+        site.name = "InvApp Romania"
         site.save()
 
         return HttpResponse(
-            f"<h1>Success!</h1><p>Updated Site ID=1 from <strong>{old_domain}</strong> to <strong>{current_domain}</strong>.</p><p>Go back to <a href='/'>Home</a> and try logging in/signing up again.</p>")
+            f"<h1>Success!</h1><p>Updated Site ID=1 from <strong>{old_domain}</strong> to <strong>{current_domain}</strong>.</p><p>You can now <a href='/'>Go Home</a> and Sign Up/Login.</p>")
     except Exception as e:
         return HttpResponse(f"Error updating site: {e}")
