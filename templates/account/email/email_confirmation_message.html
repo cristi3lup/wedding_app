@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #333333;">
+
+    <!-- Container Principal -->
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+
+        <!-- Header (Logo / Titlu) -->
+        <tr>
+            <td align="center" style="padding: 30px 20px; background-color: #4f46e5;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">InvApp România</h1>
+            </td>
+        </tr>
+
+        <!-- Conținut -->
+        <tr>
+            <td style="padding: 30px 40px;">
+                <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Salutare!</h2>
+                <p style="font-size: 16px; line-height: 1.5; color: #4b5563;">
+                    Îți mulțumim că te-ai alăturat platformei noastre. Pentru a începe să creezi invitații digitale, te rugăm să confirmi adresa de email.
+                </p>
+
+                <!-- Buton de Acțiune -->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                    <tr>
+                        <td align="center">
+                            <a href="{{ activate_url }}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 16px; font-weight: bold; color: #ffffff; background-color: #4f46e5; text-decoration: none; border-radius: 6px;">
+                                Confirmă Adresa de Email
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+
+                <p style="font-size: 14px; line-height: 1.5; color: #6b7280;">
+                    Dacă nu ai creat tu acest cont, poți ignora acest mesaj în siguranță.
+                </p>
+            </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+            <td style="padding: 20px; background-color: #f9fafb; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="font-size: 12px; color: #9ca3af; margin: 0;">
+                    © 2024 InvApp România. Toate drepturile rezervate.
+                </p>
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 10px;">
+                    Dacă butonul nu funcționează, copiază acest link în browser:<br>
+                    <a href="{{ activate_url }}" style="color: #4f46e5;">{{ activate_url }}</a>
+                </p>
+            </td>
+        </tr>
+
+    </table>
+
+</body>
+</html>
