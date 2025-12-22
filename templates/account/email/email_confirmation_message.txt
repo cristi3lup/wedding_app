@@ -1,0 +1,12 @@
+Salutare!
+
+Îți mulțumim că te-ai alăturat platformei InvApp România!
+
+Pentru a activa contul și a începe să creezi invitații, te rugăm să confirmi adresa de email apăsând pe link-ul de mai jos:
+
+{{ activate_url }}
+
+Dacă nu ai solicitat acest cont, poți ignora acest mesaj.
+
+Cu drag,
+Echipa InvApp

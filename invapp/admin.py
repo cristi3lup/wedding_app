@@ -133,3 +133,39 @@ class CardDesignAdmin(admin.ModelAdmin):
 class PlanAdmin(admin.ModelAdmin):
     list_display = ('name', 'price', 'max_events', 'featured', 'is_public', 'stripe_price_id')
     list_editable = ('price', 'max_events', 'featured', 'is_public')
+
+
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
+
+# ... (restul importurilor și codului tău existent rămân neschimbate) ...
+
+# 1. Dezînregistrăm Admin-ul standard pentru User
+try:
+    admin.site.unregister(User)
+except admin.sites.NotRegistered:
+    pass
+
+
+# 2. Creăm propria noastră versiune care afișează coloana 'is_active'
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    # Definim ce coloane apar în listă
+    list_display = (
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+        'is_active',  # <--- Asta este coloana pe care o dorești (Activ/Inactiv)
+        'is_staff',  # Stare de autorizare (Admin Access)
+        'date_joined'
+    )
+
+    # Adăugăm filtre în dreapta pentru a găsi rapid userii inactivi
+    list_filter = ('is_active', 'is_staff', 'is_superuser', 'groups')
+
+    # Permitem căutarea după email și nume
+    search_fields = ('username', 'first_name', 'last_name', 'email')
+
+    # Ordonare implicită (cei mai noi sus)
+    ordering = ('-date_joined',)
