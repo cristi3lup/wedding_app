@@ -101,16 +101,20 @@ def create_superuser():
     password = os.environ.get("ADMIN_PASSWORD", "AdminPass123!")
 
     try:
-        user, created = User.objects.get_or_create(username=username, email=email)
-        user.set_password(password)
+        # FIX: Caută doar după username pentru a evita conflictele de email
+        user, created = User.objects.get_or_create(username=username)
+
+        # Actualizăm datele indiferent dacă e nou sau vechi
+        user.email = email
         user.is_staff = True
         user.is_superuser = True
+        user.set_password(password)
         user.save()
 
         if created:
             print(f"   ✅ Superuser '{username}' created.")
         else:
-            print(f"   🔄 Superuser '{username}' updated (Password reset).")
+            print(f"   🔄 Superuser '{username}' updated (Email/Password synced).")
 
     except Exception as e:
         print(f"   ❌ Error configuring superuser: {e}")
@@ -130,3 +134,5 @@ if __name__ == "__main__":
         print("==========================================")
     except Exception as e:
         print(f"\n❌ CRITICAL ERROR: {e}")
+        # În producție, vrem să știm dacă acest script crapă
+        sys.exit(1)

@@ -33,6 +33,16 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
+# --- NEW: CSRF TRUSTED ORIGINS (CRITIC PENTRU RENDER) ---
+# Previne eroarea 403 Forbidden la Login/Signup în producție
+CSRF_TRUSTED_ORIGINS = ['https://invapp-romania.ro', 'https://www.invapp-romania.ro']
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+# Pentru dezvoltare locală, uneori e nevoie și de localhost (dacă testezi https local)
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS.extend(['http://localhost:8000', 'http://127.0.0.1:8000'])
+
+
 # Application definition
 INSTALLED_APPS = [
     # 'invapp' must be ABOVE 'allauth' to override templates
@@ -128,8 +138,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Auth Settings
-#ACCOUNT_LOGIN_METHODS = {'password'}
-
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
@@ -138,6 +146,9 @@ ACCOUNT_PASSWORD_REQUIRED = True
 
 # Dezactivare totala a codurilor
 ACCOUNT_LOGIN_BY_CODE_ENABLED = False
+
+# --- UX Improvement: Afișează erori clare (ex: Mail neverificat) ---
+ACCOUNT_PREVENT_ENUMERATION = False
 
 # Email Verification
 # Daca esti local si fara mail server, pune 'optional' sau 'none'
