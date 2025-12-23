@@ -228,16 +228,33 @@ USE_TZ = True
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # ==========================================================
-# === STATIC & MEDIA FILES                               ===
+# === STATIC & MEDIA FILES (CLOUDINARY SETUP)            ===
 # ==========================================================
+
+# 1. Static Files (CSS/JS) - Served by WhiteNoise
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-# Compression enabled
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-MEDIA_URL = '/media/'
+# 2. Media Files (User Uploads) - Served by Cloudinary
+MEDIA_URL = '/media/' # Cloudinary handles the actual URL generation
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Configurare Cloudinary
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+}
+
+# Daca avem cheile setate (adica suntem gata de upload), folosim Cloudinary
+if os.environ.get('CLOUDINARY_API_KEY'):
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+else:
+    # Fallback pe disc local (doar pentru dev fara net sau fara chei)
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
