@@ -231,14 +231,12 @@ LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 # === STATIC & MEDIA FILES (CLOUDINARY SETUP)            ===
 # ==========================================================
 
-# 1. Static Files (CSS/JS) - Served by WhiteNoise
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# 2. Media Files (User Uploads) - Served by Cloudinary
-MEDIA_URL = '/media/' # Cloudinary handles the actual URL generation
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Configurare Cloudinary
@@ -248,16 +246,21 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
 }
 
-# Daca avem cheile setate (adica suntem gata de upload), folosim Cloudinary
-if os.environ.get('CLOUDINARY_API_KEY'):
+# LOGICA NOUĂ: Dacă suntem pe Render, FORȚĂM Cloudinary
+if 'RENDER' in os.environ:
+    if not os.environ.get('CLOUDINARY_API_KEY'):
+        raise ValueError("EROARE CRITICĂ: Lipsește CLOUDINARY_API_KEY în Environment Variables pe Render!")
+
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    print("✅ PRODUCȚIE: Folosim Cloudinary Storage.")
 else:
-    # Fallback pe disc local (doar pentru dev fara net sau fara chei)
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-
-
-# Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+    # Doar pe Localhost permitem fallback
+    if os.environ.get('CLOUDINARY_API_KEY'):
+        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+        print("✅ LOCAL: Folosim Cloudinary Storage.")
+    else:
+        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+        print("⚠️ LOCAL: Folosim Disk Storage (Nu am găsit chei Cloudinary).")
 
 # ==========================================================
 # === STRIPE CONFIGURATION                               ===
