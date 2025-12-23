@@ -432,9 +432,13 @@ def unassign_guest_from_table_view(request, event_id, assignment_id):
 class EventCreateView(LoginRequiredMixin, CreateView):
     model = Event
     form_class = EventForm
+    # FIX: Revenim la numele fișierului tău real, unde ai făcut modificările
     template_name = 'invapp/event_form_tailwind.html'
 
     def dispatch(self, request, *args, **kwargs):
+        """
+        Verificăm limitele planului utilizatorului înainte de a permite crearea.
+        """
         user = self.request.user
         try:
             if hasattr(user, 'userprofile') and user.userprofile.plan:
@@ -443,9 +447,6 @@ class EventCreateView(LoginRequiredMixin, CreateView):
                 if current_count >= limit:
                     messages.warning(self.request, _("Event limit reached. Upgrade to create more."))
                     return redirect(reverse('invapp:landing_page') + '#pricing')
-            else:
-                messages.error(self.request, _("Profile error."))
-                return redirect('invapp:dashboard')
         except ObjectDoesNotExist:
             return redirect('invapp:dashboard')
         return super().dispatch(request, *args, **kwargs)
@@ -453,41 +454,64 @@ class EventCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+
+        # 1. Logică Design-uri Disponibile
         available_designs = CardDesign.objects.none()
         if hasattr(user, 'userprofile') and user.userprofile.plan:
             available_designs = user.userprofile.plan.card_designs.all()
         else:
             try:
+                # Fallback plan gratuit
                 free_plan = Plan.objects.get(price=0)
                 available_designs = free_plan.card_designs.all()
             except Plan.DoesNotExist:
                 pass
 
+        # 2. Logică Câmpuri Speciale (JSON)
         design_fields = {}
         for design in available_designs.prefetch_related('special_fields'):
             names = [f.name for f in design.special_fields.all()]
-            if names: design_fields[slugify(design.name)] = names
+            if names:
+                design_fields[slugify(design.name)] = names
 
         context['design_specific_fields_json'] = json.dumps(design_fields)
         context['available_designs'] = available_designs
 
+        # 3. Formsets (AICI este corect să pasăm request.FILES manual)
         if self.request.POST:
             context['godparent_formset'] = GodparentFormSet(self.request.POST, self.request.FILES)
             context['schedule_item_formset'] = ScheduleItemFormSet(self.request.POST, self.request.FILES)
         else:
             context['godparent_formset'] = GodparentFormSet()
             context['schedule_item_formset'] = ScheduleItemFormSet()
+
         return context
 
     def form_valid(self, form):
+        # --- DEBUGGING START ---
+        # Aceste mesaje vor apărea în consola Render când dai Save
+        print(f"DEBUG UPLOAD: Userul {self.request.user} incearca sa salveze un eveniment.", file=sys.stderr)
+
+        if self.request.FILES:
+            print(f"DEBUG UPLOAD: Am primit fisiere! Lista: {self.request.FILES.keys()}", file=sys.stderr)
+            for filename, filedata in self.request.FILES.items():
+                print(f"   -> Fisier: {filename}, Marime: {filedata.size} bytes", file=sys.stderr)
+        else:
+            print(
+                "DEBUG UPLOAD: ATENTIE! Nu s-au primit fisiere (self.request.FILES este gol). Verifica enctype in HTML.",
+                file=sys.stderr)
+        # --- DEBUGGING END ---
+
         context = self.get_context_data()
         godparent_formset = context['godparent_formset']
         schedule_item_formset = context['schedule_item_formset']
 
+        # Validare completă
         if form.is_valid() and godparent_formset.is_valid() and schedule_item_formset.is_valid():
+            # CreateView gestionează automat request.FILES pentru 'form' aici
             self.object = form.save(commit=False)
             self.object.owner = self.request.user
-            self.object.save()
+            self.object.save()  # Upload-ul imaginii se întâmplă aici
 
             godparent_formset.instance = self.object
             godparent_formset.save()
@@ -498,7 +522,10 @@ class EventCreateView(LoginRequiredMixin, CreateView):
             messages.success(self.request, _(f"Event '{self.object.title}' created!"))
             return redirect(self.get_success_url())
         else:
+            # Debug pentru erori de validare
+            print(f"DEBUG UPLOAD: Formular invalid. Erori: {form.errors}", file=sys.stderr)
             return self.render_to_response(self.get_context_data(form=form))
+
     def get_success_url(self):
         return reverse_lazy('invapp:guest_list', kwargs={'event_id': self.object.id})
 
@@ -506,23 +533,25 @@ class EventCreateView(LoginRequiredMixin, CreateView):
 class EventUpdateView(LoginRequiredMixin, UpdateView):
     model = Event
     form_class = EventForm
+    # FIX: Template-ul corect
     template_name = 'invapp/event_form_tailwind.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+
+        # Logică Plan Blocat
         is_locked = False
         if hasattr(user, 'userprofile') and user.userprofile.plan and user.userprofile.plan.lock_event_on_creation:
             is_locked = True
             form = context.get('form')
             if form:
-                # UPDATED: Locked fields include event_date and party_time
                 for f in ['event_type', 'event_date', 'selected_design']:
-                    if f in form.fields: form.fields[f].disabled = True
-
+                    if f in form.fields:
+                        form.fields[f].disabled = True
         context['is_locked_plan'] = is_locked
 
-        # Available designs logic (same as create)
+        # Logică Design-uri
         available_designs = CardDesign.objects.none()
         if hasattr(user, 'userprofile') and user.userprofile.plan:
             available_designs = user.userprofile.plan.card_designs.all()
@@ -536,9 +565,9 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         design_fields = {}
         for design in available_designs.prefetch_related('special_fields'):
             names = [f.name for f in design.special_fields.all()]
-            if names: design_fields[slugify(design.name)] = names
+            if names:
+                design_fields[slugify(design.name)] = names
 
-        # Ensure current design is visible even if not available
         current = self.object.selected_design
         if current:
             slug = slugify(current.name)
@@ -549,6 +578,7 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         context['design_specific_fields_json'] = json.dumps(design_fields)
         context['available_designs'] = available_designs
 
+        # Formsets la Update (Și aici e nevoie de FILES manual)
         if self.request.POST:
             context['godparent_formset'] = GodparentFormSet(self.request.POST, self.request.FILES, instance=self.object)
             context['schedule_item_formset'] = ScheduleItemFormSet(self.request.POST, self.request.FILES,
@@ -556,15 +586,25 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         else:
             context['godparent_formset'] = GodparentFormSet(instance=self.object)
             context['schedule_item_formset'] = ScheduleItemFormSet(instance=self.object)
+
         return context
 
     def form_valid(self, form):
+        # --- DEBUGGING START ---
+        print(f"DEBUG UPDATE: Userul {self.request.user} actualizeaza evenimentul.", file=sys.stderr)
+        if self.request.FILES:
+            print(f"DEBUG UPDATE: Am primit fisiere! Lista: {self.request.FILES.keys()}", file=sys.stderr)
+        else:
+            print("DEBUG UPDATE: Nu s-au primit fisiere noi.", file=sys.stderr)
+        # --- DEBUGGING END ---
+
         context = self.get_context_data()
         godparent_formset = context['godparent_formset']
         schedule_item_formset = context['schedule_item_formset']
 
         if form.is_valid() and godparent_formset.is_valid() and schedule_item_formset.is_valid():
-            self.object = form.save()
+            self.object = form.save()  # Salvează modificările
+
             godparent_formset.instance = self.object
             godparent_formset.save()
 
