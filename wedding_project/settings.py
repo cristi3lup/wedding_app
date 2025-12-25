@@ -171,7 +171,7 @@ USE_TZ = True
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # ==========================================================
-# === STATIC & MEDIA FILES (SAFE MODE)                   ===
+# === STATIC & MEDIA FILES (FAILSAFE MODE)               ===
 # ==========================================================
 
 STATIC_URL = 'static/'
@@ -187,13 +187,13 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
 }
 
-# --- 1. CONFIGURARE STORAGES (SAFE MODE) ---
+# --- 1. CONFIGURARE STORAGES (FAILSAFE MODE) ---
 STORAGES = {
-    # FIX FINAL: Folosim 'CompressedStaticFilesStorage'
-    # Aceasta NU face hashing (redenumire cu cifre), deci nu crapă dacă nu găsește referințe.
-    # Doar micșorează fișierele (Gzip) pentru viteză. Este cea mai sigură opțiune pentru Render.
+    # FIX FINAL: Folosim stocarea standard Django.
+    # Dezactivăm complet procesarea WhiteNoise la build (fără compresie, fără hash).
+    # Elimină orice risc de eroare "FileNotFound" la deploy.
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
     # 2. Gestionarea fișierelor media (Upload-uri)
     "default": {
@@ -216,7 +216,7 @@ elif os.environ.get('CLOUDINARY_API_KEY'):
 if USE_CLOUDINARY:
     STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
-# --- 2. LEGACY SUPPORT (CRITIC PENTRU COMPATIBILITATE) ---
+# --- 2. LEGACY SUPPORT ---
 STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
 DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
 
