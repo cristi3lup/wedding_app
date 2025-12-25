@@ -171,7 +171,7 @@ USE_TZ = True
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # ==========================================================
-# === STATIC & MEDIA FILES (DJANGO 5.1+ STORAGES)        ===
+# === STATIC & MEDIA FILES (SAFE MODE)                   ===
 # ==========================================================
 
 STATIC_URL = 'static/'
@@ -187,11 +187,13 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
 }
 
-# --- 1. CONFIGURARE NOUĂ (STORAGES) ---
+# --- 1. CONFIGURARE STORAGES (SAFE MODE) ---
 STORAGES = {
-    # 1. Gestionarea fișierelor statice (CSS/JS) prin WhiteNoise
+    # FIX FINAL: Folosim 'CompressedStaticFilesStorage'
+    # Aceasta NU face hashing (redenumire cu cifre), deci nu crapă dacă nu găsește referințe.
+    # Doar micșorează fișierele (Gzip) pentru viteză. Este cea mai sigură opțiune pentru Render.
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
     # 2. Gestionarea fișierelor media (Upload-uri)
     "default": {
@@ -214,12 +216,9 @@ elif os.environ.get('CLOUDINARY_API_KEY'):
 if USE_CLOUDINARY:
     STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
-# --- 2. LEGACY SUPPORT (CRITIC PENTRU BUILD ERROR) ---
-# Aceste variabile sunt necesare pentru că librăria 'django-cloudinary-storage'
-# și comanda collectstatic verifică încă vechile variabile.
+# --- 2. LEGACY SUPPORT (CRITIC PENTRU COMPATIBILITATE) ---
 STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
 DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
-
 
 
 # ==========================================================
