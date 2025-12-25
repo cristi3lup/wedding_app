@@ -222,7 +222,19 @@
                 </div>
             </div>
         </section>
-
+        <section class="py-16 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
+            <div class="max-w-4xl mx-auto px-4 text-center">
+                <h2 class="text-3xl font-serif font-bold text-gray-900 dark:text-white mb-4">
+                    {% translate "Still have questions?" %}
+                </h2>
+                <p class="text-lg text-gray-600 dark:text-gray-300 mb-8 font-light">
+                    {% translate "Browse our Frequently Asked Questions to find out more about how to create the perfect invitation." %}
+                </p>
+                <a href="{% url 'invapp:faq' %}" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+                    {% translate "Visit FAQ Page" %}
+                </a>
+            </div>
+        </section>
         <!-- 5. Enhanced Footer with Branding & Socials -->
        <footer class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
             <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">

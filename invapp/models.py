@@ -602,3 +602,29 @@ class ScheduleItem(models.Model):
 
     def __str__(self):
         return f"{self.get_activity_type_display()} at {self.time}"
+
+
+class FAQ(models.Model):
+    # --- Versiunea în Română (Default) ---
+    question = models.CharField(max_length=255, verbose_name="Întrebare (RO)")
+    answer = models.TextField(verbose_name="Răspuns (RO)")
+
+    # --- Versiunea în Engleză (NOU) ---
+    question_en = models.CharField(max_length=255, blank=True, verbose_name="Question (EN)")
+    answer_en = models.TextField(blank=True, verbose_name="Answer (EN)")
+
+    order = models.PositiveIntegerField(default=0, help_text="Ordinea de afișare")
+    is_visible = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['order']
+        verbose_name = "FAQ Item"
+
+    def __str__(self):
+        return self.question
+
+class Testimonial(models.Model):
+    client_name = models.CharField(max_length=100)
+    text = models.TextField()
+    rating = models.IntegerField(default=5)
+    is_featured = models.BooleanField(default=False)

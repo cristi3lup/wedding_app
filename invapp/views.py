@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.contrib.auth.models import User
-from .models import UserProfile, Event, Guest, RSVP, Table, TableAssignment, CardDesign, Plan
+from .models import UserProfile, Event, Guest, RSVP, Table, TableAssignment, CardDesign, Plan, FAQ
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
@@ -1021,3 +1021,11 @@ def fix_site_domain(request):
             f"<h1>Success!</h1><p>Updated Site ID=1 from <strong>{old_domain}</strong> to <strong>{current_domain}</strong>.</p><p>You can now <a href='/'>Go Home</a> and Sign Up/Login.</p>")
     except Exception as e:
         return HttpResponse(f"Error updating site: {e}")
+
+
+def faq_page(request):
+    """
+    Afișează pagina de Întrebări Frecvente.
+    """
+    faqs = FAQ.objects.filter(is_visible=True).order_by('order')
+    return render(request, 'invapp/faq.html', {'faqs': faqs})

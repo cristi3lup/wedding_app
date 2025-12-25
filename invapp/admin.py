@@ -1,8 +1,10 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Event, Godparent, Guest, RSVP, Table, TableAssignment, CardDesign, Plan, UserProfile, SpecialField, ScheduleItem
+from .models import Event, Godparent, Guest, RSVP, Table, TableAssignment, CardDesign, Plan, UserProfile, SpecialField, ScheduleItem, FAQ, Testimonial
 from .forms import TableAssignmentAdminForm
+from import_export.admin import ImportExportModelAdmin
+from import_export import resources
 
 # --- ADD THIS INLINE CLASS ---
 class GodparentInline(admin.TabularInline):
@@ -169,3 +171,27 @@ class CustomUserAdmin(UserAdmin):
 
     # Ordonare implicită (cei mai noi sus)
     ordering = ('-date_joined',)
+
+
+class FAQResource(resources.ModelResource):
+    class Meta:
+        model = FAQ
+        # Definim ordinea coloanelor în Excel
+        fields = ('id', 'question', 'answer', 'question_en', 'answer_en', 'order', 'is_visible')
+        import_id_fields = ('id',)  # Folosim ID pentru a face update la întrebări existente
+
+
+# 2. Actualizăm Admin-ul FAQ să folosească ImportExport
+@admin.register(FAQ)
+class FAQAdmin(ImportExportModelAdmin):
+    resource_class = FAQResource  # <--- Conectăm resursa definită mai sus
+
+    list_display = ('question', 'question_en', 'order', 'is_visible')
+    list_editable = ('order', 'is_visible')
+    list_filter = ('is_visible',)
+    search_fields = ('question', 'question_en')
+    ordering = ('order', )
+
+@admin.register(Testimonial)
+class TestimonialAdmin(admin.ModelAdmin):
+    list_display = ('client_name', 'rating', 'is_featured')
