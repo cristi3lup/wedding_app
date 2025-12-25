@@ -187,9 +187,7 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
 }
 
-# --- LOGICA NOUĂ PENTRU DJANGO 5.1 ---
-# DEFAULT_FILE_STORAGE este eliminat. Folosim STORAGES.
-
+# --- 1. CONFIGURARE NOUĂ (STORAGES) ---
 STORAGES = {
     # 1. Gestionarea fișierelor statice (CSS/JS) prin WhiteNoise
     "staticfiles": {
@@ -206,7 +204,6 @@ USE_CLOUDINARY = False
 if 'RENDER' in os.environ:
     if not os.environ.get('CLOUDINARY_API_KEY'):
         print("❌ EROARE CRITICĂ: Lipsește CLOUDINARY_API_KEY pe Render!")
-        # Nu dăm crash complet ca să poți vedea logurile, dar upload-ul va eșua pe disc
     else:
         USE_CLOUDINARY = True
         print("✅ PRODUCȚIE: Configurare Cloudinary Activată.")
@@ -216,6 +213,13 @@ elif os.environ.get('CLOUDINARY_API_KEY'):
 
 if USE_CLOUDINARY:
     STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+# --- 2. LEGACY SUPPORT (CRITIC PENTRU BUILD ERROR) ---
+# Aceste variabile sunt necesare pentru că librăria 'django-cloudinary-storage'
+# și comanda collectstatic verifică încă vechile variabile.
+STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
+DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
+
 
 
 # ==========================================================
