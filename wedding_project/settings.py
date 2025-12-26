@@ -192,19 +192,19 @@ CLOUDINARY_STORAGE = {
 
 # --- CONFIGURARE STORAGES (FAILSAFE MODE) ---
 STORAGES = {
-    # STATIC: Folosim stocarea standard Django + Whitenoise Middleware
-    # Dezactivăm hashing-ul și compresia agresivă la build pentru a evita erorile.
+    # FIX FINAL: Folosim stocarea standard Django.
+    # Dezactivăm complet procesarea WhiteNoise la build (fără compresie, fără hash).
+    # Elimină orice risc de eroare "FileNotFound" la deploy.
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
-    # MEDIA: Cloudinary (dacă avem chei) sau FileSystem (fallback)
+    # 2. Gestionarea fișierelor media (Upload-uri)
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
 }
 
-# Logică activare Cloudinary pentru Media
-USE_CLOUDINARY = False
+# Comutăm pe Cloudinary dacă avem chei sau suntem pe Render
 if 'RENDER' in os.environ:
     if not os.environ.get('CLOUDINARY_API_KEY'):
         print("❌ EROARE CRITICĂ: Lipsește CLOUDINARY_API_KEY pe Render!")
