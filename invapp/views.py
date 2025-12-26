@@ -215,9 +215,9 @@ def landing_page_view(request):
         is_public=True
     ).distinct().order_by('-priority', 'name')
 
-    featured_reviews = Testimonial.objects.filter(is_featured=True, is_active=True).order_by('-created_at')[:10]
+    recent_reviews = Testimonial.objects.filter(is_active=True).order_by('-created_at')[:10]
     context = {
-        'reviews': featured_reviews,
+        'reviews': recent_reviews,
         'designs': designs,
         'plans': plans
     }

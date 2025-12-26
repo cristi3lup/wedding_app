@@ -1,6 +1,6 @@
 """
 Django settings for wedding_project project.
-Updated by Django Architect RO for Django 5.1+ Compliance (Cloudinary Fix).
+Updated by Django Architect RO for Stability (Render + Cloudinary + Whitenoise).
 """
 import os
 from django.utils.translation import gettext_lazy as _
@@ -35,9 +35,9 @@ if DEBUG:
 
 # Application definition
 INSTALLED_APPS = [
-    # 1. Cloudinary Storage TREBUIE să fie primul pentru a evita conflictele
+    # 1. Cloudinary apps FIRST
     'cloudinary_storage',
-    'django.contrib.staticfiles', # Acesta trebuie sa fie sub cloudinary_storage
+    'django.contrib.staticfiles',
     'cloudinary',
 
     # Apps
@@ -60,7 +60,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Critical for static files on Render
     'django.contrib.sessions.middleware.SessionMiddleware',
     'wedding_project.middleware.ForceDefaultLanguageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -136,7 +136,7 @@ SOCIALACCOUNT_PROVIDERS = {
     'facebook': {
         'METHOD': 'oauth2',
         'SCOPE': ['email', 'public_profile'],
-        'FIELDS': ['id', 'email', 'name', 'first_name', 'last_name','picture'],
+        'FIELDS': ['id', 'email', 'name', 'first_name', 'last_name', 'picture'],
         'EXCHANGE_TOKEN': True,
         'VERIFIED_EMAIL': True,
         'VERSION': 'v17.0',
@@ -171,13 +171,16 @@ USE_TZ = True
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # ==========================================================
-# === STATIC & MEDIA FILES (FAILSAFE MODE)               ===
+# === STATIC & MEDIA FILES (FIXED CONFIGURATION)         ===
 # ==========================================================
 
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# 1. STATIC FILES (CSS, JS, Admin) -> Render via Whitenoise
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # Standard path for collectstatic
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-MEDIA_URL = '/media/'
+
+# 2. MEDIA FILES (Uploads) -> Cloudinary
+MEDIA_URL = '/media/' # Cloudinary will replace this URL dynamically
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Configurare Cloudinary Keys
@@ -187,36 +190,35 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
 }
 
-# --- 1. CONFIGURARE STORAGES (FAILSAFE MODE) ---
+# --- CONFIGURARE STORAGES (FAILSAFE MODE) ---
 STORAGES = {
-    # FIX FINAL: Folosim stocarea standard Django.
-    # Dezactivăm complet procesarea WhiteNoise la build (fără compresie, fără hash).
-    # Elimină orice risc de eroare "FileNotFound" la deploy.
+    # STATIC: Folosim stocarea standard Django + Whitenoise Middleware
+    # Dezactivăm hashing-ul și compresia agresivă la build pentru a evita erorile.
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
-    # 2. Gestionarea fișierelor media (Upload-uri)
+    # MEDIA: Cloudinary (dacă avem chei) sau FileSystem (fallback)
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
 }
 
-# Comutăm pe Cloudinary dacă avem chei sau suntem pe Render
+# Logică activare Cloudinary pentru Media
 USE_CLOUDINARY = False
 if 'RENDER' in os.environ:
     if not os.environ.get('CLOUDINARY_API_KEY'):
         print("❌ EROARE CRITICĂ: Lipsește CLOUDINARY_API_KEY pe Render!")
     else:
         USE_CLOUDINARY = True
-        print("✅ PRODUCȚIE: Configurare Cloudinary Activată.")
+        print("✅ PRODUCȚIE: Configurare Cloudinary Activată pentru Media.")
 elif os.environ.get('CLOUDINARY_API_KEY'):
     USE_CLOUDINARY = True
-    print("✅ LOCAL: Configurare Cloudinary Activată.")
+    print("✅ LOCAL: Configurare Cloudinary Activată pentru Media.")
 
 if USE_CLOUDINARY:
     STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
-# --- 2. LEGACY SUPPORT ---
+# Legacy Support
 STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
 DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
 
