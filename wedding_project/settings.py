@@ -1,6 +1,6 @@
 """
 Django settings for wedding_project project.
-Updated by Django Architect RO for Stability (Render + Cloudinary + Whitenoise).
+STABLE VERSION: Cloudinary for Media, Whitenoise (Simple) for Static.
 """
 import os
 from django.utils.translation import gettext_lazy as _
@@ -8,10 +8,9 @@ import dj_database_url
 from pathlib import Path
 import dotenv
 
-# Load environment variables from .env file (if it exists)
+# Load environment variables
 dotenv.load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ==========================================================
@@ -33,9 +32,8 @@ if RENDER_EXTERNAL_HOSTNAME:
 if DEBUG:
     CSRF_TRUSTED_ORIGINS.extend(['http://localhost:8000', 'http://127.0.0.1:8000'])
 
-# Application definition
 INSTALLED_APPS = [
-    # 1. Cloudinary apps FIRST
+    # 1. Storage & Static - Ordinea e importanta
     'cloudinary_storage',
     'django.contrib.staticfiles',
     'cloudinary',
@@ -60,7 +58,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Critical for static files on Render
+    'whitenoise.middleware.WhiteNoiseMiddleware', # SERVESTE FISIERELE STATICE (CSS/JS)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'wedding_project.middleware.ForceDefaultLanguageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -91,6 +89,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'invapp.context_processors.add_active_plan_to_context',
+                # Context processor pentru imaginile dinamice din Admin
+                'invapp.context_processors.site_assets',
             ],
         },
     },
@@ -98,7 +98,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'wedding_project.wsgi.application'
 
-# Database
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3'),
@@ -126,7 +125,10 @@ ACCOUNT_PASSWORD_REQUIRED = True
 ACCOUNT_LOGIN_BY_CODE_ENABLED = False
 ACCOUNT_PREVENT_ENUMERATION = False
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+
+# FIX: Redirectăm pe Home după logout pentru a evita erorile de permisiuni
 LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
 
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
@@ -171,57 +173,47 @@ USE_TZ = True
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # ==========================================================
-# === STATIC & MEDIA FILES (FIXED CONFIGURATION)         ===
+# === STATIC & MEDIA FILES (STABILITY MODE)              ===
 # ==========================================================
 
-# 1. STATIC FILES (CSS, JS, Admin) -> Render via Whitenoise
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # Standard path for collectstatic
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-# 2. MEDIA FILES (Uploads) -> Cloudinary
-MEDIA_URL = '/media/' # Cloudinary will replace this URL dynamically
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Configurare Cloudinary Keys
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+    'SECURE_URL': True,
 }
 
-# --- CONFIGURARE STORAGES (FAILSAFE MODE) ---
+# CONFIGURARE STORAGES
+# 1. Static (CSS/JS): Folosim standardul Django. Whitenoise va servi fișierele oricum.
+# Aceasta evită erorile de compresie la build.
 STORAGES = {
-    # FIX FINAL: Folosim stocarea standard Django.
-    # Dezactivăm complet procesarea WhiteNoise la build (fără compresie, fără hash).
-    # Elimină orice risc de eroare "FileNotFound" la deploy.
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
-    # 2. Gestionarea fișierelor media (Upload-uri)
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
 }
 
-# Comutăm pe Cloudinary dacă avem chei sau suntem pe Render
+# 2. Media (Uploads): Cloudinary doar dacă avem chei.
 if 'RENDER' in os.environ:
     if not os.environ.get('CLOUDINARY_API_KEY'):
-        print("❌ EROARE CRITICĂ: Lipsește CLOUDINARY_API_KEY pe Render!")
+        print("❌ EROARE: Lipsește CLOUDINARY_API_KEY pe Render!")
     else:
-        USE_CLOUDINARY = True
-        print("✅ PRODUCȚIE: Configurare Cloudinary Activată pentru Media.")
+        STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
 elif os.environ.get('CLOUDINARY_API_KEY'):
-    USE_CLOUDINARY = True
-    print("✅ LOCAL: Configurare Cloudinary Activată pentru Media.")
-
-if USE_CLOUDINARY:
     STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
-# Legacy Support
+# Legacy Support (pentru librării vechi)
 STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
 DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
-
 
 # ==========================================================
 # === ALTELE                                             ===
