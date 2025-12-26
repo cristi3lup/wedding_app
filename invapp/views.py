@@ -1046,19 +1046,46 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def submit_feedback(request):
-    # Verificăm dacă userul a lăsat deja un review
     existing_review = Testimonial.objects.filter(user=request.user).first()
 
-    # --- LOGICA NOUA: Preluare Avatar Social (Google/FB) ---
+    # --- LOGICA EXTINSĂ: Găsirea celui mai bun cont social ---
     social_avatar_url = None
+    provider_name = 'email'
+
     try:
-        # Căutăm dacă userul are un cont social legat
-        social_account = SocialAccount.objects.filter(user=request.user).first()
-        if social_account:
-            # Metoda get_avatar_url() este magică în allauth, merge pentru toți providerii
-            social_avatar_url = social_account.get_avatar_url()
-    except Exception:
-        # Dacă ceva eșuează (ex: providerul nu dă poza), ignorăm silențios
+        # 1. Căutăm TOATE conturile sociale legate de user
+        social_accounts = SocialAccount.objects.filter(user=request.user)
+
+        target_account = None
+
+        # 2. Prioritizăm conturile care au provider cunoscut (FB/Google)
+        if social_accounts.exists():
+            for account in social_accounts:
+                if account.provider in ['facebook', 'google']:
+                    target_account = account
+                    break
+
+            # Dacă nu am găsit unul specific, luăm primul disponibil
+            if not target_account:
+                target_account = social_accounts.first()
+
+        # 3. Extragem datele din contul găsit
+        if target_account:
+            provider_name = target_account.provider
+
+            # Încercăm metoda standard
+            social_avatar_url = target_account.get_avatar_url()
+
+            # Fallback pentru Facebook (dacă metoda standard returnează None)
+            if not social_avatar_url and provider_name == 'facebook':
+                picture_data = target_account.extra_data.get('picture', {}).get('data', {})
+                social_avatar_url = picture_data.get('url')
+
+            print(f"DEBUG FEEDBACK: User={request.user}, Provider={provider_name}, Avatar={social_avatar_url}",
+                  file=sys.stderr)
+
+    except Exception as e:
+        print(f"DEBUG ERROR FEEDBACK: {e}", file=sys.stderr)
         pass
 
     if request.method == 'POST':
@@ -1067,20 +1094,16 @@ def submit_feedback(request):
             review = form.save(commit=False)
             review.user = request.user
 
-            # Preluăm automat numele
-            full_name = request.user.get_full_name()
-            if not full_name:
-                full_name = request.user.username
-                # Dacă e email, luăm doar partea dinainte de @ pentru intimitate
-                if '@' in full_name:
-                    full_name = full_name.split('@')[0]
-
+            # Nume
+            full_name = request.user.get_full_name() or request.user.username.split('@')[0]
             review.client_name = full_name
 
-            # --- LOGICA NOUA: Salvare Avatar ---
-            # Salvăm URL-ul pozei doar dacă l-am găsit și dacă review-ul nu are deja unul setat
-            if social_avatar_url and not review.avatar_url:
+            # Avatar (Suprascriem doar dacă am găsit unul nou valid)
+            if social_avatar_url:
                 review.avatar_url = social_avatar_url
+
+            # Provider
+            review.social_provider = provider_name
 
             review.save()
             messages.success(request, "Îți mulțumim pentru feedback!")
@@ -1088,8 +1111,8 @@ def submit_feedback(request):
     else:
         form = ReviewForm(instance=existing_review)
 
-    # Trimitem 'social_avatar_url' în context pentru a-l arăta userului în formular (Preview)
     return render(request, 'invapp/feedback_form.html', {
         'form': form,
-        'social_avatar_url': social_avatar_url
+        'social_avatar_url': social_avatar_url,
+        'social_provider': provider_name
     })

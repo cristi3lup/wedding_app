@@ -10,6 +10,32 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.text import format_lazy
 
 
+class SiteImage(models.Model):
+    """
+    Imagini statice gestionabile din Admin (Hero, Logo, Bannere).
+    """
+    KEY_CHOICES = [
+        ('hero_bg', 'Hero Background (Landing)'),
+        ('logo_main', 'Logo Principal'),
+        ('feature_1', 'Imagine Feature 1'),
+        ('feature_2', 'Imagine Feature 2'),
+        ('feature_3', 'Imagine Feature 3'),
+        ('cta_bg', 'Call to Action Background'),
+    ]
+
+    key = models.CharField(
+        max_length=50,
+        choices=KEY_CHOICES,
+        unique=True,
+        help_text="Locul unde va apărea această imagine."
+    )
+    image = models.ImageField(upload_to='site_assets/', help_text="Încarcă imaginea aici.")
+    description = models.CharField(max_length=200, blank=True, help_text="Descriere pentru Alt Text (SEO)")
+
+    def __str__(self):
+        return self.get_key_display()
+
+
 class Plan(models.Model):
     name = models.CharField(max_length=100, unique=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
@@ -89,11 +115,20 @@ class CardDesign(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
 
+    # Legacy path (optional)
     preview_image_path = models.CharField(
         max_length=255,
         blank=True,
         null=True,
-        help_text=_("Path to preview image in static files")
+        help_text=_("Path to preview image in static files (Legacy)")
+    )
+
+    # --- FIX 1: Adăugat ImageField pentru Upload din Admin ---
+    preview_image = models.ImageField(
+        upload_to='design_previews/',
+        blank=True,
+        null=True,
+        help_text=_("Upload a mockup image here (Cloudinary).")
     )
 
     template_name = models.CharField(
@@ -127,7 +162,13 @@ class CardDesign(models.Model):
 
     is_public = models.BooleanField(
         default=False,
-        help_text=_("If unchecked, this design is hidden from the public gallery but can still be assigned by admins for testing.")
+        help_text=_("If unchecked, this design is hidden from the public gallery.")
+    )
+
+    # --- FIX 2: Adăugat is_active pentru Admin ---
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_("Admin control: Uncheck to soft-delete/hide this design everywhere.")
     )
 
     special_fields = models.ManyToManyField(
@@ -653,10 +694,22 @@ class Testimonial(models.Model):
     is_active = models.BooleanField(default=True, help_text="Este vizibil public?")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    PROVIDER_CHOICES = [
+        ('email', 'Email'),
+        ('google', 'Google'),
+        ('facebook', 'Facebook'),
+    ]
+    social_provider = models.CharField(
+        max_length=20,
+        choices=PROVIDER_CHOICES,
+        default='email',
+        verbose_name="Sursa Review"
+    )
+
     class Meta:
         ordering = ['-created_at']
         verbose_name = "Review Client"
         verbose_name_plural = "Reviews Clienți"
 
     def __str__(self):
-        return f"{self.client_name} - {self.rating}★"
+        return f"{self.client_name} ({self.social_provider}) - {self.rating}★"
