@@ -194,4 +194,15 @@ class FAQAdmin(ImportExportModelAdmin):
 
 @admin.register(Testimonial)
 class TestimonialAdmin(admin.ModelAdmin):
-    list_display = ('client_name', 'rating', 'is_featured')
+    # Coloanele pe care le vezi în tabel
+    list_display = ('client_name', 'rating', 'created_at', 'is_active', 'is_featured')
+
+    # CRITIC: Aici permiți selectarea pentru Landing Page direct din listă
+    list_editable = ('is_active', 'is_featured')
+
+    # Filtre în dreapta pentru a găsi rapid review-urile de 5 stele
+    list_filter = ('rating', 'is_featured', 'is_active')
+
+    search_fields = ('client_name', 'text')
+
+    ordering = ('-created_at',)

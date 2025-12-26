@@ -14,7 +14,8 @@ from django.utils.translation import ngettext_lazy
 
 from allauth.account.forms import SignupForm
 from django.urls import reverse_lazy
-from .models import Guest # Make sure Guest is imported
+from .models import Guest, Testimonial
+
 INPUT_CLASSES = "block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 bg-gray-50 dark:bg-gray-700 dark:text-white dark:ring-gray-500"
 INPUT_CLASSES_WITH_ICON = f"{INPUT_CLASSES} pl-10"
 
@@ -452,3 +453,18 @@ ScheduleItemFormSet = inlineformset_factory(
     extra=1,
     can_delete=True
 )
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Testimonial
+        fields = ['rating', 'text']
+        widgets = {
+            'text': forms.Textarea(attrs={
+                'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'rows': 4,
+                'placeholder': 'Spune-ne părerea ta (opțional)...'
+            }),
+            # Rating-ul va fi gestionat prin Alpine.js, dar avem nevoie de un input hidden
+            'rating': forms.HiddenInput()
+        }

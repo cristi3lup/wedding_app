@@ -1,4 +1,5 @@
 from django.contrib.sites.models import Site
+from allauth.socialaccount.models import SocialAccount
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
@@ -24,6 +25,9 @@ from datetime import datetime, timedelta
 from types import SimpleNamespace
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
+from .forms import ReviewForm # Asigură-te că imporți formularul
+from .models import Testimonial # Asigură-te că imporți modelul
+
 
 from .forms import (
     GuestForm, EventForm, GuestContactForm, AssignGuestForm,
@@ -211,7 +215,13 @@ def landing_page_view(request):
         is_public=True
     ).distinct().order_by('-priority', 'name')
 
-    return render(request, 'invapp/landing_page_tailwind.html', {'designs': designs, 'plans': plans})
+    featured_reviews = Testimonial.objects.filter(is_featured=True, is_active=True).order_by('-created_at')[:10]
+    context = {
+        'reviews': featured_reviews,
+        'designs': designs,
+        'plans': plans
+    }
+    return render(request, 'invapp/landing_page_tailwind.html', context)
 
 
 # --- Signup ---
@@ -1029,3 +1039,57 @@ def faq_page(request):
     """
     faqs = FAQ.objects.filter(is_visible=True).order_by('order')
     return render(request, 'invapp/faq.html', {'faqs': faqs})
+
+
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def submit_feedback(request):
+    # Verificăm dacă userul a lăsat deja un review
+    existing_review = Testimonial.objects.filter(user=request.user).first()
+
+    # --- LOGICA NOUA: Preluare Avatar Social (Google/FB) ---
+    social_avatar_url = None
+    try:
+        # Căutăm dacă userul are un cont social legat
+        social_account = SocialAccount.objects.filter(user=request.user).first()
+        if social_account:
+            # Metoda get_avatar_url() este magică în allauth, merge pentru toți providerii
+            social_avatar_url = social_account.get_avatar_url()
+    except Exception:
+        # Dacă ceva eșuează (ex: providerul nu dă poza), ignorăm silențios
+        pass
+
+    if request.method == 'POST':
+        form = ReviewForm(request.POST, instance=existing_review)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.user = request.user
+
+            # Preluăm automat numele
+            full_name = request.user.get_full_name()
+            if not full_name:
+                full_name = request.user.username
+                # Dacă e email, luăm doar partea dinainte de @ pentru intimitate
+                if '@' in full_name:
+                    full_name = full_name.split('@')[0]
+
+            review.client_name = full_name
+
+            # --- LOGICA NOUA: Salvare Avatar ---
+            # Salvăm URL-ul pozei doar dacă l-am găsit și dacă review-ul nu are deja unul setat
+            if social_avatar_url and not review.avatar_url:
+                review.avatar_url = social_avatar_url
+
+            review.save()
+            messages.success(request, "Îți mulțumim pentru feedback!")
+            return redirect('invapp:landing_page')
+    else:
+        form = ReviewForm(instance=existing_review)
+
+    # Trimitem 'social_avatar_url' în context pentru a-l arăta userului în formular (Preview)
+    return render(request, 'invapp/feedback_form.html', {
+        'form': form,
+        'social_avatar_url': social_avatar_url
+    })

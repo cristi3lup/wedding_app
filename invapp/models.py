@@ -2,7 +2,7 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -623,8 +623,40 @@ class FAQ(models.Model):
     def __str__(self):
         return self.question
 
+
 class Testimonial(models.Model):
-    client_name = models.CharField(max_length=100)
-    text = models.TextField()
-    rating = models.IntegerField(default=5)
-    is_featured = models.BooleanField(default=False)
+    # Legăm de user pentru a preveni spam-ul (un review per user)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='testimonial'
+    )
+
+    # Păstrăm client_name ca string pentru a-l putea edita manual dacă e nevoie
+    # (sau dacă userul își șterge contul, review-ul rămâne cu nume)
+    client_name = models.CharField(max_length=100, verbose_name="Nume Client")
+
+    # Avatar opțional (dacă vrem să preluăm poza de profil în viitor)
+    avatar_url = models.URLField(blank=True, null=True)
+
+    text = models.TextField(blank=True, verbose_name="Mesaj (Opțional)")
+
+    rating = models.PositiveIntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Număr stele (1-5)"
+    )
+
+    is_featured = models.BooleanField(default=False, help_text="Apare pe prima pagină?")
+    is_active = models.BooleanField(default=True, help_text="Este vizibil public?")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Review Client"
+        verbose_name_plural = "Reviews Clienți"
+
+    def __str__(self):
+        return f"{self.client_name} - {self.rating}★"

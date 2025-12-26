@@ -11,6 +11,7 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('i18n/', include('django.conf.urls.i18n')),
 
+
     # REMOVED: path('stripe/', include('djstripe.urls'...))
     # We are now using our own custom webhook in invapp.urls
 ]

@@ -11,6 +11,7 @@ app_name = 'invapp'
 urlpatterns = [
 # --- TEMPORARY FIX URL ---
     path('faq/', views.faq_page, name='faq'),
+    path('feedback/', views.submit_feedback, name='submit_feedback'),
     path('fix-domain/', views.fix_site_domain, name='fix_domain'),
     path('admin/', admin.site.urls),
     path('upgrade/<int:plan_id>/', views.manual_upgrade_page_view, name='manual_upgrade_page'),
