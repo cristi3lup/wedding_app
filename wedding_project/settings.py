@@ -136,7 +136,7 @@ SOCIALACCOUNT_PROVIDERS = {
     'facebook': {
         'METHOD': 'oauth2',
         'SCOPE': ['email', 'public_profile'],
-        'FIELDS': ['id', 'email', 'name', 'first_name', 'last_name'],
+        'FIELDS': ['id', 'email', 'name', 'first_name', 'last_name','picture'],
         'EXCHANGE_TOKEN': True,
         'VERIFIED_EMAIL': True,
         'VERSION': 'v17.0',
