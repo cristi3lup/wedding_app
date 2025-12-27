@@ -189,23 +189,22 @@ CLOUDINARY_STORAGE = {
     'SECURE_URL': True,
 }
 
-# --- CONFIGURARE STORAGES (CRITIC PENTRU CSS) ---
+# --- CONFIGURARE STORAGES (SAFE MODE) ---
+# Folosim Standard Django Storage peste tot pentru a evita erorile de compresie Whitenoise.
+# Middleware-ul Whitenoise (din lista de mai sus) se va ocupa oricum de servirea fisierelor.
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        # LOCAL: Standard
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
-# Daca suntem pe Render (PROD), folosim Whitenoise si Cloudinary
+# Daca suntem pe Render (PROD), activam doar Cloudinary pentru Media
 if not DEBUG:
-    # 1. Static Files via Whitenoise (Compressed)
-    # Folosim CompressedStaticFilesStorage (fara Manifest) pentru a evita erorile de build
-    # cauzate de fisiere lipsa in CSS-ul tertilor (ex: admin/img/calendar-icons.svg).
-    STORAGES["staticfiles"]["BACKEND"] = "whitenoise.storage.CompressedStaticFilesStorage"
+    # 1. Static Files: Păstrăm "StaticFilesStorage" (Standard)
+    # pentru a preveni crash-ul la build.
 
     # 2. Media Files via Cloudinary
     if os.environ.get('CLOUDINARY_API_KEY'):
