@@ -1,9 +1,9 @@
 """
 Django settings for wedding_project project.
-FINAL SAFE VERSION:
-- Foloseste StaticFilesStorage (Standard) pentru a EVITA erorile FileNotFoundError la build.
-- Pastreaza definirea explicita STATICFILES_STORAGE pentru a evita AttributeError.
-- Whitenoise serveste fisierele prin Middleware.
+FINAL VERSION V4:
+- Activeaza WHITENOISE_USE_FINDERS = True (Solutia pentru imaginile lipsa).
+- Foloseste StaticFilesStorage standard (Fara erori de build).
+- Debugging activat pe cai.
 """
 import os
 import sys
@@ -112,12 +112,12 @@ DATABASES = {
 }
 
 # ==========================================================
-# === STATIC & MEDIA FILES (SAFE MODE - NO COMPRESSION)  ===
+# === STATIC & MEDIA FILES (THE HYBRID FIX)              ===
 # ==========================================================
 
 STATIC_URL = '/static/'
 
-# Definim STATIC_ROOT absolut pentru Render
+# Folderul unde se vor strange fisierele (destinatia)
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Asiguram crearea folderului daca nu exista
@@ -127,7 +127,7 @@ if not os.path.exists(STATIC_ROOT):
     except OSError:
         pass
 
-# Definim STATICFILES_DIRS
+# Definim folderele sursa (De unde isi ia Django fisierele)
 STATICFILES_DIRS = []
 LOCAL_STATIC_DIR = BASE_DIR / 'static'
 if os.path.exists(LOCAL_STATIC_DIR):
@@ -143,31 +143,31 @@ CLOUDINARY_STORAGE = {
     'SECURE_URL': True,
 }
 
-# --- CONFIGURARE STORAGES (CRITIC: STANDARD DJANGO STORAGE) ---
+# --- CONFIGURARE STORAGES ---
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         # Folosim Standard Storage.
-        # Whitenoise Middleware va servi fisierele, dar NU incercam sa le comprimam la build.
-        # Asta elimina eroarea 'FileNotFoundError' pe fisierele de admin.
+        # Whitenoise Middleware va servi fisierele.
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
-if not DEBUG and os.environ.get('CLOUDINARY_API_KEY'):
-    STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
+if not DEBUG:
+    # 1. Whitenoise Configuration
+    # ACEASTA ESTE LINIA MAGICA:
+    # Ii spune lui Whitenoise sa caute si in sursa (static/) daca nu gaseste in staticfiles/.
+    WHITENOISE_USE_FINDERS = True
 
-# --- LEGACY SUPPORT (OBLIGATORIU) ---
-# Definitii explicite pentru compatibilitate cu django-cloudinary-storage
+    # 2. Media Files via Cloudinary
+    if os.environ.get('CLOUDINARY_API_KEY'):
+        STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+# --- LEGACY SUPPORT ---
 STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
 DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
-
-# Print debug info
-if 'RENDER' in os.environ:
-    print(f"✅ RENDER SAFE MODE. STATIC_ROOT: {STATIC_ROOT}")
-    print(f"✅ STORAGE BACKEND: {STATICFILES_STORAGE}")
 
 # ==========================================================
 # === AUTH & EMAIL                                       ===
