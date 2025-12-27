@@ -1,9 +1,9 @@
 """
 Django settings for wedding_project project.
-FINAL STABLE VERSION:
-- Fixes AttributeError by explicitly defining STATICFILES_STORAGE.
-- Fixes FileNotFoundError by disabling build-time compression (Standard Storage).
-- Keeps CSS working via Whitenoise Middleware.
+FINAL STABLE VERSION 3.0:
+- Foloseste StaticFilesStorage (Standard) PESTE TOT pentru a evita erorile la build.
+- Whitenoise ramane activ in Middleware pentru a servi fisierele.
+- Aceasta configuratie este cea mai sigura ("Safe Mode").
 """
 import os
 from django.utils.translation import gettext_lazy as _
@@ -61,7 +61,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WHITENOISE TREBUIE SA FIE AICI - El va servi fisierele chiar daca storage-ul e standard
+    # WHITENOISE TREBUIE SA FIE AICI
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'wedding_project.middleware.ForceDefaultLanguageMiddleware',
@@ -175,14 +175,17 @@ USE_TZ = True
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # ==========================================================
-# === STATIC & MEDIA FILES (BULLETPROOF CONFIG)          ===
+# === STATIC & MEDIA FILES (SAFE MODE)                   ===
 # ==========================================================
 
 STATIC_URL = '/static/'
-# Ensure staticfiles directory exists
+# Asiguram existenta folderului
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 if not os.path.exists(STATIC_ROOT):
-    os.makedirs(STATIC_ROOT, exist_ok=True)
+    try:
+        os.makedirs(STATIC_ROOT, exist_ok=True)
+    except OSError:
+        pass
 
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
@@ -196,27 +199,24 @@ CLOUDINARY_STORAGE = {
     'SECURE_URL': True,
 }
 
-# --- CONFIGURARE STORAGES ---
+# --- CONFIGURARE STORAGES (CRITIC: FARA COMPRESIE) ---
 STORAGES = {
     "default": {
-        # Default local, schimbat in Cloudinary mai jos pentru PROD
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        # FOLOSIM STANDARD STORAGE ORIUNDE.
-        # Asta evita eroarea FileNotFoundError la build.
+        # Folosim Standard Storage. Whitenoise va servi fisierele oricum,
+        # dar fara a incerca sa le comprime la build.
+        # Asta elimina eroarea FileNotFoundError.
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
-if not DEBUG:
-    # Doar MEDIA merge in Cloud. STATIC ramane local (colectat de Django, servit de Whitenoise)
-    if os.environ.get('CLOUDINARY_API_KEY'):
-        STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
+# Configurare Media pentru Render
+if not DEBUG and os.environ.get('CLOUDINARY_API_KEY'):
+    STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
-# --- LEGACY SUPPORT (CRITIC PENTRU EVITAREA AttributeErrors) ---
-# Aceste linii sunt obligatorii pentru ca django-cloudinary-storage
-# si alte librarii sa gaseasca setarile vechi.
+# --- LEGACY SUPPORT ---
 STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
 DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
 
