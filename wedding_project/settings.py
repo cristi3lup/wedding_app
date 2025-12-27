@@ -1,6 +1,6 @@
 """
 Django settings for wedding_project project.
-STABLE VERSION: Cloudinary for Media, Whitenoise (Simple) for Static.
+STABLE VERSION: Cloudinary for Media, Whitenoise (Strict) for Static.
 """
 import os
 from django.utils.translation import gettext_lazy as _
@@ -54,14 +54,12 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.facebook',
-
-    # NOTA: Am scos 'crispy_forms' daca nu e folosit, sau adauga-l aici daca ai nevoie de el
-    # 'crispy_forms',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # SERVESTE FISIERELE STATICE (CSS/JS)
+    # WHITENOISE TREBUIE SA FIE IMEDIAT DUPA SECURITY
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'wedding_project.middleware.ForceDefaultLanguageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -92,7 +90,6 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'invapp.context_processors.add_active_plan_to_context',
-                # Context processor pentru imaginile dinamice din Admin
                 'invapp.context_processors.site_assets',
             ],
         },
@@ -129,7 +126,6 @@ ACCOUNT_LOGIN_BY_CODE_ENABLED = False
 ACCOUNT_PREVENT_ENUMERATION = False
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
-# FIX: Redirectăm pe Home după logout pentru a evita erorile de permisiuni
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
@@ -176,7 +172,7 @@ USE_TZ = True
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # ==========================================================
-# === STATIC & MEDIA FILES (STABILITY MODE)              ===
+# === STATIC & MEDIA FILES (FIXED FOR RENDER)            ===
 # ==========================================================
 
 STATIC_URL = '/static/'
@@ -193,28 +189,27 @@ CLOUDINARY_STORAGE = {
     'SECURE_URL': True,
 }
 
-# CONFIGURARE STORAGES
-# 1. Static (CSS/JS): Folosim standardul Django. Whitenoise va servi fișierele oricum.
-# Aceasta evită erorile de compresie la build.
+# --- CONFIGURARE STORAGES (CRITIC PENTRU CSS) ---
 STORAGES = {
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
+    "staticfiles": {
+        # LOCAL: Standard
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
 }
 
-# 2. Media (Uploads): Cloudinary doar dacă avem chei.
-if 'RENDER' in os.environ:
-    if not os.environ.get('CLOUDINARY_API_KEY'):
-        print("❌ EROARE: Lipsește CLOUDINARY_API_KEY pe Render!")
-    else:
-        STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
-elif os.environ.get('CLOUDINARY_API_KEY'):
-    STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
+# Daca suntem pe Render (PROD), folosim Whitenoise si Cloudinary
+if not DEBUG:
+    # 1. Static Files via Whitenoise (Compressed)
+    STORAGES["staticfiles"]["BACKEND"] = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Legacy Support (pentru librării vechi)
+    # 2. Media Files via Cloudinary
+    if os.environ.get('CLOUDINARY_API_KEY'):
+        STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+# Legacy Support
 STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
 DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
 
