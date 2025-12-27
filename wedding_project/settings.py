@@ -1,6 +1,6 @@
 """
 Django settings for wedding_project project.
-FINAL VERSION: Uses CompressedStaticFilesStorage to serve CSS without crashing on missing files.
+FINAL STABLE VERSION: Standard Storage (No Compression) to prevent build crashes.
 """
 import os
 from django.utils.translation import gettext_lazy as _
@@ -189,7 +189,10 @@ CLOUDINARY_STORAGE = {
     'SECURE_URL': True,
 }
 
-# --- CONFIGURARE STORAGES (SOLUTIA CORECTA) ---
+# --- CONFIGURARE STORAGES (SOLUTIA ULTIMA STABILA) ---
+# Folosim Standard Django Storage pentru STATIC in toate mediile.
+# Asta previne orice incercare a Whitenoise de a comprima fisiere la build,
+# deci elimina eroarea FileNotFoundError pentru fisierele din pachete externe.
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -201,11 +204,9 @@ STORAGES = {
 
 # Daca suntem pe Render (PROD)
 if not DEBUG:
-    # 1. Static Files: Folosim CompressedStaticFilesStorage
-    # Aceasta clasa face compresia (necesara pentru performanta) DAR
-    # NU face verificarea stricta a manifestului. Deci lipsa iconitei
-    # admin/img/calendar-icons.svg NU va opri deploy-ul, iar CSS-ul va fi servit.
-    STORAGES["staticfiles"]["BACKEND"] = "whitenoise.storage.CompressedStaticFilesStorage"
+    # 1. Static Files: RAMANEM PE STANDARD (StaticFilesStorage)
+    # Whitenoise Middleware va servi fisierele oricum, dar fara compresie gzip avansata.
+    # Este compromisul necesar pentru un build verde.
 
     # 2. Media Files via Cloudinary
     if os.environ.get('CLOUDINARY_API_KEY'):
