@@ -1,11 +1,12 @@
 """
 Django settings for wedding_project project.
-FINAL STABLE VERSION 3.0:
-- Foloseste StaticFilesStorage (Standard) PESTE TOT pentru a evita erorile la build.
-- Whitenoise ramane activ in Middleware pentru a servi fisierele.
-- Aceasta configuratie este cea mai sigura ("Safe Mode").
+FINAL STABLE VERSION 3.1:
+- Debugging activat pentru Static Files.
+- Cale absolută garantată pentru STATIC_ROOT.
+- Whitenoise configurat pentru a servi fișierele chiar și fără compresie.
 """
 import os
+import sys
 from django.utils.translation import gettext_lazy as _
 import dj_database_url
 from pathlib import Path
@@ -14,6 +15,7 @@ import dotenv
 # Load environment variables
 dotenv.load_dotenv()
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ==========================================================
@@ -21,6 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ==========================================================
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-change-in-prod')
+# Pe Render, setam DEBUG=False explicit daca nu e suprascris
 DEBUG = 'RENDER' not in os.environ
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'invapp-romania.ro', 'www.invapp-romania.ro']
@@ -61,7 +64,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WHITENOISE TREBUIE SA FIE AICI
+    # WHITENOISE TREBUIE SA FIE AICI (Locul 2)
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'wedding_project.middleware.ForceDefaultLanguageMiddleware',
@@ -109,10 +112,67 @@ DATABASES = {
 }
 
 # ==========================================================
+# === STATIC & MEDIA FILES (CRITICAL FIX)                ===
+# ==========================================================
+
+STATIC_URL = '/static/'
+
+# Definim STATIC_ROOT absolut pentru Render
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Asiguram crearea folderului daca nu exista
+if not os.path.exists(STATIC_ROOT):
+    os.makedirs(STATIC_ROOT, exist_ok=True)
+
+# Definim STATICFILES_DIRS - unde cauta Django fisierele tale sursa
+# Verificam daca folderul 'static' din radacina exista
+STATICFILES_DIRS = []
+LOCAL_STATIC_DIR = BASE_DIR / 'static'
+if os.path.exists(LOCAL_STATIC_DIR):
+    STATICFILES_DIRS.append(LOCAL_STATIC_DIR)
+else:
+    print(f"⚠️ WARNING: Folderul {LOCAL_STATIC_DIR} nu a fost gasit! Verifica structura Git.")
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+    'SECURE_URL': True,
+}
+
+# --- CONFIGURARE STORAGES (WHITENOISE + CLOUDINARY) ---
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        # Folosim Whitenoise cu compresie dar FARA Manifest strict.
+        # Asta permite servirea fisierelor chiar daca unele lipsesc la build.
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
+
+if not DEBUG and os.environ.get('CLOUDINARY_API_KEY'):
+    STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+# --- LEGACY SUPPORT ---
+STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
+DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
+
+# Printam setarile la pornire pentru debugging in logurile Render
+if 'RENDER' in os.environ:
+    print(f"✅ RENDER DETECTED. STATIC_ROOT: {STATIC_ROOT}")
+    print(f"✅ STATICFILES_DIRS: {STATICFILES_DIRS}")
+    print(f"✅ STATICFILES_STORAGE: {STATICFILES_STORAGE}")
+
+# ==========================================================
 # === AUTH & EMAIL                                       ===
 # ==========================================================
 SITE_ID = 1
-
+# ... Restul configurarilor de Auth raman neschimbate ...
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -165,66 +225,11 @@ else:
     ACCOUNT_EMAIL_VERIFICATION = 'optional' if DEBUG else 'none'
 
 # ==========================================================
-# === I18N                                               ===
-# ==========================================================
-LANGUAGE_CODE = 'ro'
-LANGUAGES = [('ro', _('Romanian')), ('en', _('English'))]
-TIME_ZONE = 'Europe/Bucharest'
-USE_I18N = True
-USE_TZ = True
-LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
-
-# ==========================================================
-# === STATIC & MEDIA FILES (SAFE MODE)                   ===
-# ==========================================================
-
-STATIC_URL = '/static/'
-# Asiguram existenta folderului
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-if not os.path.exists(STATIC_ROOT):
-    try:
-        os.makedirs(STATIC_ROOT, exist_ok=True)
-    except OSError:
-        pass
-
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
-    'SECURE_URL': True,
-}
-
-# --- CONFIGURARE STORAGES (CRITIC: FARA COMPRESIE) ---
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        # Folosim Standard Storage. Whitenoise va servi fisierele oricum,
-        # dar fara a incerca sa le comprime la build.
-        # Asta elimina eroarea FileNotFoundError.
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
-
-# Configurare Media pentru Render
-if not DEBUG and os.environ.get('CLOUDINARY_API_KEY'):
-    STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
-
-# --- LEGACY SUPPORT ---
-STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
-DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
-
-# ==========================================================
 # === ALTELE                                             ===
 # ==========================================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Configurarile Stripe...
 STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "")
 STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "")
 STRIPE_TEST_PUBLISHABLE_KEY = os.environ.get("STRIPE_TEST_PUBLISHABLE_KEY", "")
