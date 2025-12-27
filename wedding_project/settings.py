@@ -203,7 +203,9 @@ STORAGES = {
 # Daca suntem pe Render (PROD), folosim Whitenoise si Cloudinary
 if not DEBUG:
     # 1. Static Files via Whitenoise (Compressed)
-    STORAGES["staticfiles"]["BACKEND"] = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    # Folosim CompressedStaticFilesStorage (fara Manifest) pentru a evita erorile de build
+    # cauzate de fisiere lipsa in CSS-ul tertilor (ex: admin/img/calendar-icons.svg).
+    STORAGES["staticfiles"]["BACKEND"] = "whitenoise.storage.CompressedStaticFilesStorage"
 
     # 2. Media Files via Cloudinary
     if os.environ.get('CLOUDINARY_API_KEY'):
