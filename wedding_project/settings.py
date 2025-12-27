@@ -179,7 +179,11 @@ LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 # ==========================================================
 
 STATIC_URL = '/static/'
+# Ensure staticfiles directory exists
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+if not os.path.exists(STATIC_ROOT):
+    os.makedirs(STATIC_ROOT, exist_ok=True)
+
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 MEDIA_URL = '/media/'
