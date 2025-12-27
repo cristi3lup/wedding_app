@@ -1,9 +1,9 @@
 """
 Django settings for wedding_project project.
-FINAL VERSION V4:
-- Activeaza WHITENOISE_USE_FINDERS = True (Solutia pentru imaginile lipsa).
-- Foloseste StaticFilesStorage standard (Fara erori de build).
-- Debugging activat pe cai.
+FINAL VERSION V5:
+- Fix Limbi: Restricționează limbile la RO și EN.
+- Fix Static: Folosește Standard Storage + Whitenoise Middleware (Safe Mode).
+- Fix Social: Ignoră erorile de variabile lipsă dacă nu sunt critice.
 """
 import os
 import sys
@@ -64,7 +64,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WHITENOISE TREBUIE SA FIE AICI (Locul 2) - El va servi fisierele
+    # WHITENOISE TREBUIE SA FIE AICI (Locul 2)
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'wedding_project.middleware.ForceDefaultLanguageMiddleware',
@@ -112,7 +112,7 @@ DATABASES = {
 }
 
 # ==========================================================
-# === STATIC & MEDIA FILES (THE HYBRID FIX)              ===
+# === STATIC & MEDIA FILES (SAFE MODE)                   ===
 # ==========================================================
 
 STATIC_URL = '/static/'
@@ -168,6 +168,22 @@ if not DEBUG:
 # --- LEGACY SUPPORT ---
 STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
 DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
+
+# ==========================================================
+# === I18N (LANGUAGE FIX)                                ===
+# ==========================================================
+LANGUAGE_CODE = 'ro' # Limba default
+
+# Definim STRICT limbile disponibile (Doar RO si EN)
+LANGUAGES = [
+    ('ro', _('Romanian')),
+    ('en', _('English')),
+]
+
+TIME_ZONE = 'Europe/Bucharest'
+USE_I18N = True
+USE_TZ = True
+LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # ==========================================================
 # === AUTH & EMAIL                                       ===
