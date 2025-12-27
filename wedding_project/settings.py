@@ -1,9 +1,9 @@
 """
 Django settings for wedding_project project.
-FINAL STABLE VERSION 3.1:
-- Debugging activat pentru Static Files.
-- Cale absolută garantată pentru STATIC_ROOT.
-- Whitenoise configurat pentru a servi fișierele chiar și fără compresie.
+FINAL SAFE VERSION:
+- Foloseste StaticFilesStorage (Standard) pentru a EVITA erorile FileNotFoundError la build.
+- Pastreaza definirea explicita STATICFILES_STORAGE pentru a evita AttributeError.
+- Whitenoise serveste fisierele prin Middleware.
 """
 import os
 import sys
@@ -64,7 +64,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WHITENOISE TREBUIE SA FIE AICI (Locul 2)
+    # WHITENOISE TREBUIE SA FIE AICI (Locul 2) - El va servi fisierele
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'wedding_project.middleware.ForceDefaultLanguageMiddleware',
@@ -112,7 +112,7 @@ DATABASES = {
 }
 
 # ==========================================================
-# === STATIC & MEDIA FILES (CRITICAL FIX)                ===
+# === STATIC & MEDIA FILES (SAFE MODE - NO COMPRESSION)  ===
 # ==========================================================
 
 STATIC_URL = '/static/'
@@ -122,16 +122,16 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Asiguram crearea folderului daca nu exista
 if not os.path.exists(STATIC_ROOT):
-    os.makedirs(STATIC_ROOT, exist_ok=True)
+    try:
+        os.makedirs(STATIC_ROOT, exist_ok=True)
+    except OSError:
+        pass
 
-# Definim STATICFILES_DIRS - unde cauta Django fisierele tale sursa
-# Verificam daca folderul 'static' din radacina exista
+# Definim STATICFILES_DIRS
 STATICFILES_DIRS = []
 LOCAL_STATIC_DIR = BASE_DIR / 'static'
 if os.path.exists(LOCAL_STATIC_DIR):
     STATICFILES_DIRS.append(LOCAL_STATIC_DIR)
-else:
-    print(f"⚠️ WARNING: Folderul {LOCAL_STATIC_DIR} nu a fost gasit! Verifica structura Git.")
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -143,30 +143,31 @@ CLOUDINARY_STORAGE = {
     'SECURE_URL': True,
 }
 
-# --- CONFIGURARE STORAGES (WHITENOISE + CLOUDINARY) ---
+# --- CONFIGURARE STORAGES (CRITIC: STANDARD DJANGO STORAGE) ---
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        # Folosim Whitenoise cu compresie dar FARA Manifest strict.
-        # Asta permite servirea fisierelor chiar daca unele lipsesc la build.
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        # Folosim Standard Storage.
+        # Whitenoise Middleware va servi fisierele, dar NU incercam sa le comprimam la build.
+        # Asta elimina eroarea 'FileNotFoundError' pe fisierele de admin.
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
 if not DEBUG and os.environ.get('CLOUDINARY_API_KEY'):
     STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
-# --- LEGACY SUPPORT ---
+# --- LEGACY SUPPORT (OBLIGATORIU) ---
+# Definitii explicite pentru compatibilitate cu django-cloudinary-storage
 STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
 DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
 
-# Printam setarile la pornire pentru debugging in logurile Render
+# Print debug info
 if 'RENDER' in os.environ:
-    print(f"✅ RENDER DETECTED. STATIC_ROOT: {STATIC_ROOT}")
-    print(f"✅ STATICFILES_DIRS: {STATICFILES_DIRS}")
-    print(f"✅ STATICFILES_STORAGE: {STATICFILES_STORAGE}")
+    print(f"✅ RENDER SAFE MODE. STATIC_ROOT: {STATIC_ROOT}")
+    print(f"✅ STORAGE BACKEND: {STATICFILES_STORAGE}")
 
 # ==========================================================
 # === AUTH & EMAIL                                       ===
