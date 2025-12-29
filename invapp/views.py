@@ -1048,9 +1048,9 @@ from django.contrib.auth.decorators import login_required
 def submit_feedback(request):
     existing_review = Testimonial.objects.filter(user=request.user).first()
 
-    # --- LOGICA EXTINSĂ: Găsirea celui mai bun cont social ---
+    # Default values
     social_avatar_url = None
-    provider_name = 'email'
+    provider_name = 'email'  # Default daca nu gasim altceva
 
     try:
         # 1. Căutăm TOATE conturile sociale legate de user
@@ -1058,40 +1058,64 @@ def submit_feedback(request):
 
         target_account = None
 
-        # 2. Prioritizăm conturile care au provider cunoscut (FB/Google)
+        # 2. Iterăm pentru a găsi un cont valid
         if social_accounts.exists():
             for account in social_accounts:
-                if account.provider in ['facebook', 'google']:
+                provider_str = str(account.provider).lower()
+
+                # Cautam provideri cunoscuti
+                if 'facebook' in provider_str:
                     target_account = account
                     break
+                elif 'google' in provider_str:
+                    target_account = account
+                    break
+                # Fallback pentru ID-uri numerice (Facebook vechi)
+                elif provider_str.isdigit() and len(provider_str) > 5:
+                    target_account = account
 
             # Dacă nu am găsit unul specific, luăm primul disponibil
             if not target_account:
                 target_account = social_accounts.first()
 
-        # 3. Extragem datele din contul găsit
+        # 3. Extragem datele și NORMALIZAM numele pentru Baza de Date
         if target_account:
-            provider_name = target_account.provider
+            raw_provider = str(target_account.provider).lower()
+            uid = target_account.uid
+            extra_data = target_account.extra_data or {}
 
-            # --- FIX: Logica Robustă de Extragere Avatar ---
+            # --- FIX CRITIC: Normalizare nume provider pentru a fi salvat corect in DB ---
+            if 'google' in raw_provider:
+                provider_name = 'google'  # Asta va salva 'google' in DB -> Badge Rosu in Admin
+            elif 'facebook' in raw_provider or raw_provider.isdigit():
+                provider_name = 'facebook'  # Asta va salva 'facebook' in DB -> Badge Albastru
+            else:
+                provider_name = 'email'
 
-            # Incercam metoda standard din allauth
-            social_avatar_url = target_account.get_avatar_url()
+            # --- Logica Avatar ---
+            # A. Încercare Standard Allauth
+            try:
+                social_avatar_url = target_account.get_avatar_url()
+            except Exception:
+                pass
 
-            # Daca metoda standard esueaza sau returneaza None, incercam manual
-            if not social_avatar_url:
-                if provider_name == 'google':
-                    social_avatar_url = target_account.extra_data.get('picture')
-                elif provider_name == 'facebook':
-                    # Facebook returneaza o structura imbricata: {'picture': {'data': {'url': '...'}}}
-                    picture_data = target_account.extra_data.get('picture', {})
-                    # Verificam daca 'picture' este dictionar (API v3.0+) sau string (API vechi)
-                    if isinstance(picture_data, dict):
-                        social_avatar_url = picture_data.get('data', {}).get('url')
-                    else:
-                        social_avatar_url = picture_data
+            # B. Încercare Manuală Google
+            if not social_avatar_url and provider_name == 'google':
+                social_avatar_url = extra_data.get('picture')
 
-            print(f"DEBUG FEEDBACK: User={request.user}, Provider={provider_name}, Avatar={social_avatar_url}",
+            # C. Încercare Manuală Facebook
+            if not social_avatar_url and provider_name == 'facebook':
+                picture_data = extra_data.get('picture', {})
+                if isinstance(picture_data, dict):
+                    social_avatar_url = picture_data.get('data', {}).get('url')
+                elif isinstance(picture_data, str):
+                    social_avatar_url = picture_data
+
+                # D. Fallback Suprem Facebook
+                if not social_avatar_url and uid:
+                    social_avatar_url = f"https://graph.facebook.com/{uid}/picture?type=large"
+
+            print(f"DEBUG FINAL: User={request.user}, SavedProvider={provider_name}, Avatar={social_avatar_url}",
                   file=sys.stderr)
 
     except Exception as e:
@@ -1104,28 +1128,28 @@ def submit_feedback(request):
             review = form.save(commit=False)
             review.user = request.user
 
-            # Nume - Folosim get_full_name sau username ca fallback
+            # Nume
             full_name = request.user.get_full_name()
             if not full_name:
                 full_name = request.user.username.split('@')[0]
             review.client_name = full_name
 
-            # Avatar (Suprascriem doar dacă am găsit unul nou valid)
+            # Avatar
             if social_avatar_url:
                 review.avatar_url = social_avatar_url
 
-            # Provider
+            # Provider - AICI SE SALVEAZA IN BAZA DE DATE
+            # Daca provider_name este 'google', in Admin va aparea 'Google'
             review.social_provider = provider_name
 
             review.save()
             messages.success(request, "Îți mulțumim pentru feedback!")
-            # Redirectioneaza unde consideri necesar, ex: landing page sau dashboard
-            return redirect('invapp:dashboard')  # Sau 'invapp:landing_page'
+            return redirect('invapp:dashboard')  # Sau unde doresti sa redirectionezi
     else:
         form = ReviewForm(instance=existing_review)
 
     return render(request, 'invapp/feedback_form.html', {
         'form': form,
-        'social_avatar_url': social_avatar_url,  # Trimitem si in template pentru preview
+        'social_avatar_url': social_avatar_url,
         'social_provider': provider_name
     })

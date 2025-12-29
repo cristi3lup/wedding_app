@@ -247,9 +247,25 @@ class FAQAdmin(ImportExportModelAdmin):
 
 @admin.register(Testimonial)
 class TestimonialAdmin(admin.ModelAdmin):
-    list_display = ('client_name', 'rating', 'created_at', 'is_active', 'is_featured')
-    # Permitem controlul Landing Page direct din listă
-    list_editable = ('is_active', 'is_featured')
-    list_filter = ('rating', 'is_featured', 'is_active')
-    search_fields = ('client_name', 'text')
-    ordering = ('-created_at',)
+    # Ce coloane apar in tabel
+    # FIX: Adaugam 'social_provider' in list_display pentru ca este in list_editable
+    list_display = ('client_name', 'social_provider', 'social_provider_badge', 'rating', 'created_at', 'is_active')
+
+    # Filtre in dreapta
+    list_filter = ('social_provider', 'is_active', 'rating')
+
+    # Cautare
+    search_fields = ('client_name', 'content')
+
+    # Editare rapida direct din lista
+    list_editable = ('is_active', 'social_provider')
+
+    # Functie pentru a afisa un text mai frumos in Admin
+    def social_provider_badge(self, obj):
+        if obj.social_provider == 'facebook':
+            return "🔵 Facebook"
+        elif obj.social_provider == 'google':
+            return "🔴 Google"
+        return "✉️ Email"
+
+    social_provider_badge.short_description = 'Badge'
