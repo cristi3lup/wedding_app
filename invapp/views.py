@@ -699,14 +699,47 @@ def event_preview_view(request):
 
 
 # --- Guest Management Views ---
+# În invapp/views.py
+
 @login_required
 def guest_list(request, event_id):
     event = get_object_or_404(Event, pk=event_id, owner=request.user)
-    guests = Guest.objects.filter(event=event).select_related('rsvp_details').order_by('name')
-    total = sum(g.attending_count for g in guests)
-    return render(request, 'invapp/guest_list_tailwind.html',
-                  {'event': event, 'guests': guests, 'total_attending': total})
 
+    # 1. Preluăm datele
+    guests_queryset = Guest.objects.filter(event=event).select_related('rsvp_details')
+    guests_list = list(guests_queryset)  # Convertim în listă pentru sortare Python
+
+    # 2. Preluăm parametrul din URL (asta trimite HTML-ul tău)
+    sort_param = request.GET.get('sort', 'name')
+
+    # Funcție ajutătoare pentru status
+    def status_priority(guest):
+        if guest.is_attending is True: return 0  # Primii
+        if guest.is_attending is None: return 1  # Mijloc
+        return 2  # Ultimii
+
+    # 3. Aplicăm sortarea pe baza parametrului primit
+    if sort_param == 'name':
+        guests_list.sort(key=lambda g: g.name.lower())
+    elif sort_param == '-name':
+        guests_list.sort(key=lambda g: g.name.lower(), reverse=True)
+    elif sort_param == 'status':
+        guests_list.sort(key=lambda g: (status_priority(g), g.name.lower()))
+    elif sort_param == '-status':
+        guests_list.sort(key=lambda g: (status_priority(g), g.name.lower()), reverse=True)
+
+    # Recalculăm totalul
+    total_attending = sum(g.attending_count for g in guests_list)
+
+    # 4. Trimitem 'current_sort' înapoi la HTML
+    # Fără asta, HTML-ul nu știe să pună săgeata corectă!
+    context = {
+        'event': event,
+        'guests': guests_list,
+        'total_attending': total_attending,
+        'current_sort': sort_param,
+    }
+    return render(request, 'invapp/guest_list_tailwind.html', context)
 
 class GuestCreateView(LoginRequiredMixin, CreateView):
     model = Guest
@@ -869,7 +902,7 @@ def stripe_webhook(request):
     except ValueError as e:
         print(f"❌ Error: Invalid payload")
         return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError as e:
+    except stripe.SignatureVerificationError as e:
         print(f"❌ Error: Signature verification failed.")
         return HttpResponse(status=400)
 
