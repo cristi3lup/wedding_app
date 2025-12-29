@@ -189,7 +189,7 @@ LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 # === AUTH & EMAIL                                       ===
 # ==========================================================
 SITE_ID = 1
-# ... Restul configurarilor de Auth raman neschimbate ...
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -197,8 +197,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-#ACCOUNT_LOGIN_METHOD = {'email'} # Inlocuieste ACCOUNT_AUTHENTICATION_METHOD
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+# Setari moderne pentru Allauth (Django 5+)
+ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
@@ -207,12 +207,11 @@ ACCOUNT_LOGIN_BY_CODE_ENABLED = False
 ACCOUNT_PREVENT_ENUMERATION = False
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
-LOGIN_REDIRECT_URL = '/dashboard/'
-LOGOUT_REDIRECT_URL = '/'
-
+# --- SOCIAL ACCOUNT SETTINGS (CRITIC PENTRU GOOGLE) ---
 SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none" # Nu cere verificare suplimentara
 SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter' # Asigura-te ca folosesti adaptorul default
 
 SOCIALACCOUNT_PROVIDERS = {
     'facebook': {
@@ -223,8 +222,20 @@ SOCIALACCOUNT_PROVIDERS = {
         'VERIFIED_EMAIL': True,
         'VERSION': 'v17.0',
     },
-    'google': {'SCOPE': ['profile', 'email'], 'AUTH_PARAMS': {'access_type': 'online'}, 'VERIFIED_EMAIL': True}
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'VERIFIED_EMAIL': True,
+    }
 }
+
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
 
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
