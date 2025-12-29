@@ -860,7 +860,7 @@ def stripe_webhook(request):
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
     event = None
 
-    print("\n=== STRIPE WEBHOOK RECEIVED ===")  # Debug print
+    print("\n=== STRIPE WEBHOOK RECEIVED ===")
 
     try:
         event = stripe.Webhook.construct_event(
@@ -870,76 +870,87 @@ def stripe_webhook(request):
         print(f"❌ Error: Invalid payload")
         return HttpResponse(status=400)
     except stripe.error.SignatureVerificationError as e:
-        print(f"❌ Error: Signature verification failed. Check STRIPE_WEBHOOK_SECRET in settings.py")
+        print(f"❌ Error: Signature verification failed.")
         return HttpResponse(status=400)
 
-    # Handle the event
+    # --- 1. PLATA FINALIZATĂ (One-Time sau Prima lună de Subscripție) ---
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
-
-        # Debug prints to see what Stripe sent us
         print(f"💰 Payment Succeeded for Session ID: {session.get('id')}")
 
         user_id = session.get('metadata', {}).get('user_id')
         plan_id = session.get('metadata', {}).get('plan_id')
 
-        print(f"👤 Metadata Found -> User ID: {user_id}, Plan ID: {plan_id}")
+        # Verificăm dacă există subscription ID (pentru planuri recurente)
+        subscription_id = session.get('subscription')
+
+        print(f"👤 Metadata Found -> User ID: {user_id}, Plan ID: {plan_id}, Sub ID: {subscription_id}")
 
         if user_id and plan_id:
             try:
                 user = User.objects.get(id=user_id)
                 new_plan = Plan.objects.get(id=plan_id)
 
-                # Check if profile exists, creating it if necessary logic should be handled by signals,
-                # but we add a safety net here.
                 if not hasattr(user, 'userprofile'):
-                    print("⚠️ UserProfile missing! Creating one now...")
                     UserProfile.objects.create(user=user)
 
                 profile = user.userprofile
                 profile.plan = new_plan
+
+                # OPTIONAL: Dacă vrei să salvezi ID-ul subscripției pentru a o gestiona mai târziu
+                # Trebuie să adaugi câmpul 'stripe_subscription_id' în modelul UserProfile mai întâi
+                # if subscription_id:
+                #     profile.stripe_subscription_id = subscription_id
+
                 profile.save()
 
                 print(f"✅ SUCCESS: Upgraded {user.username} to plan '{new_plan.name}'")
-            except User.DoesNotExist:
-                print(f"❌ CRITICAL ERROR: User with ID {user_id} not found in database.")
-                return HttpResponse(status=404)
-            except Plan.DoesNotExist:
-                print(f"❌ CRITICAL ERROR: Plan with ID {plan_id} not found in database.")
-                return HttpResponse(status=404)
             except Exception as e:
-                print(f"❌ UNEXPECTED ERROR updating DB: {str(e)}")
-                # Return 200 anyway to stop Stripe from retrying endlessly if it's a code bug
+                print(f"❌ ERROR updating DB: {str(e)}")
                 return HttpResponse(status=200)
-        else:
-            print("❌ Error: Metadata (user_id or plan_id) is MISSING in the Stripe Session.")
 
-    # --- NEW: Subscription Cancellation Logic ---
+    # --- 2. SUBSCRIERE NOUĂ CREATĂ (Specific pentru Event Planners) ---
+    elif event['type'] == 'customer.subscription.created':
+        subscription = event['data']['object']
+        subscription_id = subscription.get('id')
+        customer_id = subscription.get('customer')
+
+        print(f"🆕 Subscription CREATED: {subscription_id} for Customer: {customer_id}")
+
+        # NOTĂ: De obicei, logica de activare a planului este deja tratată în
+        # checkout.session.completed mai sus. Aici poți adăuga logică suplimentară
+        # doar dacă ai nevoie să reacționezi strict la crearea obiectului de subscripție.
+        # Pentru moment, doar logăm evenimentul pentru a confirma că funcționează.
+
+    # --- 3. ANULARE SUBSCRIERE ---
     elif event['type'] == 'customer.subscription.deleted':
         subscription = event['data']['object']
         customer_id = subscription.get('customer')
 
         print(f"⚠️ Subscription Cancelled for Customer ID: {customer_id}")
 
-        # We need to find the user. Since UserProfile doesn't store stripe_customer_id in V1,
-        # we try to retrieve the customer email from Stripe to find the user.
         try:
             stripe.api_key = settings.STRIPE_SECRET_KEY
             customer = stripe.Customer.retrieve(customer_id)
             email = customer.get('email')
 
             if email:
-                user = User.objects.get(email=email)
-                # Downgrade to None or a Free plan if you have one
-                user.userprofile.plan = None
-                user.userprofile.save()
-                print(f"✅ SUCCESS: Downgraded user {email} (Subscription Ended)")
+                try:
+                    user = User.objects.get(email=email)
+                    # Downgrade la planul Free sau NULL
+                    # Asumăm că planul Free are un ID specific sau logică de fallback
+                    # Aici îl setăm pe None momentan
+                    user.userprofile.plan = None
+                    user.userprofile.save()
+                    print(f"✅ SUCCESS: Downgraded user {email} (Subscription Ended)")
+                except User.DoesNotExist:
+                    print(f"❌ User with email {email} not found.")
             else:
                 print("❌ Could not find email in Stripe Customer object.")
 
         except Exception as e:
             print(f"❌ Error handling cancellation: {e}")
-            return HttpResponse(status=200)  # Return 200 to stop retries even if logic fails
+            return HttpResponse(status=200)
 
     return HttpResponse(status=200)
 

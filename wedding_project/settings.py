@@ -258,20 +258,32 @@ else:
 # ==========================================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Configurarile Stripe...
+# ==========================================================
+# === STRIPE CONFIGURATION                               ===
+# ==========================================================
 STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "")
+STRIPE_LIVE_PUBLISHABLE_KEY = os.environ.get("STRIPE_LIVE_PUBLISHABLE_KEY", "")
+
 STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "")
 STRIPE_TEST_PUBLISHABLE_KEY = os.environ.get("STRIPE_TEST_PUBLISHABLE_KEY", "")
-STRIPE_LIVE_PUBLISHABLE_KEY = os.environ.get("STRIPE_LIVE_PUBLISHABLE_KEY", "")
-STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-STRIPE_TEST_MODE = True
 
-if STRIPE_TEST_MODE:
-    STRIPE_SECRET_KEY = STRIPE_TEST_SECRET_KEY
-    STRIPE_PUBLIC_KEY = STRIPE_TEST_PUBLISHABLE_KEY
-else:
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
+# LOGICA DE COMUTARE:
+# Dacă setăm variabila STRIPE_LIVE_MODE='True' în Render, folosim cheile de LIVE.
+# Altfel, rămânem pe TEST (siguranță implicită).
+STRIPE_LIVE_MODE = os.environ.get("STRIPE_LIVE_MODE", "False") == "True"
+
+if STRIPE_LIVE_MODE:
     STRIPE_SECRET_KEY = STRIPE_LIVE_SECRET_KEY
     STRIPE_PUBLIC_KEY = STRIPE_LIVE_PUBLISHABLE_KEY
+    STRIPE_TEST_MODE = False
+    print("💳 STRIPE: Running in LIVE MODE")
+else:
+    STRIPE_SECRET_KEY = STRIPE_TEST_SECRET_KEY
+    STRIPE_PUBLIC_KEY = STRIPE_TEST_PUBLISHABLE_KEY
+    STRIPE_TEST_MODE = True
+    print("💳 STRIPE: Running in TEST MODE")
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
