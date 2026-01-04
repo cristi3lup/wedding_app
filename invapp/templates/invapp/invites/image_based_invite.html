@@ -15,7 +15,6 @@
 
     <div class="max-w-2xl mx-auto my-8 bg-white shadow-xl sm:rounded-lg overflow-hidden">
 
-        <!-- Section 1: The Uploaded Canva Image -->
         <section id="main-visual">
             {% if event.main_invitation_image %}
                 <img src="{{ event.main_invitation_image.url }}" alt="{{ event.title }} Invitation" class="w-full h-auto">
@@ -26,10 +25,8 @@
             {% endif %}
         </section>
 
-        <!-- Section 2: Interactive Content -->
         <div class="p-6 sm:p-10 space-y-12">
 
-            <!-- Map Section (Optional) -->
             {% if event.Maps_embed_url %}
             <section id="map">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 text-center">{% translate "Location" %}</h2>
@@ -39,24 +36,24 @@
             </section>
             {% endif %}
 
+            <section id="rsvp" class="border-t border-gray-200 pt-10 relative">
 
-            {% if not is_preview %}
-            <!-- RSVP Section -->
-            <section id="rsvp" class="border-t border-gray-200 pt-10">
+                {% if is_preview %}
+                <div class="absolute top-0 right-0 bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-bl-lg">
+                    PREVIEW MODE
+                </div>
+                {% endif %}
+
                 <h2 class="text-2xl font-semibold text-gray-800 mb-2 text-center">{% translate "Kindly Respond" %}</h2>
                 <p class="text-center text-gray-600 mb-8">
                     {% translate "This invitation is for:" %} <strong class="font-semibold text-indigo-600">{{ guest.name }}</strong>
                 </p>
 
                 <div class="max-w-lg mx-auto">
-                    <!--
-                       Added data-manual-status to track if the guest was manually updated by the host.
-                    -->
                     <form id="rsvp-form" class="space-y-6" action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" method="POST"
                           data-manual-status="{% if guest.manual_is_attending is not None %}true{% else %}false{% endif %}">
                         {% csrf_token %}
 
-                        <!-- Main RSVP Question -->
                         <fieldset>
                             <legend class="block text-base font-medium text-gray-700 mb-3 text-center">{{ form.attending.label }}</legend>
                             <div class="flex items-center justify-center space-x-6">
@@ -69,10 +66,8 @@
                             </div>
                         </fieldset>
 
-                        <!-- Dynamic Fields for Attending Guests -->
                         <div id="attending_details" class="space-y-6 bg-gray-50 p-6 rounded-lg border border-gray-200" style="display: none;">
 
-                            <!-- Number of Attendees -->
                             <div>
                                 <label for="{{ form.number_attending.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ form.number_attending.label }}</label>
                                 <div class="mt-1">
@@ -91,7 +86,6 @@
                                 </div>
                             </div>
 
-                            <!-- Meal Preferences -->
                             <div>
                                 <label for="{{ form.meal_preference.id_for_label }}" class="block text-sm font-medium text-gray-700">{% translate "Meal Preferences / Allergies" %}</label>
                                 <div class="mt-1">
@@ -99,7 +93,6 @@
                                 </div>
                             </div>
 
-                            <!-- Message -->
                             <div>
                                 <label for="{{ form.message.id_for_label }}" class="block text-sm font-medium text-gray-700">{% translate "Message for the hosts" %}</label>
                                 <div class="mt-1">
@@ -109,18 +102,18 @@
                         </div>
 
                         <div class="pt-4">
-                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                            <button type="submit"
+                                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors {% if is_preview %}opacity-50 cursor-not-allowed{% endif %}"
+                                    {% if is_preview %}disabled onclick="event.preventDefault(); alert('{% translate 'RSVP is disabled in preview mode.' %}');"{% endif %}>
                                 {% translate "Send RSVP" %}
                             </button>
                         </div>
                     </form>
                 </div>
             </section>
-            {% endif %}
         </div>
     </div>
 
-    <!-- Updated JavaScript for Conditional Logic & Confirmation -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const rsvpForm = document.getElementById('rsvp-form');
@@ -132,6 +125,7 @@
                 const attendingYesRadio = document.querySelector('input[name="attending"][value="True"]');
 
                 // Check state for confirmation dialogs
+                // Folosim 'default' pentru a evita erori de sintaxă în JS dacă variabilele lipsesc
                 const hasInitialResponse = "{{ guest.rsvp_details.attending|default:'None' }}" !== "None";
                 const hasManualUpdate = rsvpForm.getAttribute('data-manual-status') === 'true';
 
@@ -139,7 +133,6 @@
                     if (attendingYesRadio && attendingDetailsDiv) {
                         if (attendingYesRadio.checked) {
                             attendingDetailsDiv.style.display = 'block';
-                            // Optional: Add a slide-down animation class here if using Tailwind plugins
                         } else {
                             attendingDetailsDiv.style.display = 'none';
                         }
@@ -149,7 +142,7 @@
                 attendingRadios.forEach(radio => radio.addEventListener('change', toggleAttendingDetails));
                 toggleAttendingDetails(); // Initial check
 
-                // Confirmation on Submit
+                // Confirmation on Submit (Only if not in preview - though button is disabled anyway)
                 rsvpForm.addEventListener('submit', function(event) {
                     let message = "";
 

@@ -29,6 +29,7 @@ from .forms import ReviewForm # Asigură-te că imporți formularul
 from .models import Testimonial # Asigură-te că imporți modelul
 
 
+
 from .forms import (
     GuestForm, EventForm, GuestContactForm, AssignGuestForm,
     RSVPForm, TableForm, CustomUserCreationForm, TableAssignmentForm,
@@ -657,7 +658,7 @@ def event_preview_view(request):
     try:
         data = json.loads(request.body)
 
-        # --- UPDATED: Handle event_date and party_time ---
+        # --- 1. Gestionare dată și oră (Date & Time) ---
         date_str = data.get('event_date')
         if date_str:
             try:
@@ -674,7 +675,7 @@ def event_preview_view(request):
 
         mock_event = SimpleNamespace(**data)
 
-        # Handle Images
+        # --- 2. Gestionare Imagini (Images) ---
         for field in ['couple_photo', 'landscape_photo', 'main_invitation_image']:
             img = data.get(field)
             if img and img.startswith('data:image'):
@@ -684,17 +685,41 @@ def event_preview_view(request):
             else:
                 setattr(mock_event, field, None)
 
+        # --- 3. Gestionare Design ---
         design_id = data.get('selected_design')
         if not design_id: return HttpResponse("No design", status=400)
         design = CardDesign.objects.get(id=design_id)
 
-        mock_guest = SimpleNamespace(uuid='preview', name='Guest Name', honorific='mr')  # Dummy guest
+        # --- 4. Mock Guest (Folosind unique_id) ---
+        # Folosim un UUID valid (0000...) pentru a nu crăpa validarea URL-urilor din template
+        mock_guest = SimpleNamespace(
+            unique_id='00000000-0000-0000-0000-000000000000',
+            name='Nume Invitat',
+            honorific='family',
+            max_attendees=5,
+            manual_is_attending=None, # Necesar pentru logica din image_based_invite
+            rsvp_details=SimpleNamespace(attending=None) # Simulam lipsa unui raspuns anterior
+        )
 
-        context = {'event': mock_event, 'guest': mock_guest, 'is_preview': True}
-        html = render_to_string(design.template_name, context)
+        # --- 5. Mock Form (Critic pentru afișarea RSVP) ---
+        # Instantiem formularul gol pentru a putea randa campurile in preview
+        from .forms import RSVPForm
+        mock_form = RSVPForm(guest=mock_guest)
+
+        context = {
+            'event': mock_event,
+            'guest': mock_guest,
+            'form': mock_form,
+            'is_preview': True
+        }
+
+        # --- 6. Randare cu Request (Critic pentru CSRF Token) ---
+        html = render_to_string(design.template_name, context, request=request)
         return HttpResponse(html)
+
     except Exception as e:
         print(f"Preview Error: {e}")
+        # Returnam eroarea ca text pentru a o vedea in consola browserului daca ceva nu merge
         return HttpResponse(f"Error: {e}", status=500)
 
 
@@ -1197,3 +1222,46 @@ def submit_feedback(request):
         'social_avatar_url': social_avatar_url,
         'social_provider': provider_name
     })
+
+
+@login_required
+def event_preview_demo(request, event_id):
+    """
+    View special pentru dashboard când nu există niciun invitat real.
+    Generează un invitat fictiv în memorie.
+    """
+    event = get_object_or_404(Event, pk=event_id)
+
+    # Securitate: Doar proprietarul poate vedea demo-ul
+    if event.owner != request.user:
+        return HttpResponseForbidden("Nu ai permisiunea să vizualizezi acest eveniment.")
+
+    # Dacă evenimentul nu are design selectat
+    if not event.selected_design:
+        messages.warning(request, "Selectează un design pentru a vedea previzualizarea.")
+        return redirect('invapp:event_update', pk=event.id)
+
+    # 1. Creăm un Guest Fictiv (Nu se salvează în DB)
+    dummy_guest = SimpleNamespace(
+        unique_id='00000000-0000-0000-0000-000000000000',  # UUID Valid ca format
+        name='Nume Invitat Exemplu',  # Dummy Name cerut
+        honorific='family',
+        max_attendees=2,
+        manual_is_attending=None,
+        rsvp_details=SimpleNamespace(attending=None),  # Simulăm lipsa RSVP
+        event=event
+    )
+
+    # 2. Creăm un Formular gol legat de acest guest fictiv
+    form = RSVPForm(guest=dummy_guest)
+
+    # 3. Context
+    context = {
+        'event': event,
+        'guest': dummy_guest,
+        'form': form,
+        'is_preview': True,  # Activăm modul preview (ascunde butoanele de submit)
+        'google_calendar_link': None
+    }
+
+    return render(request, event.selected_design.template_name, context)

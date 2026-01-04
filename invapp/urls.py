@@ -24,6 +24,7 @@ urlpatterns = [
     path('accounts/signup/', views.signup_view, name='signup'),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='account/login.html'), name='login'),
     # --- Add the new unique invite path ---
+    path('event/<int:event_id>/preview-demo/', views.event_preview_demo, name='event_preview_demo'),
     path('invite/<uuid:guest_uuid>/', views.invitation_rsvp_combined_view, name='guest_invite'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('invite/<uuid:guest_uuid>/thank-you/', views.guest_invite_thank_you_view, name='guest_invite_thank_you'),
