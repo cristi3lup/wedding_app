@@ -30,6 +30,34 @@
         background-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
     }
 
+    /* --- INVITATION WORDING STYLE (UPDATED) --- */
+    .wording-container {
+        /* Layout & Positioning */
+        width: 100%;              /* Ocupă toată lățimea disponibilă */
+        max-width: 480px;         /* Limită maximă pentru a nu fi prea lat pe desktop */
+        margin-left: auto;        /* Centrează blocul pe orizontală */
+        margin-right: auto;       /* Centrează blocul pe orizontală */
+        margin-top: 20px;
+        margin-bottom: 25px;
+        padding: 0 15px;          /* Asigură că textul nu atinge marginile pe ecrane mici */
+        box-sizing: border-box;   /* Include padding-ul în calculul lățimii */
+
+        /* Typography & Alignment */
+        text-align: center !important; /* Forțează centrarea textului */
+        font-style: italic;
+        line-height: 1.6;         /* Spațiere generoasă între rânduri */
+        font-size: 1.2rem;        /* Ușor mai mare */
+        color: var(--color-text);
+
+        /* THE FIX: pre-line vs pre-wrap */
+        /* 'pre-line' păstrează rândurile noi (Enter) date de tine, */
+        /* DAR ignoră spațiile (tab-urile) de la început de rând care strică centrarea */
+        white-space: pre-line;
+
+        /* Siguranță pentru cuvinte foarte lungi */
+        overflow-wrap: break-word;
+    }
+
     /* --- CARD CONTAINER --- */
     .card-container {
         width: 100%;
@@ -287,27 +315,11 @@
 {% endblock %}
 
 {% block content %}
-<!--
-  x-data handles:
-  1. rsvpOpen: Modal visibility
-  2. langOpen: Language switcher visibility
--->
 <div x-data="{ rsvpOpen: false, langOpen: false }">
 
-    <!-- ============================================== -->
-    <!-- === CARD CONTAINER (With Dynamic Background) == -->
-    <!-- ============================================== -->
-    <!--
-         THE FIX: Changed background-size from 'cover' (default in CSS) to '100% auto'
-         inline. This ensures the full width of the image fits the card, preventing zoom-in cropping.
-    -->
     <div class="card-container"
          style="background-image: url('{% static 'invapp/images/BaloonBear/BaloonBear.png' %}'); background-size: 100% auto;">
 
-        <!--
-           Language Switcher
-           Positioned absolutely within the card for consistent placement
-        -->
         <div class="absolute top-4 right-4 z-40" @mouseenter="langOpen = true" @mouseleave="langOpen = false">
             <div class="relative">
                 <button @click="langOpen = !langOpen" class="flex items-center justify-center space-x-1 bg-white/80 backdrop-blur-md border border-white/60 shadow-sm rounded-full px-3 py-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider hover:bg-white transition-all">
@@ -315,7 +327,6 @@
                     <span>{{ LANGUAGE_CODE }}</span>
                 </button>
 
-                <!-- Dropdown -->
                 <div x-show="langOpen"
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0 translate-y-2"
@@ -341,11 +352,6 @@
             </div>
         </div>
 
-        <!--
-           CONDITIONAL DECORATIONS
-           Only show clouds and bear if NO custom background is uploaded.
-           If user uploaded a bg, we assume it contains the design.
-        -->
         {% if not event.main_invitation_image %}
             <div class="cloud cloud-1"></div>
             <div class="cloud cloud-2"></div>
@@ -355,14 +361,10 @@
 
         <div class="content">
 
-                <!-- Spacer to push text down if needed when using custom bg -->
-                <div style="height: 33vh;"></div>
+            <div style="height: 33vh;"></div>
 
-
-            <!-- Child's Name -->
             <h1 class="name">{{ event.child_name|default:"Matei - Alexandru" }}</h1>
 
-            <!-- Introduction -->
             <div class="intro-text">
                 {% translate "Împreună cu părinții mei" %}, <br>
                 <strong>{{ event.parents_names|default:"Raluca și Valentin" }}</strong><br>
@@ -377,20 +379,18 @@
                         </strong>
                     </div>
                 {% endif %}
-
-
             </div>
-                <span style="display:block; margin-top: 15px; font-style: italic;">
-                                    {{ event.invitation_wording|default:"Avem plăcerea de a vă invita" }}
-                                </span>
-            <!-- Date -->
+
+            <div class="wording-container">
+                {{ event.invitation_wording|default:"Avem plăcerea de a vă invita" }}
+            </div>
+
             <div class="date-container">
                 <div class="date-part uppercase">{{ event.date_time|date:"l" }}</div>
                 <div class="date-part date-highlight">{{ event.date_time|date:"d F" }}</div>
                 <div class="date-part">{{ event.date_time|date:"Y" }}</div>
             </div>
 
-            <!-- Details -->
             <div class="details-section">
                 <p style="margin-bottom: 20px;">{% translate "La botezul meu, care va avea loc la" %}</p>
 
@@ -423,7 +423,6 @@
                 {% translate "Vă așteptăm cu drag!" %}
             </div>
 
-            <!-- RSVP Trigger Button -->
             {% if not is_preview %}
             <div class="mt-6 mb-8">
                 <button @click="rsvpOpen = true" class="btn-rsvp">
@@ -435,9 +434,7 @@
         </div>
     </div>
 
-    <!-- ============================================== -->
-    <!-- === RSVP MODAL                             === -->
-    <!-- ============================================== -->
+    {% if not is_preview %}
     <div x-show="rsvpOpen"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
@@ -449,7 +446,6 @@
          style="display: none;">
 
         <div @click.away="rsvpOpen = false" class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 relative overflow-y-auto max-h-[90vh]">
-            <!-- Close Button -->
             <button @click="rsvpOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <i class="fas fa-times text-xl"></i>
             </button>
@@ -460,7 +456,6 @@
             <form method="POST" action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" class="space-y-4">
                 {% csrf_token %}
 
-                <!-- Attending Radio -->
                 <div class="text-center">
                     <label class="block text-sm font-semibold mb-3 text-gray-600">{% translate "Vei participa?" %}</label>
                     <div class="flex justify-center space-x-6">
@@ -473,7 +468,6 @@
                     </div>
                 </div>
 
-                <!-- Dynamic Details (Uses Alpine 'x-show' logic ideally, or JS below) -->
                 <div id="attending_details" style="display: none;">
 
                     <label class="modal-label">{% translate "Număr de persoane" %}</label>
@@ -493,24 +487,30 @@
             </form>
         </div>
     </div>
+    {% endif %}
 
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // RSVP Form Toggle Logic (Vanilla JS to supplement Alpine)
+    // RSVP Form Toggle Logic
     document.addEventListener('DOMContentLoaded', function() {
         const radios = document.querySelectorAll('input[name="attending"]');
         const details = document.getElementById('attending_details');
 
         function toggleDetails() {
+            // Check if details element exists (it won't in preview mode)
+            if (!details) return;
+
             const isYes = document.querySelector('input[name="attending"][value="True"]:checked');
-            if(details) details.style.display = isYes ? 'block' : 'none';
+            details.style.display = isYes ? 'block' : 'none';
         }
 
-        radios.forEach(r => r.addEventListener('change', toggleDetails));
-        toggleDetails();
+        if (radios.length > 0) {
+            radios.forEach(r => r.addEventListener('change', toggleDetails));
+            toggleDetails();
+        }
     });
 </script>
 {% endblock %}
