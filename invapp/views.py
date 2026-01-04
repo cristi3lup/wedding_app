@@ -1,3 +1,4 @@
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.sites.models import Site
 from allauth.socialaccount.models import SocialAccount
 from django.shortcuts import render, redirect, get_object_or_404
@@ -87,6 +88,7 @@ def export_assignments_csv(request, event_id):
 
 
 # --- Invitation & RSVP View ---
+@xframe_options_exempt
 def invitation_rsvp_combined_view(request, guest_uuid):
     """
     Handles displaying the invitation and the RSVP form for a specific guest.
@@ -253,22 +255,26 @@ def signup_view(request):
 # --- Dashboard ---
 @login_required
 def dashboard_view(request):
-    # UPDATED: Order by event_date
-    events = Event.objects.filter(
-        owner=request.user
-    ).select_related(
-        'selected_design'
-    ).prefetch_related(
-        'guests'
-    ).order_by('-event_date')  # Fixed sorting
+    # Preluăm evenimentele
+    events = Event.objects.filter(owner=request.user).select_related('selected_design').prefetch_related(
+        'guests').order_by('-event_date')
+
+    for event in events:
+        # Folosim hasattr/attribut access pentru a evita query-uri extra în buclă dacă e posibil,
+        # sau un simplu filter. Varianta sigură:
+        event.confirmed_count = event.guests.filter(rsvp_details__attending=True).count()
+        event.total_guests_count = event.guests.count()  # Optimizare pentru template
 
     user_guests = Guest.objects.filter(event__owner=request.user)
     guest_count = user_guests.count()
+
+    active_plan = request.user.userprofile.plan if hasattr(request.user, 'userprofile') else None
 
     context = {
         'events': events,
         'guests': user_guests,
         'guest_count': guest_count,
+        'active_plan': active_plan,
     }
     return render(request, 'invapp/dashboard.html', context)
 
@@ -653,6 +659,7 @@ class EventDeleteView(LoginRequiredMixin, DeleteView):
 
 # --- Preview View ---
 @csrf_exempt
+@xframe_options_exempt
 def event_preview_view(request):
     if request.method != 'POST': return HttpResponse("Invalid", status=400)
     try:
@@ -1225,6 +1232,7 @@ def submit_feedback(request):
 
 
 @login_required
+@xframe_options_exempt
 def event_preview_demo(request, event_id):
     """
     View special pentru dashboard când nu există niciun invitat real.

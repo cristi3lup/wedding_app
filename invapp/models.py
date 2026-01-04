@@ -297,12 +297,6 @@ class Event(models.Model):
         help_text=_("Name and address of the church/ceremony location.")
     )
 
-    Maps_embed_url = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Map Embed URL"),
-        help_text=_("Optional: Google Maps Embed SRC URL")
-    )
     ceremony_maps_url = models.URLField(
         max_length=1000,
         blank=True,

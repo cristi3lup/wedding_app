@@ -1,5 +1,5 @@
 # invapp/forms.py
-
+import re
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
@@ -161,7 +161,7 @@ class EventForm(forms.ModelForm):
             'child_name', 'parents_names',
             #'godparents',
              # Baptism fields
-            'Maps_embed_url','ceremony_maps_url','party_maps_url', 'calendar_description',
+            'ceremony_maps_url','party_maps_url', 'calendar_description',
             'ceremony_time', 'ceremony_location',
             'invitation_wording', 'schedule_details', 'other_info',
             'couple_photo',
@@ -204,9 +204,28 @@ class EventForm(forms.ModelForm):
             'other_info': forms.Textarea(attrs={'class': INPUT_CLASSES, 'rows': 4}),
             'selected_design': forms.RadioSelect(),
         }
-        help_texts = {
-            'Maps_embed_url': _('Find venue on Google Maps, click Share > Embed > Copy SRC URL.'),
-        }
+
+        def clean_map_url(self, field_name):
+            data = self.cleaned_data.get(field_name)
+            if not data:
+                return data
+
+            # 1. Dacă utilizatorul a lipit tot codul <iframe> (de pe Desktop)
+            # Extragem doar link-ul din atributul src="..."
+            if '<iframe' in data:
+                match = re.search(r'src="([^"]+)"', data)
+                if match:
+                    return match.group(1)
+
+            # 2. Dacă e un link simplu (de pe Android/Share), îl lăsăm așa cum e.
+            return data
+
+        def clean_ceremony_maps_url(self):
+            return self.clean_map_url('ceremony_maps_url')
+
+        def clean_party_maps_url(self):
+            return self.clean_map_url('party_maps_url')
+
 
 # invapp/forms.py
 # ... (other imports and forms) ...
