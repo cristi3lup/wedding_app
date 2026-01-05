@@ -21,11 +21,23 @@
         }
         .delay-100 { animation-delay: 0.1s; }
         .delay-200 { animation-delay: 0.2s; }
+
+        /* Shimmer effect for Coming Soon Badge */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .animate-shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
     </style>
 {% endblock %}
 
 <!-- Nav links override -->
 {% block nav_links %}
+    <a href="#features" class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-indigo-300 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">{% translate "Features" %}</a>
     <a href="#designs" class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-indigo-300 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">{% translate "Designs" %}</a>
     <a href="#about" class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-indigo-300 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">{% translate "About" %}</a>
     <a href="#pricing" class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-indigo-300 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">{% translate "Pricing" %}</a>
@@ -35,6 +47,7 @@
 {% endblock nav_links %}
 
 {% block mobile_nav_links %}
+    <a href="#features" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600 dark:text-gray-200 dark:hover:bg-gray-700">{% translate "Features" %}</a>
     <a href="#designs" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600 dark:text-gray-200 dark:hover:bg-gray-700">{% translate "Designs" %}</a>
     <a href="#about" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600 dark:text-gray-200 dark:hover:bg-gray-700">{% translate "About" %}</a>
     <a href="#pricing" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600 dark:text-gray-200 dark:hover:bg-gray-700">{% translate "Pricing" %}</a>
@@ -48,15 +61,16 @@
 {% block content %}
     <main class="-mt-6"> <!-- Negative margin to pull hero up if needed -->
 
-        <!-- 1. Hero Section with Modern Gradient Overlay -->
+        <!-- 1. Hero Section -->
         <section class="relative h-[85vh] min-h-[500px] flex items-center justify-center overflow-hidden">
-            <!-- Background Image (Dinamic din Admin sau Static Fallback) -->
+            <!-- Background Image -->
             <div class="absolute inset-0 w-full h-full">
                 <img src="{% if site_images.hero_bg %}{{ site_images.hero_bg.url }}{% else %}{% static 'images/d21nkkse.png' %}{% endif %}"
                      alt="Wedding atmosphere"
-                     class="w-full h-full object-cover object-center transition-transform duration-[20s] hover:scale-110">
+                     class="w-full h-full object-cover object-center transition-transform duration-[20s] hover:scale-110"
+                     loading="eager">
             </div>
-            <!-- Modern Gradient Overlay for better text readability -->
+            <!-- Overlay -->
             <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80"></div>
 
             <div class="relative z-10 px-4 text-center max-w-4xl mx-auto">
@@ -80,7 +94,56 @@
             </div>
         </section>
 
-        <!-- 2. Design Carousel Section (Clean Cards) -->
+        <!-- Features Section -->
+        <section id="features" class="py-24 bg-white dark:bg-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <span class="text-indigo-600 font-semibold tracking-wider uppercase text-sm">{% translate "Why InvApp?" %}</span>
+                    <h2 class="mt-2 text-4xl font-serif font-bold text-gray-900 dark:text-white">{% translate "Everything you need for your event" %}</h2>
+                    <p class="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">{% translate "We provide powerful tools to make your wedding planning stress-free and enjoyable." %}</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Feature 1 -->
+                    <div class="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-2xl hover:shadow-lg transition-all duration-300 border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800 text-center group">
+                        <div class="w-14 h-14 mx-auto bg-indigo-100 dark:bg-indigo-900/50 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{% translate "Guest Management" %}</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{% translate "Easily manage your guest list, track RSVPs, and organize details in one place." %}</p>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-2xl hover:shadow-lg transition-all duration-300 border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800 text-center group">
+                        <div class="w-14 h-14 mx-auto bg-pink-100 dark:bg-pink-900/50 rounded-xl flex items-center justify-center text-pink-600 dark:text-pink-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{% translate "Digital RSVP" %}</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{% translate "Receive instant confirmations, meal preferences, and more." %}</p>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-2xl hover:shadow-lg transition-all duration-300 border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800 text-center group">
+                        <div class="w-14 h-14 mx-auto bg-green-100 dark:bg-green-900/50 rounded-xl flex items-center justify-center text-green-600 dark:text-green-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{% translate "Table Planning" %}</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{% translate "Organize seating charts effortlessly with our intuitive table assignment tool." %}</p>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-2xl hover:shadow-lg transition-all duration-300 border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800 text-center group">
+                        <div class="w-14 h-14 mx-auto bg-yellow-100 dark:bg-yellow-900/50 rounded-xl flex items-center justify-center text-yellow-600 dark:text-yellow-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{% translate "Multi-Language" %}</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{% translate "Create invitations in multiple languages for your international guests." %}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Design Carousel Section -->
         <section id="designs" class="py-20 bg-gray-50 dark:bg-gray-900">
              <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-12">
@@ -89,12 +152,20 @@
                     <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">{% translate "Select from our collection of designs." %}</p>
                 </div>
 
-                <div class="relative group">
-                    <!-- Fading edges for scroll indication -->
+                <div class="relative group/designs">
+                    <!-- Fading edges -->
                     <div class="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-gray-50 to-transparent z-10 dark:from-gray-900 pointer-events-none"></div>
                     <div class="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-gray-50 to-transparent z-10 dark:from-gray-900 pointer-events-none"></div>
 
-                    <div class="flex space-x-6 overflow-x-auto pb-8 px-4 no-scrollbar snap-x snap-mandatory">
+                    <!-- Navigation Buttons (Designs) -->
+                    <button onclick="scrollContainer('designs-carousel', -1)" class="absolute left-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/90 dark:bg-gray-800/90 p-3 rounded-full shadow-lg hover:bg-white dark:hover:bg-gray-700 text-gray-800 dark:text-white transition-all focus:outline-none opacity-0 group-hover/designs:opacity-100 transition-opacity duration-300 hidden md:block">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <button onclick="scrollContainer('designs-carousel', 1)" class="absolute right-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/90 dark:bg-gray-800/90 p-3 rounded-full shadow-lg hover:bg-white dark:hover:bg-gray-700 text-gray-800 dark:text-white transition-all focus:outline-none opacity-0 group-hover/designs:opacity-100 transition-opacity duration-300 hidden md:block">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+
+                    <div id="designs-carousel" class="flex space-x-6 overflow-x-auto pb-8 px-4 no-scrollbar snap-x snap-mandatory scroll-smooth">
                         {% for design in designs %}
                             <div class="flex-shrink-0 w-72 sm:w-80 snap-center">
                                 <div onclick="openModal('{% if design.preview_image %}{{ design.preview_image.url }}{% elif design.preview_image_path %}{% static design.preview_image_path %}{% endif %}', '{{ design.name }}')"
@@ -102,17 +173,14 @@
 
                                         <div class="h-96 bg-gray-100 dark:bg-gray-700 overflow-hidden relative">
                                             {% if design.preview_image %}
-                                                <!-- Imagine încărcată din Admin (Cloudinary) -->
                                                 <img src="{{ design.preview_image.url }}" alt="{{ design.name }} Preview" class="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110" loading="lazy">
                                             {% elif design.preview_image_path %}
-                                                <!-- Imagine Statică (Legacy) -->
                                                 <img src="{% static design.preview_image_path %}" alt="{{ design.name }} Preview" class="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110" loading="lazy">
                                             {% else %}
-                                                <!-- Placeholder -->
                                                 <img src="https://placehold.co/400x500/E0C9A6/5D4037?text={{ design.name|urlencode }}" alt="{{ design.name }} Preview" class="w-full h-full object-cover" loading="lazy">
                                             {% endif %}
 
-                                            <!-- NEW: Multi-language Badge -->
+                                            <!-- Badge Multi-language -->
                                             {% if design.is_multilanguage %}
                                                 <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-indigo-600 px-2 py-1 rounded-full shadow-md flex items-center gap-1 z-20" title="{% translate 'Multi-language Supported' %}">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
@@ -120,7 +188,6 @@
                                                 </div>
                                             {% endif %}
 
-                                            <!-- Overlay on hover -->
                                             <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                                 <span class="bg-white/90 text-gray-900 px-4 py-2 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm">{% translate "Preview" %}</span>
                                             </div>
@@ -141,95 +208,218 @@
                 </div>
             </div>
         </section>
-         <!-- 3. About Section (Clean) -->
+
+        <!-- 3. About Section (Dynamic) -->
         <section id="about" class="py-24 bg-white dark:bg-gray-800 relative overflow-hidden">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
                 <div class="inline-block p-3 rounded-full bg-indigo-50 dark:bg-indigo-900/30 mb-6">
-                    <svg class="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                    <!-- Iconita Dinamica -->
+                    {% if about_section and about_section.icon_svg_path %}
+                        <svg class="w-8 h-8 {{ about_section.color_class }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {{ about_section.icon_svg_path|safe }}
+                        </svg>
+                    {% else %}
+                        <!-- Fallback Icon -->
+                        <svg class="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                    {% endif %}
                 </div>
-                <h2 class="text-4xl font-serif font-bold text-gray-900 dark:text-white mb-8">{% translate "Crafted with Love" %}</h2>
+
+                <h2 class="text-4xl font-serif font-bold text-gray-900 dark:text-white mb-8">
+                    {% if about_section %}{{ about_section.title }}{% else %}{% translate "Crafted with Love" %}{% endif %}
+                </h2>
+
                 <p class="text-xl text-gray-600 dark:text-gray-300 leading-relaxed font-light">
-                    {% translate "We believe the magic of an event begins with the invitation. Our mission is to empower you with an intuitive and inspiring tool to craft breathtaking invitations that spark excitement and connection. We're here to ensure every part of your journey, especially managing your guest list, is as joyful and effortless as the celebration itself." %}
+                    {% if about_section %}
+                        {{ about_section.description|linebreaksbr }}
+                    {% else %}
+                        {% translate "We believe the magic of an event begins with the invitation. Our mission is to empower you with an intuitive and inspiring tool to craft breathtaking invitations that spark excitement and connection. We're here to ensure every part of your journey, especially managing your guest list, is as joyful and effortless as the celebration itself." %}
+                    {% endif %}
                 </p>
             </div>
         </section>
 
-        <!-- 4. Pricing Plans Section (Modern Cards) -->
-        <section id="pricing" class="py-24 bg-gray-50 dark:bg-gray-900">
+        <!-- 4. Pricing Plans Section (Hybrid) -->
+        <section id="pricing" class="py-24 bg-gray-50 dark:bg-gray-900 overflow-hidden">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <span class="text-indigo-600 font-semibold tracking-wider uppercase text-sm">{% translate "Pricing" %}</span>
                 <h2 class="mt-2 text-4xl font-serif font-bold text-gray-900 dark:text-white">
                     {% translate "Choose a Plan That's Right For You" %}
                 </h2>
 
-                <div class="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
-                    {% for plan in plans %}
-                        <div class="relative flex flex-col h-full p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 dark:border-gray-700 {% if plan.featured %}ring-2 ring-indigo-500 scale-105 z-10{% endif %}">
+                <div class="mt-16 relative group/pricing">
+                    <!-- Nav Buttons -->
+                    <button onclick="scrollContainer('pricing-container', -1)" class="absolute left-0 top-1/2 transform -translate-y-1/2 z-20 bg-white/90 dark:bg-gray-800/90 p-3 rounded-full shadow-lg hover:bg-white dark:hover:bg-gray-700 text-gray-800 dark:text-white transition-all focus:outline-none opacity-0 group-hover/pricing:opacity-100 {% if plans|length <= 3 %}lg:hidden{% endif %}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <button onclick="scrollContainer('pricing-container', 1)" class="absolute right-0 top-1/2 transform -translate-y-1/2 z-20 bg-white/90 dark:bg-gray-800/90 p-3 rounded-full shadow-lg hover:bg-white dark:hover:bg-gray-700 text-gray-800 dark:text-white transition-all focus:outline-none opacity-0 group-hover/pricing:opacity-100 {% if plans|length <= 3 %}lg:hidden{% endif %}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
 
-                            {% if plan.featured %}
-                                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                    <span class="inline-flex items-center rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-1 text-xs font-bold text-white uppercase tracking-wide shadow-md">
-                                        {% translate "Most Popular" %}
-                                    </span>
-                                </div>
-                            {% endif %}
-
-                            <div class="mb-4">
-                                <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ plan.name }}</h3>
-                                <!-- THE FIX: Changed h-10 to min-h-[2.5rem] so text expands instead of overlapping -->
-                                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 min-h-[2.5rem]">{{ plan.description }}</p>
-                            </div>
-
-                            <div class="my-6 pb-6 border-b border-gray-100 dark:border-gray-700">
-                                <span class="text-4xl font-extrabold text-gray-900 dark:text-white">{{ plan.price|floatformat:0 }}</span>
-                                <span class="text-base font-medium text-gray-500 dark:text-gray-400"> RON / event</span>
-                            </div>
-
-                            <ul class="space-y-4 mb-8 flex-grow text-left">
-                                <li class="flex items-start">
-                                    <svg class="h-5 w-5 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                    <span class="text-sm text-gray-600 dark:text-gray-300">Up to <strong class="text-gray-900 dark:text-white">{{ plan.max_guests }}</strong> Guests</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="h-5 w-5 {% if plan.can_upload_own_design %}text-green-500{% else %}text-gray-300{% endif %} mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                    <span class="text-sm text-gray-600 dark:text-gray-300">{% translate "Upload Your Own Design" %}</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="h-5 w-5 {% if plan.has_table_assignment %}text-green-500{% else %}text-gray-300{% endif %} mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                    <span class="text-sm text-gray-600 dark:text-gray-300">{% translate "Table Assignment Tool" %}</span>
-                                </li>
-                                {% if plan.card_designs.all %}
-                                    <li class="pt-2 border-t border-dashed border-gray-200 dark:border-gray-700 mt-2">
-                                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Included Designs:</span>
-                                        <div class="mt-2 flex flex-wrap gap-2">
-                                            {% for design in plan.card_designs.all %}
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
-                                                    {{ design.name }}
-                                                </span>
-                                            {% endfor %}
-                                        </div>
-                                    </li>
+                    <div id="pricing-container" class="
+                        flex flex-nowrap overflow-x-auto snap-x snap-mandatory gap-6 py-10 px-4 items-stretch justify-start scroll-smooth
+                        no-scrollbar
+                        {% if plans|length <= 3 %}
+                            lg:grid lg:grid-cols-3 lg:gap-8 lg:overflow-visible lg:justify-center lg:px-0 lg:snap-none
+                        {% else %}
+                            lg:gap-8 lg:justify-start
+                        {% endif %}
+                    ">
+                        {% for plan in plans %}
+                            <div class="
+                                snap-center flex-shrink-0 w-[85vw] sm:w-[320px] flex flex-col h-full
+                                {% if plans|length <= 3 %}
+                                    lg:w-auto
                                 {% endif %}
-                            </ul>
+                            ">
+                                <div class="relative flex flex-col h-full p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 dark:border-gray-700
+                                    {% if plan.featured %}ring-2 ring-indigo-500 scale-[1.02] z-10{% endif %}">
 
-                            {% if plan.price == 0 %}
-                                <a href="{% url 'account_signup' %}" class="block w-full py-3 px-4 rounded-lg text-center font-bold bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors">
-                                    {% translate "Start for free" %}
-                                </a>
-                            {% else %}
-                                <a href="{% url 'invapp:manual_upgrade_page' plan_id=plan.id %}" class="block w-full py-3 px-4 rounded-lg text-center font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all">
-                                    {% translate "Get Started" %}
-                                </a>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
+                                    {% if plan.featured %}
+                                        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+                                            <span class="inline-flex items-center rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-1 text-[10px] font-bold text-white uppercase tracking-wide shadow-md whitespace-nowrap">
+                                                {% translate "Most Popular" %}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="mb-2 {% if plan.featured %}mt-2{% endif %}">
+                                        <!-- Dynamic Pricing Icon -->
+                                        {% if plan.icon_svg_path %}
+                                            <div class="mb-4">
+                                                <div class="inline-flex items-center justify-center p-2 rounded-xl bg-gray-50 dark:bg-gray-700/50">
+                                                    <svg class="h-8 w-8 {{ plan.color_class|default:'text-indigo-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                        {{ plan.icon_svg_path|safe }}
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+
+                                        <h3 class="text-xl font-bold text-gray-900 dark:text-white truncate" title="{{ plan.name }}">{{ plan.name }}</h3>
+                                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 min-h-[4rem] leading-relaxed">
+                                            {{ plan.description|linebreaksbr }}
+                                        </p>
+                                    </div>
+
+                                    <div class="my-4 pb-4 border-b border-gray-100 dark:border-gray-700">
+                                        <span class="text-4xl font-extrabold text-gray-900 dark:text-white">{{ plan.price|floatformat:0 }}</span>
+                                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase"> RON / {% translate "event" %}</span>
+                                    </div>
+
+                                    <!-- MODIFICARE: Listă Dinamică din Admin -->
+                                    <ul class="space-y-2 mb-6 flex-grow text-left">
+                                        <!-- 1. Afișăm features custom definite în Admin -->
+                                        {% for feature in plan.features.all %}
+                                            <li class="flex items-center">
+                                                {% if feature.is_included %}
+                                                    <!-- Icon Verde (Check) -->
+                                                    <svg class="h-4 w-4 text-green-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                    </svg>
+                                                    <span class="text-sm text-gray-600 dark:text-gray-300">{{ feature.text }}</span>
+                                                {% else %}
+                                                    <!-- Icon Gri/Roșu (X sau Minus) -->
+                                                    <svg class="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                    </svg>
+                                                    <span class="text-sm text-gray-400 line-through decoration-gray-400">{{ feature.text }}</span>
+                                                {% endif %}
+                                            </li>
+                                        {% endfor %}
+
+                                        <!-- 2. (Opțional) Păstrăm logica hardcodată veche ca fallback sau pentru chestii de sistem critice -->
+                                        <!-- De exemplu, Max Guests e un câmp tehnic, poate vrei să-l afișezi mereu primul -->
+                                        {% if not plan.features.exists %}
+                                             <li class="flex items-center">
+                                                <svg class="h-4 w-4 text-green-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                <span class="text-sm text-gray-600 dark:text-gray-300">{% translate "Up to" %} <strong class="text-gray-900 dark:text-white">{{ plan.max_guests }}</strong> {% translate "Guests" %}</span>
+                                            </li>
+                                            <!-- ... restul listei vechi ... -->
+                                        {% endif %}
+                                    </ul>
+
+                                    {% if plan.price == 0 %}
+                                        <a href="{% url 'account_signup' %}" class="block w-full py-2.5 px-4 rounded-lg text-center font-bold bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors text-sm">
+                                            {% translate "Start for free" %}
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'invapp:manual_upgrade_page' plan_id=plan.id %}" class="block w-full py-2.5 px-4 rounded-lg text-center font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all text-sm">
+                                            {% translate "Get Started" %}
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- REVIEWS CAROUSEL -->
-        {% include "invapp/includes/reviews_carousel_3d.html" %}
+        <!-- 5. Future Updates (Timeline Roadmap) Section -->
+        {% if future_features %}
+        <section id="roadmap" class="py-20 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <span class="inline-block py-1 px-3 rounded-full bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-xs font-bold tracking-wider uppercase mb-2">
+                        {% translate "Roadmap" %}
+                    </span>
+                    <h2 class="text-3xl font-serif font-bold text-gray-900 dark:text-white">
+                        {% translate "Coming Soon" %}
+                    </h2>
+                    <p class="mt-4 text-gray-500 dark:text-gray-400">
+                        {% translate "We are constantly working to improve your experience." %}
+                    </p>
+                </div>
 
+                <!-- Vertical Timeline -->
+                <div class="relative border-l-2 border-indigo-100 dark:border-indigo-900 ml-3 md:ml-0 md:pl-0 md:space-y-12 space-y-12">
+                    {% for feature in future_features %}
+                    <div class="relative md:flex items-center justify-between group">
+
+                        <!-- Dot on Line -->
+                        <div class="absolute -left-3 md:left-1/2 md:-ml-3 w-6 h-6 rounded-full border-4 border-white dark:border-gray-800 bg-indigo-500 z-10 shadow-md group-hover:scale-125 transition-transform duration-300"></div>
+
+                        <!-- Date/Status (Left on Desktop) -->
+                        <div class="ml-8 md:ml-0 md:w-5/12 md:text-right md:pr-10 mb-2 md:mb-0">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                {% translate "IN PROGRESS" %}
+                            </span>
+                        </div>
+
+                        <!-- Content (Right on Desktop) -->
+                        <div class="ml-8 md:ml-0 md:w-5/12 md:pl-10">
+                            <div class="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300 border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800">
+                                <div class="flex items-center mb-3">
+                                    <!-- Dynamic Icon Logic -->
+                                    <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center mr-3">
+                                        {% if feature.icon_svg_path %}
+                                            <svg class="w-5 h-5 {{ feature.color_class }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                {{ feature.icon_svg_path|safe }}
+                                            </svg>
+                                        {% else %}
+                                            <!-- Fallback Icon (Lightbulb) -->
+                                            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                            </svg>
+                                        {% endif %}
+                                    </div>
+                                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ feature.title }}</h3>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                                    {{ feature.description }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+               6. <!-- REVIEWS CAROUSEL -->
+            {% include "invapp/includes/reviews_carousel_3d.html" %}
+
+        <!-- 7. FAQ Teaser / Still Have Questions -->
         <section class="py-16 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
             <div class="max-w-4xl mx-auto px-4 text-center">
                 <h2 class="text-3xl font-serif font-bold text-gray-900 dark:text-white mb-4">
@@ -243,14 +433,15 @@
                 </a>
             </div>
         </section>
-        <!-- 5. Enhanced Footer with Branding & Socials -->
+
+        <!-- 8. Footer -->
        <footer class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
             <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                 <div class="md:flex md:items-center md:justify-between">
 
                     <!-- Left: Logo & Copyright -->
                     <div class="flex flex-col space-y-2">
-                        <span class="text-2xl font-serif font-bold text-gray-900 dark:text-white">InvApp</span>
+                        <a href="{% url 'invapp:landing_page' %}" class="text-2xl font-serif font-bold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">InvApp</a>
                         <p class="text-sm text-gray-500 dark:text-gray-400">
                             &copy; {% now "Y" %} InvApp. {% translate "All rights reserved." %}
                         </p>
@@ -339,5 +530,17 @@
                 closeModal();
             }
         });
+
+        // Function to scroll carousels
+        function scrollContainer(containerId, direction) {
+            const container = document.getElementById(containerId);
+            const scrollAmount = 350; // Adjust scroll distance
+            if (container) {
+                container.scrollBy({
+                    left: direction * scrollAmount,
+                    behavior: 'smooth'
+                });
+            }
+        }
     </script>
 {% endblock extra_js %}

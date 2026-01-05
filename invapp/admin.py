@@ -20,7 +20,10 @@ from .models import (
     ScheduleItem,
     FAQ,
     Testimonial,
-    SiteImage
+    SiteImage,
+    AboutSection,
+    FutureFeature,
+    PlanFeature,
 )
 from .forms import TableAssignmentAdminForm
 
@@ -210,11 +213,45 @@ class CardDesignAdmin(admin.ModelAdmin):
         return ", ".join([field.name for field in obj.special_fields.all()])
 
 
+class PlanFeatureInline(admin.TabularInline):
+    model = PlanFeature
+    extra = 0
+    # Aici apar câmpurile tale noi
+    fields = ('order', 'text_ro', 'text_en', 'is_included')
+    ordering = ('order',)
+
+
+# 2. Configurare Plan (Combinat: Vechi + Nou)
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price', 'max_events', 'stripe_price_id')
-    list_editable = ('price', 'max_events')
-    # Removed filter_horizontal for card_designs because the M2M is on CardDesign, not Plan
+    # Ce coloane vezi în listă (am adăugat max_guests și max_events cum ai cerut)
+    list_display = ('name', 'price', 'max_guests', 'max_events', 'stripe_price_id', 'is_public')
+
+    # Ce poți edita DIRECT din listă, fără să intri în detaliu
+    list_editable = ('price', 'max_guests', 'max_events', 'is_public')
+
+    search_fields = ('name',)
+
+    # Aici conectăm lista de features
+    inlines = [PlanFeatureInline]
+
+    # Organizăm formularul de detaliu să arate curat
+    fieldsets = (
+        ('Informații Generale', {
+            'fields': ('name', 'price', 'description', 'stripe_price_id')
+        }),
+        ('Limitări (Ceea ce ai vrut să păstrezi)', {
+            'fields': ('max_guests', 'max_events', 'lock_event_on_creation'),
+            'description': "Setează limitele tehnice ale planului."
+        }),
+        ('Vizual & Public', {
+            'fields': ('featured', 'is_public', 'icon_svg_path', 'color_class')
+        }),
+        ('Setări Vechi (Compatibilitate)', {
+            'classes': ('collapse',),
+            'fields': ('has_table_assignment', 'can_upload_own_design', 'show_watermark'),
+        }),
+    )
 
 
 @admin.register(SiteImage)
@@ -269,3 +306,13 @@ class TestimonialAdmin(admin.ModelAdmin):
         return "✉️ Email"
 
     social_provider_badge.short_description = 'Badge'
+
+    # La finalul fișierului, adaugă:
+    @admin.register(AboutSection)
+    class AboutSectionAdmin(admin.ModelAdmin):
+        list_display = ('title_ro', 'is_active')
+
+    @admin.register(FutureFeature)
+    class FutureFeatureAdmin(admin.ModelAdmin):
+        list_display = ('title_ro', 'target_date', 'priority', 'is_public')
+        list_editable = ('priority', 'is_public')

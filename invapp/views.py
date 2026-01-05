@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.contrib.auth.models import User
-from .models import UserProfile, Event, Guest, RSVP, Table, TableAssignment, CardDesign, Plan, FAQ
+from .models import UserProfile, Event, Guest, RSVP, Table, TableAssignment, CardDesign, Plan, FAQ, AboutSection, FutureFeature
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
@@ -34,7 +34,7 @@ from .models import Testimonial # Asigură-te că imporți modelul
 from .forms import (
     GuestForm, EventForm, GuestContactForm, AssignGuestForm,
     RSVPForm, TableForm, CustomUserCreationForm, TableAssignmentForm,
-    GuestCreateForm, GodparentFormSet, ScheduleItemFormSet
+    GuestCreateForm, GodparentFormSet, ScheduleItemFormSet, ReviewForm
 )
 
 
@@ -55,8 +55,6 @@ def export_assignments_csv(request, event_id):
     writer = csv.writer(response)
 
     # TRANSLATED HEADERS
-    # We wrap them in _() to mark them for translation.
-    # We use str() to ensure the translation is evaluated immediately for the CSV.
     writer.writerow([
         str(_('Type')),
         str(_('Guest Name')),
@@ -219,13 +217,22 @@ def landing_page_view(request):
     ).distinct().order_by('-priority', 'name')
 
     recent_reviews = Testimonial.objects.filter(is_active=True).order_by('-created_at')[:10]
+
+    # === NEW DATA FETCHING ===
+    # 1. About Section (Luăm prima activă)
+    about_section = AboutSection.objects.filter(is_active=True).first()
+
+    # 2. Future Features (Doar cele publice)
+    future_features = FutureFeature.objects.filter(is_public=True).order_by('-priority', 'target_date')
+
     context = {
         'reviews': recent_reviews,
         'designs': designs,
-        'plans': plans
+        'plans': plans,
+        'about_section': about_section,  # Adăugat în context
+        'future_features': future_features,  # Adăugat în context
     }
     return render(request, 'invapp/landing_page_tailwind.html', context)
-
 
 # --- Signup ---
 def signup_view(request):
@@ -731,8 +738,6 @@ def event_preview_view(request):
 
 
 # --- Guest Management Views ---
-# În invapp/views.py
-
 @login_required
 def guest_list(request, event_id):
     event = get_object_or_404(Event, pk=event_id, owner=request.user)
@@ -772,6 +777,7 @@ def guest_list(request, event_id):
         'current_sort': sort_param,
     }
     return render(request, 'invapp/guest_list_tailwind.html', context)
+
 
 class GuestCreateView(LoginRequiredMixin, CreateView):
     model = Guest
@@ -979,7 +985,6 @@ def stripe_webhook(request):
         subscription = event['data']['object']
         subscription_id = subscription.get('id')
         customer_id = subscription.get('customer')
-
         print(f"🆕 Subscription CREATED: {subscription_id} for Customer: {customer_id}")
 
         # NOTĂ: De obicei, logica de activare a planului este deja tratată în
@@ -1123,44 +1128,33 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def submit_feedback(request):
     existing_review = Testimonial.objects.filter(user=request.user).first()
-
-    # Default values
     social_avatar_url = None
-    provider_name = 'email'  # Default daca nu gasim altceva
+    provider_name = 'email'
 
     try:
-        # 1. Căutăm TOATE conturile sociale legate de user
         social_accounts = SocialAccount.objects.filter(user=request.user)
-
         target_account = None
 
-        # 2. Iterăm pentru a găsi un cont valid
         if social_accounts.exists():
             for account in social_accounts:
                 provider_str = str(account.provider).lower()
-
-                # Cautam provideri cunoscuti
                 if 'facebook' in provider_str:
                     target_account = account
                     break
                 elif 'google' in provider_str:
                     target_account = account
                     break
-                # Fallback pentru ID-uri numerice (Facebook vechi)
                 elif provider_str.isdigit() and len(provider_str) > 5:
                     target_account = account
 
-            # Dacă nu am găsit unul specific, luăm primul disponibil
             if not target_account:
                 target_account = social_accounts.first()
 
-        # 3. Extragem datele și NORMALIZAM numele pentru Baza de Date
         if target_account:
             raw_provider = str(target_account.provider).lower()
             uid = target_account.uid
             extra_data = target_account.extra_data or {}
 
-            # --- FIX CRITIC: Normalizare nume provider pentru a fi salvat corect in DB ---
             if 'google' in raw_provider:
                 provider_name = 'google'  # Asta va salva 'google' in DB -> Badge Rosu in Admin
             elif 'facebook' in raw_provider or raw_provider.isdigit():
@@ -1168,8 +1162,6 @@ def submit_feedback(request):
             else:
                 provider_name = 'email'
 
-            # --- Logica Avatar ---
-            # A. Încercare Standard Allauth
             try:
                 social_avatar_url = target_account.get_avatar_url()
             except Exception:

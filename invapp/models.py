@@ -8,6 +8,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django.utils.text import format_lazy
+from django.utils.translation import get_language
+
 
 
 class SiteImage(models.Model):
@@ -63,6 +65,12 @@ class Plan(models.Model):
         help_text=_("Does this plan allow uploading a custom design image?")
     )
 
+    # Watermark Control
+    show_watermark = models.BooleanField(
+        default=False,
+        help_text=_("Dacă este bifat, afișează 'InvApp Demo' pe invitație (pentru planul Gratuit).")
+    )
+
     icon_svg_path = models.TextField(
         blank=True,
         help_text=_("Paste the SVG <path> data for an icon here. e.g., <path d='...'/>")
@@ -90,6 +98,38 @@ class Plan(models.Model):
         return self.name
 
 
+# === NEW: Plan Features (pentru lista din Pricing) ===
+class PlanFeature(models.Model):
+    plan = models.ForeignKey(Plan, related_name='features', on_delete=models.CASCADE)
+    text_ro = models.CharField(max_length=255, verbose_name="Text Funcționalitate (RO)")
+    text_en = models.CharField(max_length=255, verbose_name="Text Funcționalitate (EN)", blank=True)
+
+    is_included = models.BooleanField(
+        default=True,
+        help_text=_("Dacă este bifat, apare cu verde (inclus). Dacă nu, apare tăiat sau gri.")
+    )
+
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text=_("Ordinea de afișare în listă.")
+    )
+
+    class Meta:
+        ordering = ['order']
+        verbose_name = _("Plan Feature")
+        verbose_name_plural = _("Plan Features")
+
+    @property
+    def text(self):
+        if get_language() == 'ro':
+            return self.text_ro
+        return self.text_en or self.text_ro
+
+    def __str__(self):
+        return self.text_ro
+
+
+# --- 1. Special Fields Config ---
 class SpecialField(models.Model):
     name = models.CharField(
         max_length=100,
@@ -517,8 +557,7 @@ class RSVP(models.Model):
             status = _("Attending")
         elif self.attending is False:
             status = _("Not Attending")
-        return format_lazy(_("RSVP for {name} - {status}"), name=self.guest.name, status=status)
-
+        return str(format_lazy(_("RSVP for {name} - {status}"), name=self.guest.name, status=status))
 
 # Represents a physical table at the reception
 class Table(models.Model):
@@ -559,7 +598,7 @@ class TableAssignment(models.Model):
         if self.event:
             return format_lazy(_("{guest} -> {table} for {event}"), guest=guest_name, table=table_name,
                                event=self.event.title)
-        return format_lazy(_("{guest} -> {table} (No Event Assigned)"), guest=guest_name, table=table_name)
+        return str(format_lazy(_("{guest} -> {table} (No Event Assigned)"), guest=guest_name, table=table_name))
 
 
 class UserProfile(models.Model):
@@ -707,3 +746,100 @@ class Testimonial(models.Model):
 
     def __str__(self):
         return f"{self.client_name} ({self.social_provider}) - {self.rating}★"
+
+
+# === NEW: Dynamic About Section (Bilingv) ===
+class AboutSection(models.Model):
+    # Câmpuri Română (Default)
+    title_ro = models.CharField(max_length=200, default="Creat cu Dragoste", verbose_name="Titlu (RO)")
+    description_ro = models.TextField(verbose_name="Descriere (RO)", help_text="Textul principal în Română.")
+
+    # Câmpuri Engleză
+    title_en = models.CharField(max_length=200, default="Crafted with Love", verbose_name="Titlu (EN)", blank=True)
+    description_en = models.TextField(verbose_name="Descriere (EN)", help_text="Textul principal în Engleză.",
+                                      blank=True)
+
+    icon_svg_path = models.TextField(
+        blank=True,
+        help_text=_("Paste the SVG <path> data here.")
+    )
+    color_class = models.CharField(
+        max_length=50,
+        default="text-indigo-600",
+        help_text=_("Tailwind color class for the icon (e.g., text-indigo-600, text-pink-500).")
+    )
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = _("About Section Configuration")
+        verbose_name_plural = _("About Section Configurations")
+
+    @property
+    def title(self):
+        if get_language() == 'ro':
+            return self.title_ro
+        return self.title_en or self.title_ro  # Fallback la RO dacă EN e gol
+
+    @property
+    def description(self):
+        if get_language() == 'ro':
+            return self.description_ro
+        return self.description_en or self.description_ro
+
+    def __str__(self):
+        return f"About Section: {self.title_ro}"
+
+
+# === NEW: Future Features / Roadmap (Bilingv) ===
+# === NEW: Future Features / Roadmap (Bilingv + Icon) ===
+class FutureFeature(models.Model):
+    # Câmpuri Română
+    title_ro = models.CharField(max_length=200, verbose_name="Titlu Funcționalitate (RO)")
+    description_ro = models.TextField(blank=True, verbose_name="Descriere Scurtă (RO)")
+
+    # Câmpuri Engleză
+    title_en = models.CharField(max_length=200, verbose_name="Titlu Funcționalitate (EN)", blank=True)
+    description_en = models.TextField(blank=True, verbose_name="Descriere Scurtă (EN)")
+
+    # --- UPDATED: Icon SVG & Color ---
+    icon_svg_path = models.TextField(
+        blank=True,
+        help_text=_("Paste the SVG <path> data here (e.g., <path d='...'/>).")
+    )
+    color_class = models.CharField(
+        max_length=50,
+        default="text-indigo-600",
+        help_text=_("Tailwind color class for the icon wrapper (e.g., text-indigo-600).")
+    )
+
+    # Internal tracking fields
+    target_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text=_("Internal target date for completion (Month/Year). Not necessarily shown publicly.")
+    )
+
+    is_public = models.BooleanField(
+        default=True,
+        help_text=_("Show this in the 'Coming Soon' section on the landing page?")
+    )
+
+    priority = models.PositiveIntegerField(
+        default=0,
+        help_text=_("Higher numbers appear first.")
+    )
+
+    @property
+    def title(self):
+        if get_language() == 'ro':
+            return self.title_ro
+        return self.title_en or self.title_ro
+
+    @property
+    def description(self):
+        if get_language() == 'ro':
+            return self.description_ro
+        return self.description_en or self.description_ro
+
+    def __str__(self):
+        return self.title_ro

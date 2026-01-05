@@ -5,22 +5,31 @@
 {% block page_specific_fonts %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
 {% block page_specific_styles %}
 <style>
+    :root {
+        --color-sage: #5D7355;
+        --color-sage-dark: #4A5D44;
+        --color-beige: #F3F0EB;
+        --color-text: #4A4A4A;
+    }
+
     body {
         font-family: 'Montserrat', sans-serif;
-        background-color: #F3F0EB; /* Warmer beige/stone */
-        color: #4A4A4A;
+        background-color: var(--color-beige);
+        color: var(--color-text);
+        /* Subtle noise texture */
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
     }
-    .font-serif {
-        font-family: 'Cormorant Garamond', serif;
-    }
+
+    .font-serif { font-family: 'Cormorant Garamond', serif; }
+    .font-sans { font-family: 'Montserrat', sans-serif; }
 
     /* Elegant Fade In Animation */
     @keyframes fadeInUp {
@@ -34,256 +43,452 @@
     /* Floating Leaves Animation */
     @keyframes float {
         0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-10px) rotate(2deg); }
+        50% { transform: translateY(-15px) rotate(4deg); }
     }
     .animate-float {
-        animation: float 8s ease-in-out infinite;
+        animation: float 10s ease-in-out infinite;
     }
 
-    /* Custom Button */
+    /* Custom Buttons */
     .btn-botanical {
-        background-color: #5D7355; /* Sage Green */
+        background-color: var(--color-sage);
         color: white;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 14px rgba(93, 115, 85, 0.25);
     }
     .btn-botanical:hover {
-        background-color: #4A5D44;
+        background-color: var(--color-sage-dark);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(93, 115, 85, 0.3);
+        box-shadow: 0 6px 20px rgba(93, 115, 85, 0.4);
+    }
+    .btn-botanical:active { transform: scale(0.98); }
+
+    .btn-outline-botanical {
+        background-color: transparent;
+        border: 1px solid var(--color-sage);
+        color: var(--color-sage);
+        transition: all 0.2s;
+    }
+    .btn-outline-botanical:hover {
+        background-color: var(--color-sage);
+        color: white;
     }
 
+    /* Glass Effect */
     .glass-panel {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    /* Form Inputs */
+    .modal-input {
+        width: 100%;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px;
+        background-color: #fff;
+        font-size: 16px; /* Prevents zoom on iOS */
+        transition: border-color 0.2s;
+    }
+    .modal-input:focus {
+        border-color: var(--color-sage);
+        outline: none;
+        ring: 2px solid rgba(93, 115, 85, 0.2);
+    }
+
+    /* Utilities */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Safe Area for Mobile */
+    .safe-area-bottom {
+        padding-bottom: env(safe-area-inset-bottom, 20px);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- x-data handles Modal state -->
-<div x-data="{ rsvpOpen: false }" class="relative min-h-screen overflow-hidden selection:bg-[#5D7355] selection:text-white">
+<!-- x-data handles Modal state & Language dropdown -->
+<div x-data="{ rsvpOpen: false, langOpen: false }" class="relative min-h-screen overflow-x-hidden selection:bg-[#5D7355] selection:text-white pb-24 sm:pb-0">
 
-    <!-- Decorative Background SVGs -->
-    <div class="fixed top-0 left-0 w-64 h-64 -translate-x-1/2 -translate-y-1/2 opacity-10 text-[#5D7355] pointer-events-none animate-float">
+    <!-- === LANGUAGE SWITCHER (Top Right) === -->
+    <div class="fixed top-4 right-4 z-40" @click.away="langOpen = false">
+        {% get_current_language as LANGUAGE_CODE %}
+        <div class="relative">
+            <button @click="langOpen = !langOpen" type="button" class="flex items-center justify-center space-x-1 bg-white/60 backdrop-blur-md border border-stone-200/50 shadow-sm rounded-full px-3 py-2 text-xs font-bold text-[#5D7355] uppercase tracking-wider hover:bg-white transition-all">
+                <i class="fas fa-globe mr-1"></i>
+                <span>{{ LANGUAGE_CODE|default:'ro' }}</span>
+            </button>
+
+            <div x-show="langOpen"
+                 style="display: none;"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-xl overflow-hidden border border-stone-100">
+                <form action="{% url 'set_language' %}" method="post">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                    <button type="submit" name="language" value="ro" class="w-full text-left px-4 py-3 text-sm hover:bg-stone-50 flex justify-between text-stone-600">
+                        <span>Română</span> {% if LANGUAGE_CODE == 'ro' %}<i class="fas fa-check text-[#5D7355]"></i>{% endif %}
+                    </button>
+                    <button type="submit" name="language" value="en" class="w-full text-left px-4 py-3 text-sm hover:bg-stone-50 flex justify-between text-stone-600">
+                        <span>English</span> {% if LANGUAGE_CODE == 'en' %}<i class="fas fa-check text-[#5D7355]"></i>{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decorative Background Leaves (SVGs) -->
+    <div class="fixed top-0 left-0 w-64 h-64 -translate-x-1/3 -translate-y-1/3 opacity-10 text-[#5D7355] pointer-events-none animate-float">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,22c4.97,0,9-4.03,9-9c0-4.97-9-13-9-13S3,8.03,3,13C3,17.97,7.03,22,12,22z"/></svg>
     </div>
-    <div class="fixed bottom-0 right-0 w-96 h-96 translate-x-1/3 translate-y-1/3 opacity-10 text-[#5D7355] pointer-events-none animate-float" style="animation-delay: 1s;">
+    <div class="fixed bottom-0 right-0 w-80 h-80 translate-x-1/4 translate-y-1/4 opacity-10 text-[#5D7355] pointer-events-none animate-float" style="animation-delay: 2s;">
          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1.04-3.37c4.8-2.54,12.27-5.92,14.65-11.75L17,8z"/></svg>
     </div>
 
     <!-- Main Content Container -->
-    <div class="max-w-3xl mx-auto py-12 px-4 sm:px-6 relative z-10">
+    <div class="max-w-3xl mx-auto py-8 sm:py-12 px-4 sm:px-6 relative z-10">
 
         <!-- Main Card -->
-        <div class="glass-panel rounded-2xl shadow-xl overflow-hidden animate-fade-up">
+        <div class="glass-panel rounded-2xl shadow-xl animate-fade-up">
 
-            <!-- Image Header -->
-            <div class="relative h-96 bg-stone-200">
-                {% if event.couple_photo %}
-                    <img src="{{ event.couple_photo.url }}" alt="Couple" class="w-full h-full object-cover">
-                {% else %}
-                    <div class="w-full h-full flex items-center justify-center text-stone-400 font-serif italic text-2xl bg-[#E8E6E1]">
-                        {{ event.bride_name }} & {{ event.groom_name }}
-                    </div>
-                {% endif %}
+            <!-- Image Header with Curved Cutout -->
+            <div class="relative h-[26rem] sm:h-96 bg-stone-200 group">
 
-                <!-- Date Overlay Badge -->
-                <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-white px-8 py-4 shadow-lg rounded-t-lg rounded-b-2xl text-center border-t-4 border-[#5D7355]">
-                    <p class="text-xs tracking-[0.2em] uppercase text-stone-500">Save the Date</p>
-                    <p class="font-serif text-3xl font-bold text-[#2C2C2C] mt-1">{{ event.event_date|date:"d.m.Y" }}</p>
+                <!-- Inner Image Wrapper (Clips the image zoom) -->
+                <div class="absolute inset-0 overflow-hidden rounded-t-2xl">
+                    {% if event.couple_photo %}
+                        <img src="{{ event.couple_photo.url }}" alt="Couple" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105">
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-stone-400 font-serif italic text-2xl bg-[#E8E6E1]">
+                            {{ event.bride_name }} & {{ event.groom_name }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Date Overlay Badge (Floating) -->
+                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 translate-y-1/2 bg-white px-8 py-5 shadow-lg rounded-full text-center border-4 border-[#F3F0EB] z-10 min-w-[180px]">
+                    <p class="text-[10px] tracking-[0.25em] uppercase text-stone-400 font-bold mb-1">Save the Date</p>
+                    <p class="font-serif text-3xl font-bold text-[#2C2C2C]">{{ event.event_date|date:"d.m.Y" }}</p>
                 </div>
             </div>
 
             <!-- Content Body -->
-            <div class="px-8 pt-16 pb-12 text-center">
+            <div class="px-6 sm:px-12 pt-16 pb-12 text-center">
 
                 <!-- Monogram -->
-                <div class="mb-6 text-[#5D7355]">
-                    <i data-lucide="leaf" class="w-8 h-8 mx-auto opacity-80"></i>
+                <div class="mb-6 text-[#5D7355] opacity-80">
+                    <span class="font-serif text-3xl italic tracking-widest">Noi</span>
                 </div>
 
-                <h1 class="font-serif text-5xl sm:text-7xl text-[#2C2C2C] leading-none mb-4">
-                    {{ event.bride_name }} <span class="text-[#5D7355] text-4xl align-middle mx-2">&</span> {{ event.groom_name }}
-                </h1>
+                <!-- Names: Bride Left / Groom Right (TOP) -->
+                <div class="grid grid-cols-2 gap-0 w-full mb-6 items-center max-w-lg mx-auto">
+                    <!-- Left: Bride -->
+                    <div class="text-right pr-4 sm:pr-8 border-r border-[#5D7355]/30">
+                        <h1 class="font-serif text-3xl sm:text-5xl text-[#2C2C2C] leading-tight break-words">
+                            {{ event.bride_name }}
+                        </h1>
+                    </div>
 
-                <p class="text-stone-600 uppercase tracking-widest text-xs mt-6 mb-12 relative inline-block px-6">
-                    <span class="absolute left-0 top-1/2 w-4 h-px bg-stone-300"></span>
-                    {% translate "Se căsătoresc" %}
-                    <span class="absolute right-0 top-1/2 w-4 h-px bg-stone-300"></span>
+                    <!-- Right: Groom -->
+                    <div class="text-left pl-4 sm:pl-8">
+                        <h1 class="font-serif text-3xl sm:text-5xl text-[#2C2C2C] leading-tight break-words">
+                            {{ event.groom_name }}
+                        </h1>
+                    </div>
+                </div>
+
+                <!-- Intro Text ("Noi, alături de părinții") (MIDDLE) -->
+                <p class="text-stone-500 uppercase tracking-widest text-[10px] sm:text-xs mb-8 relative inline-block px-8 py-2 border-y border-stone-200">
+                    {% translate "Alături de părinții" %}
                 </p>
+
+                <!-- Parents: Bride Parents Left / Groom Parents Right (BOTTOM) -->
+                <div class="grid grid-cols-2 gap-8 w-full mb-12 items-start max-w-2xl mx-auto px-2">
+                    <!-- Left: Bride Parents -->
+                    <div class="text-right">
+                         <h2 class="font-serif text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1 opacity-70">{% translate "Părinții Miresei" %}</h2>
+                         <p class="font-serif text-lg italic text-stone-700 leading-relaxed">
+                            {{ event.bride_parents }}
+                         </p>
+                    </div>
+
+                    <!-- Right: Groom Parents -->
+                    <div class="text-left">
+                         <h2 class="font-serif text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1 opacity-70">{% translate "Părinții Mirelui" %}</h2>
+                         <p class="font-serif text-lg italic text-stone-700 leading-relaxed">
+                            {{ event.groom_parents }}
+                         </p>
+                    </div>
+                </div>
+
+                <!-- Godparents Section -->
+                {% if event.godparents.exists %}
+                <div class="w-full text-center mb-12">
+                    <p class="text-stone-500 uppercase tracking-widest text-[10px] sm:text-xs mb-6 relative inline-block px-8 py-2 border-y border-stone-200">
+                        {% translate "Împreună cu nașii" %}
+                    </p>
+                    <div class="font-serif text-xl italic text-stone-700 leading-relaxed space-y-1">
+                        {% for gp in event.godparents.all %}
+                            <p>{{ gp.name }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if event.invitation_wording %}
+                  <p class="text-stone-500 uppercase tracking-widest text-[10px] sm:text-xs mb-8 relative inline-block px-8 py-2 border-y border-stone-200">
+                    {{ event.invitation_wording }}
+                </p>
+                {% else %}
+                <p class="text-stone-500 uppercase tracking-widest text-[10px] sm:text-xs mb-8 relative inline-block px-8 py-2 border-y border-stone-200">
+                    {% translate "Vă invităm la nunta noastră" %}
+                </p>
+                {% endif %}
+
+                <!-- Personalized Greeting Box -->
+                <div class="mb-12 bg-[#F9F8F6] p-5 rounded-xl border border-[#EBE8E3]">
+                    <p class="text-xs text-stone-400 mt-2 uppercase tracking-wide">{% translate "Mulțumim" %}</p>
+                     <p class="font-serif text-xl italic text-stone-700">
+                        {% if guest.honorific == 'family' %}
+                            {% blocktranslate with name=guest.name %}Dragă Familie {{ name }},{% endblocktranslate %}
+                        {% elif guest.honorific == 'couple' %}
+                            {% blocktranslate with name=guest.name %}Dragă cuplu {{ name }},{% endblocktranslate %}
+                        {% else %}
+                             {% blocktranslate with name=guest.name %}Dragă {{ name }},{% endblocktranslate %}
+                        {% endif %}
+                     </p>
+                </div>
 
                 <!-- Countdown -->
                 {% if event.event_date %}
                 <div x-data="countdown('{{ event.event_date|date:'Y-m-d' }}T{% if event.party_time %}{{ event.party_time|time:'H:i:s' }}{% else %}00:00:00{% endif %}')"
                      x-init="init()"
-                     class="grid grid-cols-4 gap-4 max-w-md mx-auto mb-16 font-serif text-[#5D7355]">
-                    <div class="bg-[#F3F0EB] p-3 rounded-lg">
-                        <span x-text="time.days" class="block text-3xl font-bold leading-none"></span>
-                        <span class="text-[10px] uppercase tracking-wider text-stone-500">{% translate "Zile" %}</span>
+                     class="grid grid-cols-4 gap-3 max-w-sm mx-auto mb-16 font-serif text-[#5D7355]">
+                    <div class="bg-white/50 border border-white p-3 rounded-lg shadow-sm">
+                        <span x-text="time.days" class="block text-2xl font-bold leading-none"></span>
+                        <span class="text-[9px] uppercase tracking-wider text-stone-400">{% translate "Zile" %}</span>
                     </div>
-                    <div class="bg-[#F3F0EB] p-3 rounded-lg">
-                        <span x-text="time.hours" class="block text-3xl font-bold leading-none"></span>
-                        <span class="text-[10px] uppercase tracking-wider text-stone-500">{% translate "Ore" %}</span>
+                    <div class="bg-white/50 border border-white p-3 rounded-lg shadow-sm">
+                        <span x-text="time.hours" class="block text-2xl font-bold leading-none"></span>
+                        <span class="text-[9px] uppercase tracking-wider text-stone-400">{% translate "Ore" %}</span>
                     </div>
-                    <div class="bg-[#F3F0EB] p-3 rounded-lg">
-                        <span x-text="time.minutes" class="block text-3xl font-bold leading-none"></span>
-                        <span class="text-[10px] uppercase tracking-wider text-stone-500">{% translate "Min" %}</span>
+                    <div class="bg-white/50 border border-white p-3 rounded-lg shadow-sm">
+                        <span x-text="time.minutes" class="block text-2xl font-bold leading-none"></span>
+                        <span class="text-[9px] uppercase tracking-wider text-stone-400">{% translate "Min" %}</span>
                     </div>
-                    <div class="bg-[#F3F0EB] p-3 rounded-lg">
-                        <span x-text="time.seconds" class="block text-3xl font-bold leading-none"></span>
-                        <span class="text-[10px] uppercase tracking-wider text-stone-500">{% translate "Sec" %}</span>
+                    <div class="bg-white/50 border border-white p-3 rounded-lg shadow-sm">
+                        <span x-text="time.seconds" class="block text-2xl font-bold leading-none"></span>
+                        <span class="text-[9px] uppercase tracking-wider text-stone-400">{% translate "Sec" %}</span>
                     </div>
                 </div>
                 {% endif %}
 
-                <!-- Details Columns -->
-                <div class="grid md:grid-cols-2 gap-10 text-left max-w-2xl mx-auto mb-16">
+                <!-- Details Cards (Grid) -->
+                <div class="grid md:grid-cols-2 gap-6 text-left max-w-2xl mx-auto mb-12">
                     <!-- Ceremony -->
-                    <div class="relative pl-6 border-l-2 border-[#5D7355]/30">
-                        <h3 class="font-serif text-2xl text-[#2C2C2C] mb-1 flex items-center gap-2">
-                            <i data-lucide="church" class="w-6 h-6 text-[#5D7355]"></i>
-                            {% translate "Cununia" %}
-                        </h3>
-                        <p class="text-[#5D7355] font-bold text-sm mb-2">{{ event.ceremony_time|time:"H:i" }}</p>
-                        <p class="text-stone-600 text-sm leading-relaxed">{{ event.ceremony_location }}</p>
-                        {% if event.ceremony_maps_url %}
-                            <a href="{{ event.ceremony_maps_url }}" target="_blank" class="inline-flex items-center mt-3 text-xs font-bold text-[#5D7355] hover:underline">
-                                <i data-lucide="map-pin" class="w-3 h-3 mr-1"></i> {% translate "Adresa" %}
-                            </a>
-                        {% endif %}
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100 flex flex-col h-full relative overflow-hidden group hover:border-[#5D7355]/30 transition-colors">
+                        <!-- Subtle Icon BG -->
+                        <div class="absolute -right-4 -top-4 text-stone-50 opacity-50 transform rotate-12 group-hover:scale-110 transition-transform">
+                             <i class="fas fa-church text-8xl"></i>
+                        </div>
+
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-3 text-[#5D7355]">
+                                <i data-lucide="church" class="w-5 h-5"></i>
+                                <h3 class="font-sans font-bold uppercase text-xs tracking-widest">{% translate "Cununia" %}</h3>
+                            </div>
+                            <p class="font-serif text-3xl text-stone-800 mb-1">{{ event.ceremony_time|time:"H:i" }}</p>
+                            <p class="text-stone-600 text-sm leading-relaxed mb-4 min-h-[3rem]">{{ event.ceremony_location }}</p>
+
+                            {% if event.ceremony_maps_url %}
+                                <a href="{{ event.ceremony_maps_url }}" target="_blank" class="btn-outline-botanical w-full py-2 px-4 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 mt-auto">
+                                    <i data-lucide="map-pin" class="w-3 h-3"></i> {% translate "Vezi Harta" %}
+                                </a>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <!-- Party -->
-                    <div class="relative pl-6 border-l-2 border-[#5D7355]/30">
-                        <h3 class="font-serif text-2xl text-[#2C2C2C] mb-1 flex items-center gap-2">
-                            <i data-lucide="wine" class="w-6 h-6 text-[#5D7355]"></i>
-                            {% translate "Petrecerea" %}
-                        </h3>
-                        <!-- UPDATED: Use party_time -->
-                        <p class="text-[#5D7355] font-bold text-sm mb-2">{{ event.party_time|time:"H:i" }}</p>
-                        <p class="text-stone-600 text-sm leading-relaxed">{{ event.venue_name }}<br><span class="text-stone-400">{{ event.venue_address }}</span></p>
-                        {% if event.party_maps_url %}
-                            <a href="{{ event.party_maps_url }}" target="_blank" class="inline-flex items-center mt-3 text-xs font-bold text-[#5D7355] hover:underline">
-                                <i data-lucide="map-pin" class="w-3 h-3 mr-1"></i> {% translate "Adresa" %}
-                            </a>
-                        {% endif %}
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100 flex flex-col h-full relative overflow-hidden group hover:border-[#5D7355]/30 transition-colors">
+                        <!-- Subtle Icon BG -->
+                        <div class="absolute -right-4 -top-4 text-stone-50 opacity-50 transform rotate-12 group-hover:scale-110 transition-transform">
+                             <i class="fas fa-glass-cheers text-8xl"></i>
+                        </div>
+
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-3 text-[#5D7355]">
+                                <i data-lucide="wine" class="w-5 h-5"></i>
+                                <h3 class="font-sans font-bold uppercase text-xs tracking-widest">{% translate "Petrecerea" %}</h3>
+                            </div>
+                            <p class="font-serif text-3xl text-stone-800 mb-1">{{ event.party_time|time:"H:i" }}</p>
+                            <p class="text-stone-600 text-sm font-semibold">{{ event.venue_name }}</p>
+                            <p class="text-stone-500 text-xs mb-4 min-h-[2rem]">{{ event.venue_address }}</p>
+
+                            {% if event.party_maps_url %}
+                                <a href="{{ event.party_maps_url }}" target="_blank" class="btn-outline-botanical w-full py-2 px-4 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 mt-auto">
+                                    <i data-lucide="map-pin" class="w-3 h-3"></i> {% translate "Vezi Harta" %}
+                                </a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
                 <!-- Timeline / Schedule -->
                 {% if event.schedule_details %}
-                <div class="bg-[#F3F0EB] rounded-xl p-8 text-left mb-8 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-24 h-24 text-white opacity-50 translate-x-8 -translate-y-8">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,2L12,2c-5.52,0-10,4.48-10,10s4.48,10,10,10c5.52,0,10-4.48,10-10S17.52,2,12,2z M12,18c-3.31,0-6-2.69-6-6s2.69-6,6-6 s6,2.69,6,6S15.31,18,12,18z"/></svg>
-                    </div>
-                    <h3 class="font-serif text-2xl text-[#2C2C2C] mb-4 flex items-center">
-                        <i data-lucide="clock" class="w-5 h-5 mr-2 text-[#5D7355]"></i>
-                        {% translate "Cronologia evenimentelor" %}
+                <div class="bg-[#F9F8F6] rounded-xl p-8 text-left mb-8 relative border border-[#EBE8E3]">
+                    <h3 class="font-serif text-2xl text-[#2C2C2C] mb-6 flex items-center justify-center border-b border-stone-200 pb-3">
+                        <span class="px-4">{% translate "Program" %}</span>
                     </h3>
-                    <div class="prose prose-stone prose-sm">
+                    <div class="prose prose-stone prose-sm mx-auto marker:text-[#5D7355]">
                         {{ event.schedule_details|linebreaks }}
                     </div>
                 </div>
                 {% endif %}
 
             </div>
-        </div>
 
-        <!-- Floating RSVP Button (Mobile Friendly) -->
-        {% if not is_preview %}
-        <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
-            <button @click="rsvpOpen = true" class="btn-botanical flex items-center gap-2 px-8 py-3 rounded-full shadow-lg font-serif text-lg tracking-wider">
-                <span>{% translate "Confirmați acum" %}</span>
-                <i data-lucide="send" class="w-4 h-4"></i>
-            </button>
+            <!-- Desktop RSVP Button (Hidden on Mobile) -->
+            {% if not is_preview %}
+            <div class="hidden sm:block pb-12 text-center bg-stone-50/50">
+                 <button @click="rsvpOpen = true" class="btn-botanical px-10 py-4 rounded-full font-serif text-lg tracking-wider shadow-xl hover:shadow-2xl transform transition-all hover:-translate-y-1">
+                    <span>{% translate "Confirmă Prezența" %}</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4 ml-2 inline"></i>
+                </button>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
-
     </div>
 
     <!-- ============================================== -->
-    <!-- === RSVP MODAL (Centered Popup)            === -->
+    <!-- === MOBILE STICKY BOTTOM BAR               === -->
+    <!-- ============================================== -->
+    {% if not is_preview %}
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-lg border-t border-stone-200 p-4 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] sm:hidden flex gap-3 items-center safe-area-bottom">
+
+        <!-- Waze/Map Button (if Party location exists) -->
+        {% if event.party_maps_url %}
+        <a href="{{ event.party_maps_url }}" target="_blank" class="flex-shrink-0 bg-stone-100 text-[#5D7355] w-12 h-12 rounded-full flex items-center justify-center border border-stone-200 active:scale-95 transition-transform">
+            <i data-lucide="map" class="w-5 h-5"></i>
+        </a>
+        {% endif %}
+
+        <!-- Main RSVP CTA -->
+        <button @click="rsvpOpen = true" class="flex-1 btn-botanical h-12 rounded-xl shadow-md font-bold text-sm tracking-widest uppercase flex items-center justify-center gap-2">
+            {% translate "Răspunde" %}
+            <i data-lucide="send" class="w-4 h-4"></i>
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- ============================================== -->
+    <!-- === RSVP MODAL (Bottom Sheet / Center)     === -->
     <!-- ============================================== -->
     {% if not is_preview %}
     <div x-show="rsvpOpen"
          style="display: none;"
-         class="fixed inset-0 z-50 flex items-center justify-center px-4">
+         class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:px-4">
 
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
-             x-transition:enter="transition ease-out duration-300"
+        <div class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity"
+             x-show="rsvpOpen"
+             x-transition:enter="ease-out duration-300"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave="ease-in duration-200"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              @click="rsvpOpen = false"></div>
 
-        <!-- Modal Content -->
-        <div class="relative w-full max-w-md bg-white rounded-xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
+        <!-- Modal Panel -->
+        <div class="bg-[#fdfbf7] w-full max-w-lg sm:rounded-2xl rounded-t-3xl shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]"
+             x-show="rsvpOpen"
              x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 translate-y-8 scale-95"
-             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:enter-start="translate-y-full sm:translate-y-10 sm:opacity-0"
+             x-transition:enter-end="translate-y-0 sm:translate-y-0 sm:opacity-100"
              x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-             x-transition:leave-end="opacity-0 translate-y-8 scale-95">
+             x-transition:leave-start="translate-y-0 sm:translate-y-0 sm:opacity-100"
+             x-transition:leave-end="translate-y-full sm:translate-y-10 sm:opacity-0">
 
-            <button @click="rsvpOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <i data-lucide="x" class="w-6 h-6"></i>
+            <!-- Drag Handle (Mobile Visual Cue) -->
+            <div class="w-12 h-1.5 bg-stone-300 rounded-full mx-auto mt-3 sm:hidden"></div>
+
+            <button @click="rsvpOpen = false" class="absolute top-4 right-4 text-stone-400 hover:text-stone-800 p-2 bg-stone-100 rounded-full sm:block hidden">
+                <i data-lucide="x" class="w-5 h-5"></i>
             </button>
 
-            <div class="text-center mb-6">
-                <i data-lucide="mail" class="w-10 h-10 mx-auto text-[#5D7355] mb-2"></i>
-                <h3 class="font-serif text-3xl text-[#2C2C2C]">{% translate "Vă rugăm confirmați" %}</h3>
-                <p class="text-sm text-stone-500 mt-1">
-                    {% translate "Pentru" %}
-                    <span class="font-bold text-[#5D7355]">
-                        {% if guest.honorific != 'none' %}{{ guest.get_honorific_display }} {% endif %}{{ guest.name }}
-                    </span>
+            <!-- Modal Header -->
+            <div class="px-6 pt-6 pb-2 text-center">
+                <h3 class="font-serif text-3xl text-[#2C2C2C] mb-1">{% translate "RSVP" %}</h3>
+                <p class="text-xs text-stone-500 uppercase tracking-wider">
+                    {% translate "Pentru" %} <span class="font-bold text-[#5D7355]">{{ guest.name }}</span>
                 </p>
             </div>
 
-            <form id="rsvp-form" method="POST" action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}"
-                  class="space-y-5"
-                  data-manual-status="{% if guest.manual_is_attending is not None %}true{% else %}false{% endif %}">
-                {% csrf_token %}
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-6 overflow-y-auto no-scrollbar">
+                <form id="rsvp-form" method="POST" action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}"
+                      class="space-y-6"
+                      data-manual-status="{% if guest.manual_is_attending is not None %}true{% else %}false{% endif %}">
+                    {% csrf_token %}
 
-                <!-- Attendance Radios -->
-                <div class="grid grid-cols-2 gap-4">
-                    {% for radio in form.attending %}
-                        <label class="cursor-pointer">
-                            {{ radio.tag }}
-                            <div class="border border-stone-200 rounded-lg p-3 text-center hover:border-[#5D7355] hover:bg-stone-50 transition-colors peer-checked:bg-[#5D7355] peer-checked:text-white peer-checked:border-[#5D7355]">
-                                <span class="font-serif text-lg block">{{ radio.choice_label }}</span>
-                            </div>
-                        </label>
-                    {% endfor %}
-                </div>
-
-                <!-- Details Section (Conditional in JS) -->
-                <div id="attending_details" style="display: none;" class="space-y-4 bg-[#F9F8F6] p-4 rounded-lg">
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-1">{% translate "Număr invitați" %}</label>
-                        <input type="number" name="{{ form.number_attending.name }}" min="1" max="{{ guest.max_attendees }}" class="w-full border-stone-300 rounded-md focus:ring-[#5D7355] focus:border-[#5D7355]" placeholder="1">
-                        <p class="text-[10px] text-stone-400 text-right mt-1">{% blocktranslate with max=guest.max_attendees %}Max allowed: {{ max }}{% endblocktranslate %}</p>
+                    <!-- Attendance Radios (Visual Cards) -->
+                    <div class="grid grid-cols-2 gap-4">
+                        {% for radio in form.attending %}
+                            <label class="cursor-pointer group relative">
+                                {{ radio.tag }} <!-- Hidden native input -->
+                                <div class="h-full border-2 border-stone-200 rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-200 hover:border-[#5D7355] peer-checked:border-[#5D7355] peer-checked:bg-[#5D7355]/10 peer-checked:text-[#5D7355]">
+                                    <div class="mb-2 text-2xl transform transition-transform group-hover:scale-110">
+                                        {% if 'Da' in radio.choice_label or 'Yes' in radio.choice_label %}
+                                            <i class="fas fa-check-circle text-[#5D7355]"></i>
+                                        {% else %}
+                                            <i class="fas fa-times-circle text-stone-400"></i>
+                                        {% endif %}
+                                    </div>
+                                    <span class="font-bold text-sm uppercase tracking-wide">{{ radio.choice_label }}</span>
+                                </div>
+                            </label>
+                        {% endfor %}
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-1">{% translate "Meniu Special" %}</label>
-                        <textarea name="{{ form.meal_preference.name }}" rows="2" class="w-full border-stone-300 rounded-md focus:ring-[#5D7355] focus:border-[#5D7355]"></textarea>
+
+                    <!-- Dynamic Details Section -->
+                    <div id="attending_details" style="display: none;" class="space-y-4 bg-white p-5 rounded-2xl border border-stone-100 shadow-sm animate-fade-up">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-stone-500">
+                                <i class="fas fa-user-friends mr-1"></i> {% translate "Număr persoane" %}
+                            </label>
+                            <input type="number" name="{{ form.number_attending.name }}" min="1" max="{{ guest.max_attendees }}" class="modal-input text-center font-bold text-lg text-[#5D7355]" placeholder="1" value="{{ form.number_attending.value|default:1 }}">
+                            <p class="text-[10px] text-stone-400 text-center mt-1">{% blocktranslate with max=guest.max_attendees %}(Maxim: {{ max }}){% endblocktranslate %}</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-stone-500">
+                                <i class="fas fa-utensils mr-1"></i> {% translate "Meniu Special / Alergii" %}
+                            </label>
+                            <textarea name="{{ form.meal_preference.name }}" rows="2" class="modal-input" placeholder="Ex: Vegetarian, fără gluten..."></textarea>
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-1">{% translate "Transmiteți un mesaj" %}</label>
-                    <textarea name="{{ form.message.name }}" rows="2" class="w-full border-stone-300 rounded-md focus:ring-[#5D7355] focus:border-[#5D7355]"></textarea>
-                </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-stone-500">{% translate "Mesaj pentru miri" %}</label>
+                        <textarea name="{{ form.message.name }}" rows="2" class="modal-input" placeholder="Vă dorim..."></textarea>
+                    </div>
 
-                <button type="submit" class="btn-botanical w-full py-3 rounded-lg font-bold tracking-wider uppercase text-sm">
-                    {% translate "Răspundeți" %}
-                </button>
-            </form>
-
+                    <!-- Bottom Padding for Safe Area -->
+                    <div class="safe-area-bottom">
+                        <button type="submit" class="btn-botanical w-full py-4 rounded-xl font-bold tracking-widest uppercase text-sm shadow-lg flex justify-center items-center gap-2">
+                            <span>{% translate "Trimite Răspunsul" %}</span>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
     {% endif %}
@@ -303,7 +508,7 @@
             target: new Date(dateString).getTime(),
             init() {
                 if (isNaN(this.target)) return;
-                setInterval(() => {
+                const update = () => {
                     const now = new Date().getTime();
                     const dist = this.target - now;
                     if (dist < 0) {
@@ -314,7 +519,9 @@
                     this.time.hours = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
                     this.time.minutes = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
                     this.time.seconds = Math.floor((dist % (1000 * 60)) / 1000).toString().padStart(2, '0');
-                }, 1000);
+                };
+                update();
+                setInterval(update, 1000);
             }
         }
     }
@@ -325,19 +532,48 @@
         const details = document.getElementById('attending_details');
 
         function toggle() {
-            const yes = document.querySelector('input[name="attending"][value="True"]');
-            if(yes && details) details.style.display = yes.checked ? 'block' : 'none';
+            // Check for "True" value
+            const checked = document.querySelector('input[name="attending"]:checked');
+            // Logic adapted for standard Django RadioSelect output
+            const isYes = checked && (checked.value === "True");
+
+            if(details) {
+                 if (isYes) {
+                    details.style.display = 'block';
+                    // Optional: auto scroll to details on mobile
+                    // if(window.innerWidth < 640) details.scrollIntoView({behavior: "smooth", block: "nearest"});
+                 } else {
+                    details.style.display = 'none';
+                 }
+            }
+
+            // Visual State Update for Parents (The Cards)
+            radios.forEach(r => {
+                // The parent is the label.group
+                const label = r.closest('label');
+                const card = label.querySelector('div');
+
+                if(r.checked) {
+                    card.classList.add('border-[#5D7355]', 'bg-[#5D7355]/10', 'text-[#5D7355]');
+                    card.classList.remove('border-stone-200');
+                } else {
+                    card.classList.remove('border-[#5D7355]', 'bg-[#5D7355]/10', 'text-[#5D7355]');
+                    card.classList.add('border-stone-200');
+                }
+            });
         }
 
         radios.forEach(r => r.addEventListener('change', toggle));
-        toggle(); // Init state
+
+        // Initial run to set state based on backend data
+        toggle();
 
         // Confirmation Check
         const form = document.getElementById('rsvp-form');
         if (form) {
             form.addEventListener('submit', function(e) {
                 const manual = this.getAttribute('data-manual-status') === 'true';
-                if (manual && !confirm("{% translate 'This will update your previous response. Continue?' %}")) {
+                if (manual && !confirm("{% translate 'Acest lucru va actualiza răspunsul anterior. Continuați?' %}")) {
                     e.preventDefault();
                 }
             });
