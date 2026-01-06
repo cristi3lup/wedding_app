@@ -15,6 +15,7 @@ urlpatterns = [
     path('fix-domain/', views.fix_site_domain, name='fix_domain'),
     path('admin/', admin.site.urls),
     path('upgrade/<int:plan_id>/', views.manual_upgrade_page_view, name='manual_upgrade_page'),
+    path('upgrade/', views.upgrade_plan, name='upgrade_plan'),
     # Keep the root view for now (optional, could be removed later)
     path('', views.landing_page_view, name='landing_page'),
     # path('', views.invitation_view, name='invitation_detail'),

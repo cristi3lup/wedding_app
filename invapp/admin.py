@@ -178,23 +178,25 @@ class SpecialFieldAdmin(admin.ModelAdmin):
 
 @admin.register(CardDesign)
 class CardDesignAdmin(admin.ModelAdmin):
-    # UPDATED: Acum afișăm preview_image (imaginea uploadată) și is_active
-    list_display = ('name', 'event_type', 'preview_image', 'is_active', 'is_public', 'priority', 'display_plans')
+    # 1. LISTA: Am inlocuit 'preview_image' cu 'show_preview_icon' pentru a afisa poza, nu textul
+    list_display = ('name', 'event_type', 'show_preview_icon', 'is_active', 'is_public', 'priority', 'display_plans')
 
-    # Editare rapidă din listă
+    # 2. EDITARE RAPIDA: Ramane neschimbat
     list_editable = ('priority', 'is_active', 'is_public')
 
+    # 3. FILTRE SI CAUTARE: Ramane neschimbat
     list_filter = ('event_type', 'is_active', 'is_public', 'available_on_plans')
     search_fields = ('name', 'template_name')
     filter_horizontal = ('available_on_plans', 'special_fields')
 
-    # Ordinea câmpurilor în formularul de editare
+    # 4. FORMULAR EDITARE: Ordinea campurilor
     fields = (
         'name',
         'description',
         'event_type',
-        'preview_image',  # Câmp nou pentru Upload
-        'preview_image_path',  # Câmp vechi (Legacy)
+        'preview_image',       # Campul de upload
+        'show_large_preview',  # <--- BONUS: Vezi imaginea mare in pagina de editare
+        'preview_image_path',  # Legacy
         'template_name',
         'special_fields',
         'available_on_plans',
@@ -203,6 +205,31 @@ class CardDesignAdmin(admin.ModelAdmin):
         'is_public',
         'priority'
     )
+
+    # Definim campul custom ca fiind doar pentru citit (nu poti edita preview-ul generat)
+    readonly_fields = ('show_large_preview',)
+
+    # --- METODE CUSTOM PENTRU IMAGINI ---
+
+    def show_preview_icon(self, obj):
+        """Genereaza iconita mica pentru tabelul din lista."""
+        if obj.preview_image:
+            return format_html(
+                '<img src="{}" style="height: 50px; width: auto; border-radius: 4px; box-shadow: 0 0 2px #ccc;" />',
+                obj.preview_image.url
+            )
+        return "-"
+    show_preview_icon.short_description = "Preview" # Numele coloanei in tabel
+
+    def show_large_preview(self, obj):
+        """Genereaza imaginea mare pentru pagina de editare."""
+        if obj.preview_image:
+            return format_html(
+                '<img src="{}" style="max-height: 300px; max-width: 100%; border-radius: 8px;" />',
+                obj.preview_image.url
+            )
+        return "Fără imagine încărcată"
+    show_large_preview.short_description = "Vizualizare Imagine Actuală"
 
     @admin.display(description='Available Plans')
     def display_plans(self, obj):

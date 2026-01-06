@@ -1265,3 +1265,7 @@ def event_preview_demo(request, event_id):
     }
 
     return render(request, event.selected_design.template_name, context)
+
+def upgrade_plan(request):
+    """Pagina unde utilizatorii pot vedea planurile si face upgrade."""
+    return render(request, 'invapp/upgrade_page.html')

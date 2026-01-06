@@ -49,6 +49,28 @@
 
 </head>
 <body class="h-full antialiased">
+    {% if event.plan.price == 0 or not event.is_paid %}
+    <div class="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center overflow-hidden">
+
+        <div class="opacity-10 rotate-[-15deg] transform select-none">
+            <h1 class="text-9xl font-black text-gray-900 tracking-widest whitespace-nowrap">
+                DEMO INVAPP
+            </h1>
+        </div>
+
+        <div class="absolute inset-0 opacity-[0.05]"
+             style="background-image: url('{% static 'invapp/images/watermark_pattern.png' %}'); background-repeat: repeat; background-size: 200px;">
+        </div>
+
+        <div class="absolute bottom-0 w-full bg-red-600/90 text-white text-center py-2 text-sm font-bold pointer-events-auto shadow-lg backdrop-blur-sm">
+            Aceasta este o previzualizare gratuită.
+            <a href="/upgrade/" class="underline hover:text-yellow-200 ml-2">
+                Activează Planul Premium pentru a elimina watermark-ul.
+            </a>
+        </div>
+
+    </div>
+{% endif %}
     <!-- This is the main content block that your invitation designs will fill. -->
     {% block content %}{% endblock %}
 
