@@ -16,21 +16,25 @@
 
     <meta property="og:site_name" content="InvApp">
     <meta property="og:type" content="website">
+
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
-    
+
     <meta property="og:title" content="{% block og_title %}InvApp - Platforma de Invitații Digitale{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Creează invitații digitale memorabile, gestionează confirmările și organizează evenimentul perfect.{% endblock %}">
-    
-    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'invapp/images/social_preview.jpg' %}{% endblock %}">
+
+    <meta property="og:image" content="{% block og_image %}{% static 'invapp/images/social_preview.jpg' as og_img_url %}{% if '://' in og_img_url %}{{ og_img_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ og_img_url }}{% endif %}{% endblock %}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{% block twitter_title %}InvApp{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}Invitații digitale premium pentru evenimente speciale.{% endblock %}">
-    <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'invapp/images/social_preview.jpg' %}{% endblock %}">
+
+    <meta name="twitter:image" content="{% block twitter_image %}{% static 'invapp/images/social_preview.jpg' as tw_img_url %}{% if '://' in tw_img_url %}{{ tw_img_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ tw_img_url }}{% endif %}{% endblock %}">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">

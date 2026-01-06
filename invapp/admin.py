@@ -252,10 +252,10 @@ class PlanFeatureInline(admin.TabularInline):
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
     # Ce coloane vezi în listă (am adăugat max_guests și max_events cum ai cerut)
-    list_display = ('name', 'price', 'max_guests', 'max_events', 'stripe_price_id', 'is_public')
+    list_display = ('name', 'price','show_watermark', 'max_guests', 'max_events', 'stripe_price_id', 'is_public')
 
     # Ce poți edita DIRECT din listă, fără să intri în detaliu
-    list_editable = ('price', 'max_guests', 'max_events', 'is_public')
+    list_editable = ('price', 'max_guests', 'max_events', 'is_public','show_watermark')
 
     search_fields = ('name',)
 

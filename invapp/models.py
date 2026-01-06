@@ -67,8 +67,9 @@ class Plan(models.Model):
 
     # Watermark Control
     show_watermark = models.BooleanField(
-        default=False,
-        help_text=_("Dacă este bifat, afișează 'InvApp Demo' pe invitație (pentru planul Gratuit).")
+        default=True,
+        verbose_name="Show Watermark",
+        help_text="If is checked, invites from these plan will have watermark."
     )
 
     icon_svg_path = models.TextField(
@@ -610,18 +611,28 @@ class UserProfile(models.Model):
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        # --- FIX: Auto-assign Free Plan (Price = 0) ---
-        # This ensures new users (Social or Email) start with a plan visible in dashboard
-        free_plan = Plan.objects.filter(price=0).first()
-        UserProfile.objects.create(user=instance, plan=free_plan)
+def ensure_profile_exists(sender, instance, created, **kwargs):
+    """
+    Această funcție rulează la ORICE salvare a userului (Sign Up Email, Google Login, sau doar Update).
+    Garantează că userul are Profil și Plan.
+    """
+    # 1. Încercăm să luăm profilul sau să îl creăm dacă nu există (Safe & Self-Healing)
+    profile, newly_created = UserProfile.objects.get_or_create(user=instance)
 
+    # 2. Dacă profilul a fost creat ACUM (sau exista dar nu avea plan setat)
+    if newly_created or profile.plan is None:
+        # Căutăm planul Free
+        default_plan = Plan.objects.filter(price=0).first()
 
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def save_user_profile(sender, instance, **kwargs):
-    if hasattr(instance, 'userprofile'):
-        instance.userprofile.save()
+        # Fallback: Dacă nu există plan Free, luăm primul plan din bază
+        if not default_plan:
+            default_plan = Plan.objects.first()
+
+        # Atribuim planul și salvăm
+        if default_plan:
+            profile.plan = default_plan
+            profile.save()
+            print(f"DEBUG: Planul '{default_plan.name}' a fost alocat userului {instance.username}")
 
 
 # === NEW: Godparent Model                   ===
