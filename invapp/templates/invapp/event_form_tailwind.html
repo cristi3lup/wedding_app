@@ -85,7 +85,7 @@
     <div class="py-6">
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                {% if object %}{% translate "Edit Details" %}{% else %}{% translate "Create Event" %}{% endif %}
+                {% if object %}{% translate "Modifică Detaliile" %}{% else %}{% translate "Configurează Evenimentul" %}{% endif %}
             </h1>
             <div class="flex flex-col items-end">
                 <span class="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full dark:bg-indigo-900 dark:text-indigo-200">
@@ -104,7 +104,7 @@
                 <div id="progress-bar" style="width: 20%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-600 transition-all duration-500"></div>
             </div>
             <div class="flex justify-between text-xs text-gray-500 font-medium px-1">
-                <span class="step-label text-indigo-600 font-bold">1. {% translate "Designs" %}</span>
+                <span class="step-label text-indigo-600 font-bold">1. {% translate "Design" %}</span>
                 <span class="step-label">2. {% translate "Details" %}</span>
                 <span class="step-label">3. {% translate "Location" %}</span>
                 <span class="step-label">4. {% translate "Guests" %}</span>
@@ -118,7 +118,7 @@
         <div class="flex">
             <div class="ml-3">
                 <p class="text-sm text-yellow-700 dark:text-yellow-300">
-                    {% translate "Your plan locks core event details." %}
+                    {% translate "Your plan locks certain details (Date, Type, Design)." %}
                     <a href="{% url 'invapp:landing_page' %}#pricing" class="font-medium underline">{% translate "Upgrade" %}</a>
                 </p>
             </div>
@@ -152,7 +152,7 @@
 
                 <!-- Tip Eveniment -->
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">{% translate "The type of event being planned." %}</label>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">{% translate "What type of event are you organizing?" %}</label>
                     <div class="relative">
                         {% render_field form.event_type class="block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
 
@@ -225,7 +225,7 @@
                 <!-- COMUN: Titlu Intern -->
                 <div id="field-title-container">
                     <label for="id_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% translate "Event Name (Internal)" %}</label>
-                    {% render_field form.title class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg py-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Ana & Andrei Wedding" %}
+                    {% render_field form.title class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg py-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Nunta Ana & Andrei" %}
                     <p class="mt-1 text-xs text-gray-500">{% translate "This name appears only in your dashboard." %}</p>
                     {% if form.title.errors %}<p class="text-sm text-red-600 mt-1">{{ form.title.errors.0 }}</p>{% endif %}
                 </div>
@@ -350,7 +350,7 @@
 
                 <!-- Schedule Formset (Hidden for Image Upload) -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mt-6" id="timeline-section">
-                    <h3 class="text-lg font-bold mb-4 flex items-center justify-between dark:text-white">
+                    <h3 class="text-lg font-bold mb-4 flex items-center justify-between">
                         <span>{% translate "Timeline" %}</span>
                         <span class="text-xs font-normal text-gray-500">{% translate "Add key moments" %}</span>
                     </h3>
@@ -420,7 +420,7 @@
         <!-- ========================== STEP 4: INVITAȚI SPECIALI (NAȘI) ========================== -->
         <div class="step-content" data-step="4">
             <div id="godparents-section" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                <h3 class="text-lg font-bold dark:text-white mb-4">{% translate "Godparents" %}</h3>
+                <h3 class="text-lg font-bold mb-4">{% translate "Godparents" %}</h3>
                 <p class="text-sm text-gray-500 mb-6">{% translate "Add godparents' names as you want them to appear on the invitation (e.g. 'John and Mary Smith' or separately)." %}</p>
 
                 {{ godparent_formset.management_form }}
