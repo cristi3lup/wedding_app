@@ -5,9 +5,9 @@
 
 {% block title %}
     {% if object %}
-        {% translate "Editare Eveniment:" %} {{ object.title }}
+        {% translate "Edit Event:" %} {{ object.title }}
     {% else %}
-        {% translate "Creează Eveniment Nou" %}
+        {% translate "Create New Event" %}
     {% endif %}
 {% endblock %}
 
@@ -77,7 +77,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span class="text-indigo-600 font-bold animate-pulse">{% translate "Se procesează..." %}</span>
+            <span class="text-indigo-600 font-bold animate-pulse">{% translate "Processing..." %}</span>
         </div>
     </div>
 
@@ -85,11 +85,11 @@
     <div class="py-6">
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                {% if object %}{% translate "Modifică Detaliile" %}{% else %}{% translate "Configurează Evenimentul" %}{% endif %}
+                {% if object %}{% translate "Edit Details" %}{% else %}{% translate "Create Event" %}{% endif %}
             </h1>
             <div class="flex flex-col items-end">
                 <span class="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full dark:bg-indigo-900 dark:text-indigo-200">
-                    Pasul <span id="current-step-label">1</span> din 5
+                    {% translate "Step" %} <span id="current-step-label">1</span> {% translate "of" %} 5
                 </span>
                 <!-- Autosave Status Indicator -->
                 <div id="autosave-status" class="text-xs font-medium mt-1 text-gray-500 opacity-0 h-4">
@@ -104,11 +104,11 @@
                 <div id="progress-bar" style="width: 20%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-600 transition-all duration-500"></div>
             </div>
             <div class="flex justify-between text-xs text-gray-500 font-medium px-1">
-                <span class="step-label text-indigo-600 font-bold">1. Design</span>
-                <span class="step-label">2. Detalii</span>
-                <span class="step-label">3. Locație</span>
-                <span class="step-label">4. Invitați</span>
-                <span class="step-label">5. Media</span>
+                <span class="step-label text-indigo-600 font-bold">1. {% translate "Designs" %}</span>
+                <span class="step-label">2. {% translate "Details" %}</span>
+                <span class="step-label">3. {% translate "Location" %}</span>
+                <span class="step-label">4. {% translate "Guests" %}</span>
+                <span class="step-label">5. {% translate "Media" %}</span>
             </div>
         </div>
     </div>
@@ -118,7 +118,7 @@
         <div class="flex">
             <div class="ml-3">
                 <p class="text-sm text-yellow-700 dark:text-yellow-300">
-                    {% translate "Planul tău blochează anumite detalii (Dată, Tip, Design)." %}
+                    {% translate "Your plan locks core event details." %}
                     <a href="{% url 'invapp:landing_page' %}#pricing" class="font-medium underline">{% translate "Upgrade" %}</a>
                 </p>
             </div>
@@ -138,7 +138,7 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-red-700 dark:text-red-200">
-                        {% translate "Vă rugăm să corectați erorile de mai jos." %}
+                        {% translate "Please correct the errors below." %}
                     </p>
                     {{ form.non_field_errors }}
                 </div>
@@ -152,7 +152,7 @@
 
                 <!-- Tip Eveniment -->
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">{% translate "Ce fel de eveniment organizați?" %}</label>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">{% translate "The type of event being planned." %}</label>
                     <div class="relative">
                         {% render_field form.event_type class="block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
 
@@ -167,7 +167,7 @@
 
                 <!-- Selector Design (Grid) -->
                 <div id="design-selection-container">
-                    <label class="block text-lg font-bold text-gray-900 dark:text-white mb-4">{% translate "Alegeți Designul Invitației" %}</label>
+                    <label class="block text-lg font-bold text-gray-900 dark:text-white mb-4">{% translate "Choose Invitation Design" %}</label>
 
                     <!-- Folosim available_designs din context pentru a avea acces la proprietățile obiectelor -->
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto p-1 custom-scrollbar {% if is_locked_plan %}opacity-60 pointer-events-none{% endif %}">
@@ -187,7 +187,7 @@
                                         {% if design.preview_image_path %}
                                             <img src="{% static design.preview_image_path %}" alt="{{ design.name }}" class="object-cover w-full h-48">
                                         {% else %}
-                                            <div class="flex items-center justify-center h-48 bg-gray-100 text-gray-400 text-xs">Fără Preview</div>
+                                            <div class="flex items-center justify-center h-48 bg-gray-100 text-gray-400 text-xs">{% translate "No Preview" %}</div>
                                         {% endif %}
 
                                         <!-- Checkmark Badge -->
@@ -220,19 +220,19 @@
         <div class="step-content" data-step="2">
             <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 space-y-6">
 
-                <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white border-b pb-2">{% translate "Informații Principale" %}</h3>
+                <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white border-b pb-2">{% translate "Main Information" %}</h3>
 
                 <!-- COMUN: Titlu Intern -->
                 <div id="field-title-container">
-                    <label for="id_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% translate "Nume Eveniment (Intern)" %}</label>
-                    {% render_field form.title class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg py-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Nunta Ana & Andrei" %}
-                    <p class="mt-1 text-xs text-gray-500">{% translate "Acest nume apare doar în dashboard-ul tău." %}</p>
+                    <label for="id_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% translate "Event Name (Internal)" %}</label>
+                    {% render_field form.title class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg py-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Ana & Andrei Wedding" %}
+                    <p class="mt-1 text-xs text-gray-500">{% translate "This name appears only in your dashboard." %}</p>
                     {% if form.title.errors %}<p class="text-sm text-red-600 mt-1">{{ form.title.errors.0 }}</p>{% endif %}
                 </div>
 
                 <!-- COMUN: Data Eveniment -->
                 <div id="field-event_date-container">
-                    <label for="id_event_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% translate "Data Evenimentului" %}</label>
+                    <label for="id_event_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% translate "Event Date" %}</label>
                     <input type="date" name="event_date" id="id_event_date" value="{{ form.event_date.value|date:'Y-m-d' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg py-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" {% if is_locked_plan %}disabled{% endif %}>
 
                     {% if is_locked_plan %}
@@ -244,11 +244,11 @@
                 <!-- SPECIFIC NUNTA (Bride/Groom) -->
                 <div id="wedding-names-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div id="field-bride_name-container">
-                        <label for="id_bride_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Prenume Mireasă" %}</label>
+                        <label for="id_bride_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Bride's First Name" %}</label>
                         {% render_field form.bride_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                     </div>
                     <div id="field-groom_name-container">
-                        <label for="id_groom_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Prenume Mire" %}</label>
+                        <label for="id_groom_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Groom's First Name" %}</label>
                         {% render_field form.groom_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                     </div>
                 </div>
@@ -256,7 +256,7 @@
                 <!-- SPECIFIC BOTEZ (Child) -->
                 <div id="baptism-names-container" class="hidden">
                     <div id="field-child_name-container">
-                        <label for="id_child_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Nume Copil (Botez)" %}</label>
+                        <label for="id_child_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Child's Name (Baptism)" %}</label>
                         {% render_field form.child_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                     </div>
                 </div>
@@ -264,11 +264,11 @@
                 <!-- SPECIFIC NUNTA (Parents) -->
                 <div id="wedding-parents-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100 dark:border-gray-700">
                     <div id="field-bride_parents-container">
-                        <label for="id_bride_parents" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Părinții Miresei" %}</label>
+                        <label for="id_bride_parents" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Bride's Parents" %}</label>
                         {% render_field form.bride_parents rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                     </div>
                     <div id="field-groom_parents-container">
-                        <label for="id_groom_parents" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Părinții Mirelui" %}</label>
+                        <label for="id_groom_parents" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Groom's Parents" %}</label>
                         {% render_field form.groom_parents rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                     </div>
                 </div>
@@ -276,17 +276,17 @@
                 <!-- SPECIFIC BOTEZ (Parents) -->
                 <div id="baptism-parents-container" class="hidden pt-4 border-t border-gray-100 dark:border-gray-700">
                     <div id="field-parents_names-container">
-                        <label for="id_parents_names" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Părinții (Botez)" %}</label>
-                        {% render_field form.parents_names rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Maria și Alexandru Popescu" %}
+                        <label for="id_parents_names" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Parents (Baptism)" %}</label>
+                        {% render_field form.parents_names rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Maria and Alexandru Popescu" %}
                     </div>
                 </div>
 
                 <!-- NUNTA & BOTEZ (Text) -->
                 <div id="text-content-section" class="pt-4 border-t border-gray-100 dark:border-gray-700">
                     <div id="field-invitation_wording-container">
-                        <label for="id_invitation_wording" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Text Invitație (Introductiv)" %}</label>
-                        {% render_field form.invitation_wording rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Noi, alături de părinți..." %}
-                        <p class="text-xs text-gray-500 mt-1">{% translate "Acest text apare la începutul invitației." %}</p>
+                        <label for="id_invitation_wording" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Invitation Text (Introductory)" %}</label>
+                        {% render_field form.invitation_wording rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Together with our parents..." %}
+                        <p class="text-xs text-gray-500 mt-1">{% translate "This text appears at the beginning of the invitation." %}</p>
                     </div>
                 </div>
 
@@ -303,19 +303,19 @@
                     <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-l-4 border-indigo-500">
                         <h4 class="font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                            {% translate "Cununia / Ceremonia" %}
+                            {% translate "Wedding / Ceremony" %}
                         </h4>
                         <div class="space-y-4">
                             <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Ora" %}</label>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Time" %}</label>
                                 <input type="time" name="ceremony_time" id="id_ceremony_time" value="{{ form.ceremony_time.value|date:'H:i' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                             <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Locația (Nume)" %}</label>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Location (Name)" %}</label>
                                 {% render_field form.ceremony_location class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                             </div>
                             <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Link Waze/Maps" %}</label>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Waze/Maps Link" %}</label>
                                 {% render_field form.ceremony_maps_url class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="https://maps.google.com/..." %}
                             </div>
                         </div>
@@ -325,23 +325,23 @@
                     <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-l-4 border-pink-500">
                         <h4 class="font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z"></path></svg>
-                            {% translate "Petrecerea" %}
+                            {% translate "Reception / Party" %}
                         </h4>
                         <div class="space-y-4">
                             <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Ora" %}</label>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Time" %}</label>
                                 <input type="time" name="party_time" id="id_party_time" value="{{ form.party_time.value|date:'H:i' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                             <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Locația (Nume)" %}</label>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Location (Name)" %}</label>
                                 {% render_field form.venue_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                             </div>
                             <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Adresa Completă" %}</label>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Full Address" %}</label>
                                 {% render_field form.venue_address class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                             </div>
                             <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Link Waze/Maps" %}</label>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Waze/Maps Link" %}</label>
                                 {% render_field form.party_maps_url class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                             </div>
                         </div>
@@ -350,9 +350,9 @@
 
                 <!-- Schedule Formset (Hidden for Image Upload) -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mt-6" id="timeline-section">
-                    <h3 class="text-lg font-bold mb-4 flex items-center justify-between">
-                        <span>{% translate "Cronologie (Timeline)" %}</span>
-                        <span class="text-xs font-normal text-gray-500">{% translate "Adaugă momente cheie" %}</span>
+                    <h3 class="text-lg font-bold mb-4 flex items-center justify-between dark:text-white">
+                        <span>{% translate "Timeline" %}</span>
+                        <span class="text-xs font-normal text-gray-500">{% translate "Add key moments" %}</span>
                     </h3>
 
                     {{ schedule_item_formset.management_form }}
@@ -364,13 +364,13 @@
 
                                 <div class="grid grid-cols-12 gap-4 items-start">
                                     <div class="col-span-4 sm:col-span-3">
-                                        <label class="block text-xs text-gray-500">{% translate "Ora" %}</label>
+                                        <label class="block text-xs text-gray-500">{% translate "Time" %}</label>
                                         {% render_field form.time class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                                     </div>
                                     <div class="col-span-8 sm:col-span-8">
-                                        <label class="block text-xs text-gray-500">{% translate "Activitate" %}</label>
+                                        <label class="block text-xs text-gray-500">{% translate "Activity" %}</label>
                                         {% render_field form.activity_type class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                                        <label class="block text-xs text-gray-500 mt-2">{% translate "Descriere (Opțional)" %}</label>
+                                        <label class="block text-xs text-gray-500 mt-2">{% translate "Description (Optional)" %}</label>
                                         {% render_field form.description class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                                     </div>
                                     <div class="col-span-12 sm:col-span-1 flex justify-end items-center pt-4">
@@ -387,7 +387,7 @@
 
                     <button type="button" id="add-schedule_items-btn" class="mt-4 w-full flex items-center justify-center py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-indigo-500 hover:text-indigo-500 transition-colors font-medium">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                        {% translate "Adaugă Activitate în Program" %}
+                        {% translate "Add Activity to Schedule" %}
                     </button>
                 </div>
 
@@ -396,13 +396,13 @@
                     <div class="schedule_items-form bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 relative mt-4">
                         <div class="grid grid-cols-12 gap-4 items-start">
                             <div class="col-span-4 sm:col-span-3">
-                                <label class="block text-xs text-gray-500">{% translate "Ora" %}</label>
+                                <label class="block text-xs text-gray-500">{% translate "Time" %}</label>
                                 {% render_field schedule_item_formset.empty_form.time class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                             </div>
                             <div class="col-span-8 sm:col-span-8">
-                                <label class="block text-xs text-gray-500">{% translate "Activitate" %}</label>
+                                <label class="block text-xs text-gray-500">{% translate "Activity" %}</label>
                                 {% render_field schedule_item_formset.empty_form.activity_type class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                                <label class="block text-xs text-gray-500 mt-2">{% translate "Descriere (Opțional)" %}</label>
+                                <label class="block text-xs text-gray-500 mt-2">{% translate "Description (Optional)" %}</label>
                                 {% render_field schedule_item_formset.empty_form.description class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                             </div>
                             <div class="col-span-12 sm:col-span-1 flex justify-end pt-4">
@@ -420,8 +420,8 @@
         <!-- ========================== STEP 4: INVITAȚI SPECIALI (NAȘI) ========================== -->
         <div class="step-content" data-step="4">
             <div id="godparents-section" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                <h3 class="text-lg font-bold mb-4">{% translate "Nași de Cununie / Botez" %}</h3>
-                <p class="text-sm text-gray-500 mb-6">{% translate "Adăugați numele nașilor așa cum doriți să apară pe invitație (ex: 'Ion și Maria Popescu' sau separat)." %}</p>
+                <h3 class="text-lg font-bold dark:text-white mb-4">{% translate "Godparents" %}</h3>
+                <p class="text-sm text-gray-500 mb-6">{% translate "Add godparents' names as you want them to appear on the invitation (e.g. 'John and Mary Smith' or separately)." %}</p>
 
                 {{ godparent_formset.management_form }}
                 <div id="godparents-formset-container" class="space-y-4">
@@ -429,7 +429,7 @@
                         <div class="godparents-form bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800 flex items-center justify-between">
                             {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
                             <div class="flex-grow mr-4">
-                                <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase mb-1">{% translate "Nume Naș(i)" %}</label>
+                                <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase mb-1">{% translate "Godparent(s) Name" %}</label>
                                 {% render_field form.name class="mt-1 block w-full rounded-md border-indigo-200 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                             </div>
 
@@ -445,14 +445,14 @@
 
                 <button type="button" id="add-godparents-btn" class="mt-6 w-full py-3 bg-indigo-50 dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 rounded-lg font-bold hover:bg-indigo-100 transition-colors flex items-center justify-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    {% translate "Adaugă încă o pereche de nași" %}
+                    {% translate "Add another pair of godparents" %}
                 </button>
 
                  <!-- Hidden Template for Empty Form (Godparent) -->
                  <div id="empty-godparents-form" class="hidden">
                     <div class="godparents-form bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800 flex items-center justify-between mt-4">
                         <div class="flex-grow mr-4">
-                             <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase mb-1">{% translate "Nume Naș(i)" %}</label>
+                             <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase mb-1">{% translate "Godparent(s) Name" %}</label>
                             {% render_field godparent_formset.empty_form.name class="mt-1 block w-full rounded-md border-indigo-200 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                         </div>
                         <div class="hidden">{{ godparent_formset.empty_form.DELETE }}</div>
@@ -471,7 +471,7 @@
                 <!-- Main Photo (Wedding / Baptism Header) -->
                 <div id="media-wedding-baptism-section">
                     <div id="field-couple_photo-container">
-                        <label id="label-couple-photo" class="block text-lg font-bold text-gray-900 dark:text-white mb-2">{% translate "Poza Principală (Mirii)" %}</label>
+                        <label id="label-couple-photo" class="block text-lg font-bold text-gray-900 dark:text-white mb-2">{% translate "Main Photo (Couple)" %}</label>
                         <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition-colors bg-gray-50 dark:bg-gray-900">
                             <div class="space-y-1 text-center">
                                 <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
@@ -479,14 +479,14 @@
                                 </svg>
                                 <div class="text-sm text-gray-600 dark:text-gray-400">
                                     <label for="id_couple_photo" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 px-2">
-                                        <span>{% translate "Încarcă o poză" %}</span>
+                                        <span>{% translate "Upload a photo" %}</span>
                                         {{ form.couple_photo }}
                                     </label>
                                 </div>
                                 <p class="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
                                 {% if object.couple_photo %}
                                     <div class="mt-4">
-                                        <p class="text-xs font-bold text-green-600">{% translate "Poza Curentă:" %}</p>
+                                        <p class="text-xs font-bold text-green-600">{% translate "Current Photo:" %}</p>
                                         <img src="{{ object.couple_photo.url }}" class="h-24 object-contain mx-auto rounded shadow-sm">
                                     </div>
                                 {% endif %}
@@ -496,18 +496,18 @@
 
                     <!-- Landscape Photo -->
                     <div id="field-landscape_photo-container" class="mt-6">
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Poză Secundară (Peisaj/Story)" %}</label>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Secondary Photo (Landscape/Story)" %}</label>
                         <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition-colors bg-gray-50 dark:bg-gray-900">
                              <div class="space-y-1 text-center">
                                 <div class="text-sm text-gray-600 dark:text-gray-400">
                                     <label for="id_landscape_photo" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 px-2">
-                                        <span>{% translate "Încarcă o poză" %}</span>
+                                        <span>{% translate "Upload a photo" %}</span>
                                         {{ form.landscape_photo }}
                                     </label>
                                 </div>
                                 {% if object.landscape_photo %}
                                     <div class="mt-4">
-                                        <p class="text-xs font-bold text-green-600">{% translate "Poza Curentă:" %}</p>
+                                        <p class="text-xs font-bold text-green-600">{% translate "Current Photo:" %}</p>
                                         <img src="{{ object.landscape_photo.url }}" class="h-24 object-contain mx-auto rounded shadow-sm">
                                     </div>
                                 {% endif %}
@@ -522,10 +522,10 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                Galerie Foto
+                                {% translate "Photo Gallery" %}
                             </h3>
                             <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">
-                                Poți încărca până la 6 fotografii. (Format recomandat: JPG/PNG, max 5MB)
+                                {% translate "You can upload up to 6 photos. (Recommended format: JPG/PNG, max 5MB)" %}
                             </p>
                         </div>
 
@@ -544,14 +544,14 @@
 
                                             {% if gallery_image_formset.can_delete %}
                                                 <div class="flex items-center justify-between px-1">
-                                                    <span class="text-xs font-semibold text-slate-600 dark:text-gray-300">Șterge?</span>
+                                                    <span class="text-xs font-semibold text-slate-600 dark:text-gray-300">{% translate "Delete?" %}</span>
                                                     {{ form.DELETE }}
                                                 </div>
                                             {% endif %}
                                         </div>
                                     {% else %}
                                         <div class="mb-2 flex justify-center items-center h-32 bg-white dark:bg-gray-600 border-2 border-dashed border-slate-300 rounded-lg">
-                                            <span class="text-slate-400 text-xs">Liber</span>
+                                            <span class="text-slate-400 text-xs">{% translate "Empty" %}</span>
                                         </div>
                                     {% endif %}
 
@@ -565,14 +565,14 @@
 
                     <!-- Audio Greeting -->
                     <div id="field-audio_greeting-container" class="mt-6 border-t pt-6">
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Mesaj Audio / Muzică de fundal" %}</label>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Audio Message / Background Music" %}</label>
                         <input type="file" name="audio_greeting" id="id_audio_greeting" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                     </div>
                 </div>
 
                 <!-- Main Invitation Image (Image Upload Only) -->
                 <div id="media-image-upload-section" class="hidden">
-                    <label class="block text-lg font-bold text-gray-900 dark:text-white mb-2">{% translate "Imagine Principală Invitație" %}</label>
+                    <label class="block text-lg font-bold text-gray-900 dark:text-white mb-2">{% translate "Main Invitation Image" %}</label>
                     <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition-colors bg-gray-50 dark:bg-gray-900">
                         <div class="space-y-1 text-center">
                             <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
@@ -580,14 +580,14 @@
                             </svg>
                             <div class="text-sm text-gray-600 dark:text-gray-400">
                                 <label for="id_main_invitation_image" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 px-2">
-                                    <span>{% translate "Încarcă imaginea" %}</span>
+                                    <span>{% translate "Upload image" %}</span>
                                     {{ form.main_invitation_image }}
                                 </label>
                             </div>
                             <p class="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
                             {% if object.main_invitation_image %}
                                 <div class="mt-4">
-                                    <p class="text-xs font-bold text-green-600">{% translate "Imagine Curentă:" %}</p>
+                                    <p class="text-xs font-bold text-green-600">{% translate "Current Image:" %}</p>
                                     <img src="{{ object.main_invitation_image.url }}" class="h-24 object-contain mx-auto rounded shadow-sm">
                                 </div>
                             {% endif %}
@@ -604,23 +604,23 @@
 
                 <!-- Prev Button -->
                 <button type="button" id="prevBtn" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed hidden">
-                    {% translate "Înapoi" %}
+                    {% translate "Back" %}
                 </button>
 
                 <!-- Center: Preview Button (MODIFICAT: Apare mereu) -->
                 <button type="button" id="live-preview-button" class="text-indigo-600 font-medium text-sm flex flex-col items-center justify-center p-2 rounded hover:bg-indigo-50">
                     <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                    <span>Preview</span>
+                    <span>{% translate "Preview" %}</span>
                 </button>
 
                 <!-- Next / Save Button -->
                 <button type="button" id="nextBtn" class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-indigo-700 transition-colors flex items-center justify-center">
-                    {% translate "Înainte" %}
+                    {% translate "Next" %}
                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>
 
                 <button type="submit" id="submitBtn" class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-green-700 transition-colors hidden items-center justify-center">
-                    {% translate "Salvează" %}
+                    {% translate "Save" %}
                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                 </button>
 
@@ -639,13 +639,13 @@
         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
             <h3 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                Live Preview
+                {% translate "Live Preview" %}
             </h3>
 
             <div class="flex items-center gap-2">
-                <button type="button" id="open-new-window-btn" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors" title="Deschide în fereastră nouă">
+                <button type="button" id="open-new-window-btn" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors" title="{% translate 'Open in new window' %}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                    <span class="hidden sm:inline">Deschide Separat</span>
+                    <span class="hidden sm:inline">{% translate "Open Separately" %}</span>
                 </button>
 
                 <div class="h-6 w-px bg-gray-300 mx-1"></div>
@@ -856,7 +856,7 @@
                 if(mediaImageUpload) mediaImageUpload.classList.add('hidden');
 
                 // Label Change
-                if(coupleLabel) coupleLabel.innerText = "Poză Copil/Familie";
+                if(coupleLabel) coupleLabel.innerText = "{% translate 'Child/Family Photo' %}";
 
             } else {
                 // 3. NUNTĂ (Default)
@@ -875,7 +875,7 @@
                 if(mediaImageUpload) mediaImageUpload.classList.add('hidden');
 
                 // Label Change
-                if(coupleLabel) coupleLabel.innerText = "Poza Principală (Mirii)";
+                if(coupleLabel) coupleLabel.innerText = "{% translate 'Main Photo (Couple)' %}";
             }
 
             // Filtrare Design-uri în funcție de tip
@@ -927,7 +927,7 @@
 
             // 1. UI Feedback
             const originalBtnContent = previewBtn.innerHTML;
-            previewBtn.innerHTML = '<span class="animate-spin inline-block mr-2">↻</span> Generare...';
+            previewBtn.innerHTML = '<span class="animate-spin inline-block mr-2">↻</span> {% translate "Processing..." %}';
             // Don't disable button here because autosave might trigger it repeatedly
             // previewBtn.disabled = true;
 
