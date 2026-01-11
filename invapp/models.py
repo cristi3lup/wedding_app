@@ -11,6 +11,7 @@ from django.utils.text import format_lazy
 from django.utils.translation import get_language
 from django.core.exceptions import ValidationError
 from cloudinary.models import CloudinaryField
+from cloudinary_storage.storage import RawMediaCloudinaryStorage
 
 
 
@@ -377,6 +378,7 @@ class Event(models.Model):
     )
     audio_greeting = models.FileField(
         upload_to='audio_greetings/',
+        storage=RawMediaCloudinaryStorage(),  # <--- CRITIC PENTRU AUDIO
         blank=True,
         null=True,
         verbose_name=_("Audio Greeting"),
