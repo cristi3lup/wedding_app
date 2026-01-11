@@ -36,6 +36,93 @@ from .forms import (
 )
 
 
+@csrf_exempt
+@xframe_options_exempt
+def event_preview(request):
+    """
+    Generează HTML-ul pentru preview.
+    Gestionează corect imaginile de pe Cloudinary (https://) și upload-urile locale (data:image).
+    """
+    if request.method == 'POST':
+        try:
+            # 1. Extragere date
+            if request.content_type == 'application/json':
+                try:
+                    data = json.loads(request.body)
+                except json.JSONDecodeError:
+                    return HttpResponse("Invalid JSON", status=400)
+            else:
+                data = request.POST.dict()
+
+            # 2. Construire instanță Event (fără salvare în DB)
+            event_instance = Event()
+
+            # Populăm câmpurile standard
+            for field in Event._meta.fields:
+                if field.name in data:
+                    val = data[field.name]
+                    if val == "":
+                        val = None
+                    setattr(event_instance, field.name, val)
+
+            # 3. FIX IMAGINI (Critic pentru Cloudinary și Preview Local)
+            image_fields = ['couple_photo', 'landscape_photo', 'main_invitation_image']
+
+            for field_name in image_fields:
+                raw_val = data.get(field_name)
+
+                if raw_val and isinstance(raw_val, str):
+                    # CAZ 1: URL Absolut (Cloudinary/S3) - începe cu http
+                    if raw_val.startswith('http://') or raw_val.startswith('https://'):
+                        # Creăm un obiect fals care are atributul .url
+                        mock_img = SimpleNamespace(url=raw_val)
+                        setattr(event_instance, field_name, mock_img)
+
+                    # CAZ 2: Base64 (Upload nou, preview instant)
+                    elif raw_val.startswith('data:image'):
+                        mock_img = SimpleNamespace(url=raw_val)
+                        setattr(event_instance, field_name, mock_img)
+
+                    # CAZ 3: Cale relativă (Local Dev)
+                    else:
+                        # Dacă e cale relativă validă, o lăsăm string (Django adaugă MEDIA_URL)
+                        # Sau o forțăm dacă e nevoie:
+                        # local_url = f"{settings.MEDIA_URL}{raw_val}"
+                        # setattr(event_instance, field_name, SimpleNamespace(url=local_url))
+                        pass
+
+                        # 4. Determinare Template Design
+            design_id = data.get('selected_design')
+            # Default fallback
+            template_name = 'invapp/invites/default_invite.html'
+
+            if design_id:
+                try:
+                    design = CardDesign.objects.get(pk=design_id)
+                    template_name = design.template_name
+                    event_instance.selected_design = design
+                except (CardDesign.DoesNotExist, ValueError):
+                    pass
+
+            # 5. Context (Mockup pentru relații)
+            context = {
+                'event': event_instance,
+                'guest': None,
+                'is_preview': True,
+                'godparents': [],
+                'schedule_items': [],
+                'gallery_images': []
+            }
+
+            return render(request, template_name, context)
+
+        except Exception as e:
+            print(f"Preview Error: {e}")
+            return HttpResponse(f"Error generating preview: {str(e)}", status=500)
+
+    return HttpResponse("Method not allowed", status=405)
+
+
 # --- CSV Export View ---
 @login_required
 def export_assignments_csv(request, event_id):
