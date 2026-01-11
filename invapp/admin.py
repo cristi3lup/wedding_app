@@ -6,6 +6,7 @@ from django.utils.html import format_html
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
+
 from .models import (
     Event,
     Godparent,
@@ -24,6 +25,7 @@ from .models import (
     AboutSection,
     FutureFeature,
     PlanFeature,
+    GalleryImage,
 )
 from .forms import TableAssignmentAdminForm
 
@@ -58,19 +60,26 @@ class TableAssignmentInline(admin.TabularInline):
 # ==========================================
 # === 2. EVENT MANAGEMENT                ===
 # ==========================================
+class GalleryImageInline(admin.TabularInline):
+    model = GalleryImage
+    extra = 1  # Îți arată un rând gol by default
+    max_num = 6  # Limită vizuală în admin
+    verbose_name = "Imagine Galerie"
+    verbose_name_plural = "Galerie Foto (Maxim 6 imagini)"
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = ('title', 'owner', 'event_date', 'venue_name', 'view_guests_link')
     search_fields = ('title', 'venue_name', 'owner__username', 'owner__email')
     list_filter = ('event_type', 'event_date')
-    inlines = [TableInline, TableAssignmentInline, GodparentInline, ScheduleItemInline]
+    inlines = [TableInline, TableAssignmentInline, GodparentInline, ScheduleItemInline, GalleryImageInline]
 
     @admin.display(description='Guests')
     def view_guests_link(self, obj):
         count = obj.guests.count()
         url = reverse('admin:invapp_guest_changelist') + f'?event__id__exact={obj.id}'
         return format_html('<a href="{}">{} Guests</a>', url, count)
+
 
 
 @admin.register(Guest)
@@ -343,3 +352,4 @@ class TestimonialAdmin(admin.ModelAdmin):
     class FutureFeatureAdmin(admin.ModelAdmin):
         list_display = ('title_ro', 'target_date', 'priority', 'is_public')
         list_editable = ('priority', 'is_public')
+

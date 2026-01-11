@@ -9,6 +9,8 @@ from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django.utils.text import format_lazy
 from django.utils.translation import get_language
+from django.core.exceptions import ValidationError
+from cloudinary.models import CloudinaryField
 
 
 
@@ -854,3 +856,22 @@ class FutureFeature(models.Model):
 
     def __str__(self):
         return self.title_ro
+
+
+class GalleryImage(models.Model):
+    # Presupun că modelul tău principal se numește 'Event' sau 'Invitation'
+    event = models.ForeignKey(
+        'Event',
+        on_delete=models.CASCADE,
+        related_name='gallery_images'  # Important pentru template
+    )
+    image = CloudinaryField('image', folder='invapp_gallery', help_text="Format recomandat: JPG/PNG. Maxim 5MB.")
+
+    def save(self, *args, **kwargs):
+        # PROTECȚIE: Dacă e instanță nouă (fără ID) și limita e atinsă
+        if not self.pk and self.event.gallery_images.count() >= 6:
+            raise ValidationError("Limita de 6 fotografii pentru acest pachet a fost atinsă.")
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Imagine pentru {self.event}"

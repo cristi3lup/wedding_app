@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'cloudinary_storage',
     'django.contrib.staticfiles',
     'cloudinary',
+    'widget_tweaks',
 
     # Apps
     'invapp',

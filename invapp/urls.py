@@ -10,6 +10,7 @@ app_name = 'invapp'
 
 urlpatterns = [
 # --- TEMPORARY FIX URL ---
+    path('event/live-preview/', views.EventLivePreviewView.as_view(), name='event_live_preview'),
     path('faq/', views.faq_page, name='faq'),
     path('feedback/', views.submit_feedback, name='submit_feedback'),
     path('fix-domain/', views.fix_site_domain, name='fix_domain'),

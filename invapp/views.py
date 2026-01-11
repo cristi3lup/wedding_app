@@ -1,3 +1,4 @@
+from django.views import View
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.sites.models import Site
 from allauth.socialaccount.models import SocialAccount
@@ -20,21 +21,18 @@ import pandas as pd
 import urllib.parse
 import json
 import csv
+import base64
 import sys
 import stripe
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-from .forms import ReviewForm # Asigură-te că imporți formularul
 from .models import Testimonial # Asigură-te că imporți modelul
-
-
-
 from .forms import (
     GuestForm, EventForm, GuestContactForm, AssignGuestForm,
     RSVPForm, TableForm, CustomUserCreationForm, TableAssignmentForm,
-    GuestCreateForm, GodparentFormSet, ScheduleItemFormSet, ReviewForm
+    GuestCreateForm, GodparentFormSet, ScheduleItemFormSet, ReviewForm, GalleryImageFormSet
 )
 
 
@@ -457,13 +455,9 @@ def unassign_guest_from_table_view(request, event_id, assignment_id):
 class EventCreateView(LoginRequiredMixin, CreateView):
     model = Event
     form_class = EventForm
-    # FIX: Revenim la numele fișierului tău real, unde ai făcut modificările
     template_name = 'invapp/event_form_tailwind.html'
 
     def dispatch(self, request, *args, **kwargs):
-        """
-        Verificăm limitele planului utilizatorului înainte de a permite crearea.
-        """
         user = self.request.user
         try:
             if hasattr(user, 'userprofile') and user.userprofile.plan:
@@ -480,19 +474,18 @@ class EventCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
-        # 1. Logică Design-uri Disponibile
+        # 1. Logică Design-uri
         available_designs = CardDesign.objects.none()
         if hasattr(user, 'userprofile') and user.userprofile.plan:
             available_designs = user.userprofile.plan.card_designs.all()
         else:
             try:
-                # Fallback plan gratuit
                 free_plan = Plan.objects.get(price=0)
                 available_designs = free_plan.card_designs.all()
             except Plan.DoesNotExist:
                 pass
 
-        # 2. Logică Câmpuri Speciale (JSON)
+        # 2. Logică Câmpuri Speciale
         design_fields = {}
         for design in available_designs.prefetch_related('special_fields'):
             names = [f.name for f in design.special_fields.all()]
@@ -502,41 +495,40 @@ class EventCreateView(LoginRequiredMixin, CreateView):
         context['design_specific_fields_json'] = json.dumps(design_fields)
         context['available_designs'] = available_designs
 
-        # 3. Formsets (AICI este corect să pasăm request.FILES manual)
+        # 3. Formsets (Includem si Galeria)
         if self.request.POST:
             context['godparent_formset'] = GodparentFormSet(self.request.POST, self.request.FILES)
             context['schedule_item_formset'] = ScheduleItemFormSet(self.request.POST, self.request.FILES)
+            # <--- LINIE NOUĂ: Instanțiem FormSet-ul Galeriei cu POST și FILES
+            context['gallery_image_formset'] = GalleryImageFormSet(self.request.POST, self.request.FILES)
         else:
             context['godparent_formset'] = GodparentFormSet()
             context['schedule_item_formset'] = ScheduleItemFormSet()
+            # <--- LINIE NOUĂ: FormSet gol pentru GET
+            context['gallery_image_formset'] = GalleryImageFormSet()
 
         return context
 
     def form_valid(self, form):
         # --- DEBUGGING START ---
-        # Aceste mesaje vor apărea în consola Render când dai Save
         print(f"DEBUG UPLOAD: Userul {self.request.user} incearca sa salveze un eveniment.", file=sys.stderr)
-
         if self.request.FILES:
             print(f"DEBUG UPLOAD: Am primit fisiere! Lista: {self.request.FILES.keys()}", file=sys.stderr)
-            for filename, filedata in self.request.FILES.items():
-                print(f"   -> Fisier: {filename}, Marime: {filedata.size} bytes", file=sys.stderr)
         else:
-            print(
-                "DEBUG UPLOAD: ATENTIE! Nu s-au primit fisiere (self.request.FILES este gol). Verifica enctype in HTML.",
-                file=sys.stderr)
+            print("DEBUG UPLOAD: ATENTIE! Nu s-au primit fisiere.", file=sys.stderr)
         # --- DEBUGGING END ---
 
         context = self.get_context_data()
         godparent_formset = context['godparent_formset']
         schedule_item_formset = context['schedule_item_formset']
+        # <--- LINIE NOUĂ: Extragem formset-ul din context
+        gallery_image_formset = context['gallery_image_formset']
 
-        # Validare completă
-        if form.is_valid() and godparent_formset.is_valid() and schedule_item_formset.is_valid():
-            # CreateView gestionează automat request.FILES pentru 'form' aici
+        # Validare completă (inclusiv galeria)
+        if form.is_valid() and godparent_formset.is_valid() and schedule_item_formset.is_valid() and gallery_image_formset.is_valid():
             self.object = form.save(commit=False)
             self.object.owner = self.request.user
-            self.object.save()  # Upload-ul imaginii se întâmplă aici
+            self.object.save()
 
             godparent_formset.instance = self.object
             godparent_formset.save()
@@ -544,11 +536,18 @@ class EventCreateView(LoginRequiredMixin, CreateView):
             schedule_item_formset.instance = self.object
             schedule_item_formset.save()
 
+            # <--- LINIE NOUĂ: Salvăm galeria
+            gallery_image_formset.instance = self.object
+            gallery_image_formset.save()
+
             messages.success(self.request, _(f"Event '{self.object.title}' created!"))
             return redirect(self.get_success_url())
         else:
-            # Debug pentru erori de validare
-            print(f"DEBUG UPLOAD: Formular invalid. Erori: {form.errors}", file=sys.stderr)
+            print(f"DEBUG UPLOAD: Formular invalid. Errors: {form.errors}", file=sys.stderr)
+            # Verificăm și erorile din galerie pentru debug
+            if not gallery_image_formset.is_valid():
+                print(f"DEBUG GALERIE: Erori galerie: {gallery_image_formset.errors}", file=sys.stderr)
+
             return self.render_to_response(self.get_context_data(form=form))
 
     def get_success_url(self):
@@ -558,7 +557,6 @@ class EventCreateView(LoginRequiredMixin, CreateView):
 class EventUpdateView(LoginRequiredMixin, UpdateView):
     model = Event
     form_class = EventForm
-    # FIX: Template-ul corect
     template_name = 'invapp/event_form_tailwind.html'
 
     def get_context_data(self, **kwargs):
@@ -603,38 +601,44 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         context['design_specific_fields_json'] = json.dumps(design_fields)
         context['available_designs'] = available_designs
 
-        # Formsets la Update (Și aici e nevoie de FILES manual)
+        # Formsets Update
         if self.request.POST:
             context['godparent_formset'] = GodparentFormSet(self.request.POST, self.request.FILES, instance=self.object)
             context['schedule_item_formset'] = ScheduleItemFormSet(self.request.POST, self.request.FILES,
                                                                    instance=self.object)
+            # <--- LINIE NOUĂ: Formset Galerie cu instance=self.object
+            context['gallery_image_formset'] = GalleryImageFormSet(self.request.POST, self.request.FILES,
+                                                                   instance=self.object)
         else:
             context['godparent_formset'] = GodparentFormSet(instance=self.object)
             context['schedule_item_formset'] = ScheduleItemFormSet(instance=self.object)
+            # <--- LINIE NOUĂ: Formset Galerie populat cu imaginile existente
+            context['gallery_image_formset'] = GalleryImageFormSet(instance=self.object)
 
         return context
 
     def form_valid(self, form):
-        # --- DEBUGGING START ---
         print(f"DEBUG UPDATE: Userul {self.request.user} actualizeaza evenimentul.", file=sys.stderr)
-        if self.request.FILES:
-            print(f"DEBUG UPDATE: Am primit fisiere! Lista: {self.request.FILES.keys()}", file=sys.stderr)
-        else:
-            print("DEBUG UPDATE: Nu s-au primit fisiere noi.", file=sys.stderr)
-        # --- DEBUGGING END ---
 
         context = self.get_context_data()
         godparent_formset = context['godparent_formset']
         schedule_item_formset = context['schedule_item_formset']
+        # <--- LINIE NOUĂ
+        gallery_image_formset = context['gallery_image_formset']
 
-        if form.is_valid() and godparent_formset.is_valid() and schedule_item_formset.is_valid():
-            self.object = form.save()  # Salvează modificările
+        # Validare completă
+        if form.is_valid() and godparent_formset.is_valid() and schedule_item_formset.is_valid() and gallery_image_formset.is_valid():
+            self.object = form.save()
 
             godparent_formset.instance = self.object
             godparent_formset.save()
 
             schedule_item_formset.instance = self.object
             schedule_item_formset.save()
+
+            # <--- LINIE NOUĂ: Salvare galerie (adăugare/ștergere)
+            gallery_image_formset.instance = self.object
+            gallery_image_formset.save()
 
             messages.success(self.request, _("Event updated."))
             return redirect(self.get_success_url())
@@ -1269,3 +1273,57 @@ def event_preview_demo(request, event_id):
 def upgrade_plan(request):
     """Pagina unde utilizatorii pot vedea planurile si face upgrade."""
     return render(request, 'invapp/upgrade_page.html')
+
+
+class EventLivePreviewView(LoginRequiredMixin, View):
+    """
+    View special pentru a randa preview-ul fără a salva datele în DB.
+    Primește datele din formular via POST.
+    """
+
+    def post(self, request, *args, **kwargs):
+        # 1. Extragem datele din request.POST fără a salva
+        form = EventForm(request.POST, request.FILES)
+
+        # Chiar dacă formularul nu e 100% valid (ex: lipsesc câmpuri opționale),
+        # încercăm să randăm ce avem pentru preview.
+        event_instance = form.save(commit=False)
+        event_instance.owner = request.user
+
+        # 2. Gestionare Design (Critic pentru randare)
+        design_id = request.POST.get('selected_design')
+        if design_id:
+            try:
+                design = CardDesign.objects.get(pk=design_id)
+                event_instance.selected_design = design
+            except CardDesign.DoesNotExist:
+                return HttpResponse("Design invalid selectat.", status=400)
+        else:
+            return HttpResponse("Te rugăm să selectezi un design pentru preview.", status=400)
+
+        # 3. Gestionare Imagini (Live Upload - Hack pentru Preview)
+        # Citim imaginea direct din memorie și o convertim în Base64 pentru a o afișa
+        # fără a o salva pe disk/Cloudinary.
+        if 'couple_photo' in request.FILES:
+            f = request.FILES['couple_photo']
+            try:
+                img_data = base64.b64encode(f.read()).decode('utf-8')
+                # Aici "păcălim" template-ul să folosească string-ul base64 în loc de URL
+                # Trebuie să modificăm template-ul invitației să accepte asta sau să suprascriem atributul.
+                # O metodă robustă e să setăm un atribut temporar pe obiect.
+                event_instance.preview_couple_photo_b64 = f"data:{f.content_type};base64,{img_data}"
+            except Exception:
+                pass  # Dacă eșuează conversia, nu afișăm poza nouă
+
+        # 4. Context pentru Template
+        context = {
+            'event': event_instance,
+            'guest': None,  # Preview-ul nu are un invitat specific
+            'is_preview': True,  # Flag util în template pentru a ascunde butoane de RSVP etc.
+        }
+
+        # 5. Randare
+        try:
+            return render(request, design.template_name, context)
+        except Exception as e:
+            return HttpResponse(f"Eroare la generare preview: {str(e)}", status=500)

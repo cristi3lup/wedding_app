@@ -1,646 +1,812 @@
 {% extends "invapp/base.html" %}
 {% load i18n %}
 {% load static %}
+{% load widget_tweaks %}
 
 {% block title %}
     {% if object %}
-        {% translate "Edit Event:" %} {{ object.title }}
+        {% translate "Editare Eveniment:" %} {{ object.title }}
     {% else %}
-        {% translate "Create New Event" %}
+        {% translate "Creează Eveniment Nou" %}
     {% endif %}
 {% endblock %}
 
-<!-- Custom Navigation for This Page -->
-{% block nav_links %}
-    <a href="{% url 'invapp:dashboard' %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Dashboard" %}</a>
-    {% if object %}
-        <a href="{% url 'invapp:guest_list' event_id=object.id %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Guest List" %}</a>
-        <a href="{% url 'invapp:table_assignment_ui' event_id=object.id %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Assign Guests" %}</a>
-    {% endif %}
-{% endblock nav_links %}
+{% block page_specific_styles %}
+<style>
+    /* Wizard Steps Transition */
+    .step-content {
+        display: none;
+        animation: fadeIn 0.4s ease-in-out;
+    }
+    .step-content.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-{% block mobile_nav_links %}
-    <a href="{% url 'invapp:dashboard' %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Dashboard" %}</a>
-    {% if object %}
-        <a href="{% url 'invapp:guest_list' event_id=object.id %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Guest List" %}</a>
-        <a href="{% url 'invapp:table_assignment_ui' event_id=object.id %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Assign Guests" %}</a>
-    {% endif %}
-{% endblock mobile_nav_links %}
+    /* Design Radio Selector Override */
+    .design-radio-input:checked + .design-card {
+        border-color: #4F46E5; /* Indigo-600 */
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+        transform: scale(1.02);
+    }
+    .design-radio-input:checked + .design-card .check-icon {
+        opacity: 1;
+        transform: scale(1);
+    }
 
+    /* Mobile Sticky Bar SafeArea */
+    .safe-area-bottom {
+        padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
 
-{% block page_header %}
-    <div class="sm:flex sm:justify-between sm:items-center">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {% if object %}
-                    {% translate "Edit Event" %}
-                {% else %}
-                    {% translate "Create New Event" %}
-                {% endif %}
-            </h1>
-            {% if object %}
-                <p class="mt-1 text-md text-gray-600 dark:text-gray-400">
-                    {% translate "Editing:" %} <strong class="font-semibold">{{ object.title }}</strong>
-                </p>
-            {% endif %}
-        </div>
-        <div class="mt-4 sm:mt-0">
-            <a href="{% url 'invapp:dashboard' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
-                {% translate "Back to Dashboard" %}
-            </a>
-        </div>
-    </div>
+    /* Loading Spinner Overlay */
+    .loading-overlay {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(4px);
+    }
+
+    /* Custom Scrollbar for Design Grid */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
+<div class="max-w-5xl mx-auto pb-32 lg:pb-12 px-4 sm:px-6 lg:px-8" x-data="{ loading: false }">
+
+    <!-- Loading State -->
+    <div x-show="loading" class="fixed inset-0 z-50 flex items-center justify-center loading-overlay" style="display: none;">
+        <div class="flex flex-col items-center">
+            <svg class="animate-spin h-10 w-10 text-indigo-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-indigo-600 font-bold animate-pulse">{% translate "Se procesează..." %}</span>
+        </div>
+    </div>
+
+    <!-- Header & Progress Bar -->
+    <div class="py-6">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                {% if object %}{% translate "Modifică Detaliile" %}{% else %}{% translate "Configurează Evenimentul" %}{% endif %}
+            </h1>
+            <span class="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full dark:bg-indigo-900 dark:text-indigo-200">
+                Pasul <span id="current-step-label">1</span> din 5
+            </span>
+        </div>
+
+        <!-- Stepper Visual -->
+        <div class="relative">
+            <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200 dark:bg-gray-700">
+                <div id="progress-bar" style="width: 20%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-600 transition-all duration-500"></div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 font-medium px-1">
+                <span class="step-label text-indigo-600 font-bold">1. Design</span>
+                <span class="step-label">2. Detalii</span>
+                <span class="step-label">3. Locație</span>
+                <span class="step-label">4. Invitați</span>
+                <span class="step-label">5. Media</span>
+            </div>
+        </div>
+    </div>
+
     {% if is_locked_plan %}
     <div class="mb-6 rounded-md bg-yellow-50 dark:bg-yellow-900/50 p-4 border-l-4 border-yellow-400">
         <div class="flex">
-            <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-                </svg>
-            </div>
             <div class="ml-3">
                 <p class="text-sm text-yellow-700 dark:text-yellow-300">
-                    {% translate "Your plan locks core event details." %}
-                    <a href="{% url 'invapp:landing_page' %}#pricing" class="font-medium underline hover:text-yellow-600 dark:hover:text-yellow-200">
-                        {% translate "Upgrade your plan" %}
-                    </a>
-                    {% translate "to unlock all fields, including event type, date, and design." %}
-                </p>
-                <p class="mt-2 text-sm text-yellow-700 dark:text-yellow-300 font-medium">
-                    {% translate "Need to update the date or time? Please contact the administrator. Provide your user email and the event name, and we will update it for you." %}
+                    {% translate "Planul tău blochează anumite detalii (Dată, Tip, Design)." %}
+                    <a href="{% url 'invapp:landing_page' %}#pricing" class="font-medium underline">{% translate "Upgrade" %}</a>
                 </p>
             </div>
         </div>
     </div>
     {% endif %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
 
-        <!-- FIX: Added x-data for loading state and @submit handler -->
-        <form id="event-form" method="POST" enctype="multipart/form-data" class="space-y-8" x-data="{ loading: false }" @submit="loading = true">
-            {% csrf_token %}
+    <form method="post" enctype="multipart/form-data" id="event-form" class="space-y-6" @submit="loading = true">
+        {% csrf_token %}
 
-            <!-- NEW: Display non-field errors -->
-            {% if form.non_field_errors %}
-                <div class="rounded-md bg-red-50 dark:bg-red-900/50 p-4">
-                    <div class="flex">
-                        <div class="ml-3">
-                            <h3 class="text-sm font-medium text-red-800 dark:text-red-300">{% translate "Please correct the errors below:" %}</h3>
-                            <div class="mt-2 text-sm text-red-700 dark:text-red-400">
-                                <ul role="list" class="list-disc space-y-1 pl-5">
-                                    {% for error in form.non_field_errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Errors Summary -->
+        {% if form.errors or godparent_formset.errors or schedule_item_formset.errors or gallery_image_formset.errors %}
+        <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-6 rounded-md">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
                 </div>
-            {% endif %}
+                <div class="ml-3">
+                    <p class="text-sm text-red-700 dark:text-red-200">
+                        {% translate "Vă rugăm să corectați erorile de mai jos." %}
+                    </p>
+                    {{ form.non_field_errors }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
-            <!-- Event Type & Design Card -->
-            <div>
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-3">{% translate "Event Type & Design" %}</h3>
-                <div class="mt-6 space-y-6">
-                    <div>
-                        <!-- FIX: Error Styling for Event Type -->
-                        <label for="{{ form.event_type.id_for_label }}" class="block text-sm font-medium {% if form.event_type.errors %}text-red-700 dark:text-red-400{% else %}text-gray-700 dark:text-gray-300{% endif %}">
-                            {{ form.event_type.label }}
-                            {% if form.event_type.field.required %}<span class="text-red-500">*</span>{% endif %}
+        <!-- ========================== STEP 1: TIP & DESIGN ========================== -->
+        <div class="step-content active" data-step="1">
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 space-y-6">
 
-                            <!-- Locked Badge -->
-                            {% if is_locked_plan %}
-                                <span class="ml-2 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">
-                                    <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
-                                    {% translate "Locked" %}
-                                </span>
-                            {% endif %}
-                        </label>
-                        <div class="mt-1">
-                            {{ form.event_type }}
-                            <!-- FIX FOR LOCKED PLAN: Send hidden value so validation passes -->
-                            {% if is_locked_plan %}
-                                <input type="hidden" name="event_type" value="{{ form.instance.event_type }}">
-                            {% endif %}
-                        </div>
-                        <!-- FIX: Display errors -->
-                        {% if form.event_type.errors %}
-                            <p class="mt-2 text-sm text-red-600 dark:text-red-400">
-                                {{ form.event_type.errors|striptags }}
-                            </p>
-                        {% endif %}
-                    </div>
-                    <div class="hidden">{{ form.selected_design }}</div>
+                <!-- Tip Eveniment -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">{% translate "Ce fel de eveniment organizați?" %}</label>
+                    <div class="relative">
+                        {% render_field form.event_type class="block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
 
-                    <div id="design-selection-container" class="conditional-section">
-                        <!-- FIX: Error Styling for Design -->
-                        <label class="block text-sm font-medium {% if form.selected_design.errors %}text-red-700 dark:text-red-400{% else %}text-gray-700 dark:text-gray-300{% endif %}">
-                            {% translate "Select a Design" %}
-                            <span class="text-red-500">*</span>
-                            {% if is_locked_plan %}
-                                <span class="ml-2 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">
-                                    <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
-                                    {% translate "Locked" %}
-                                </span>
-                            {% endif %}
-                        </label>
-
-                        <!-- FIX FOR LOCKED PLAN: Add opacity and disable interactions if locked -->
-                        <div class="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-4 {% if is_locked_plan %}opacity-60 pointer-events-none{% endif %}">
-                            {% for design in available_designs %}
-                                <div class="design-wrapper" data-event-type="{{ design.event_type|lower|slugify }}" style="display: none;">
-                                    <label for="design_{{ design.id }}" class="relative block rounded-lg border bg-gray-50 dark:bg-gray-700/50 p-3 shadow-sm cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:ring-2 has-[:checked]:ring-indigo-500">
-                                        <input type="radio" name="selected_design" id="design_{{ design.id }}" value="{{ design.id }}" class="sr-only design-radio" data-design-name="{{ design.name|slugify }}" {% if form.instance.selected_design.id == design.id %} checked {% endif %} {% if is_locked_plan %}disabled{% endif %}>
-                                        <span class="flex flex-col items-center text-center">
-                                            {% if design.preview_image_path %}<img src="{% static design.preview_image_path %}" alt="{{ design.name }} preview" class="h-40 w-full object-cover rounded-md mb-2">{% else %}<div class="h-40 w-full bg-gray-200 dark:bg-gray-600 rounded-md mb-2 flex items-center justify-center"><span class="text-xs text-gray-400">{% translate "No Preview" %}</span></div>{% endif %}
-                                            <span class="block text-sm font-medium text-gray-900 dark:text-gray-100">{{ design.name }}</span>
-                                        </span>
-                                    </label>
-                                </div>
-                            {% endfor %}
-                        </div>
-
-                        <!-- FIX: Display errors -->
-                        {% if form.selected_design.errors %}
-                            <p class="mt-2 text-sm text-red-600 dark:text-red-400">
-                                {{ form.selected_design.errors|striptags }}
-                            </p>
-                        {% endif %}
-
-                        <!-- FIX FOR LOCKED PLAN: Send hidden design ID -->
                         {% if is_locked_plan %}
-                            <input type="hidden" name="selected_design" value="{{ form.instance.selected_design.id }}">
+                            <input type="hidden" name="event_type" value="{{ form.instance.event_type }}">
                         {% endif %}
                     </div>
-                </div>
-            </div>
-
-            <!-- Wrapper for all conditional form sections -->
-            <div id="form-fields-wrapper" class="space-y-8 conditional-field">
-
-                <!-- Event Details Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-3">{% translate "Event Details" %}</h3>
-                    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div id="field-title-container" class="field-container conditional-field sm:col-span-2"></div>
-                        <!-- UPDATED: Replaced date_time with event_date -->
-                        <div id="field-event_date-container" class="field-container conditional-field"></div>
-                        <div id="field-bride_name-container" class="field-container conditional-field"></div>
-                        <div id="field-groom_name-container" class="field-container conditional-field"></div>
-                        <div id="field-bride_parents-container" class="field-container conditional-field"></div>
-                        <div id="field-groom_parents-container" class="field-container conditional-field"></div>
-                        <div id="field-child_name-container" class="field-container conditional-field"></div>
-                        <div id="field-parents_names-container" class="field-container conditional-field"></div>
-                    </div>
-                </div>
-
-                 <!-- ============================================== -->
-                <!-- === 1. Godparents Formset Card (with ID)   === -->
-                <!-- ============================================== -->
-                <div id="godparents-section" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-3">
-                        {% translate "Godparents" %}
-                    </h3>
-                    <div id="godparent-formset" class="mt-6 space-y-4">
-                        {{ godparent_formset.management_form }}
-                        {% for form in godparent_formset %}
-                            <div class="godparent-form flex items-center space-x-4">
-                                <div class="flex-grow">
-                                    <!-- This renders the text input for the godparent's name -->
-                                    {{ form.name }}
-                                    <!-- These are hidden fields Django needs to manage the form -->
-                                    {{ form.id }}
-                                    {% if form.name.errors %}
-                                        <p class="text-xs text-red-600 mt-1">{{ form.name.errors|striptags }}</p>
-                                    {% endif %}
-                                </div>
-                                <!-- This shows the 'Delete' checkbox only for existing godparents -->
-                                <div class="hidden">{{ form.DELETE }}</div>
-                                <button type="button" class="delete-godparent-btn p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-                                    <span class="sr-only">{% translate "Delete" %}</span>
-                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.84.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" /></svg>
-                                </button>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <!-- This is the button that will add a new form row via JavaScript -->
-                    <div class="mt-4">
-                        <button type="button" id="add-godparent-form" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                            + {% translate "Add another Godparent" %}
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Location & Timing Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-3">{% translate "Location & Timing" %}</h3>
-                     <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div id="field-venue_name-container" class="field-container conditional-field"></div>
-                        <div id="field-venue_address-container" class="field-container conditional-field"></div>
-                        <!-- UPDATED: Added party_time container -->
-                        <div id="field-party_time-container" class="field-container conditional-field"></div>
-                        <div id="field-ceremony_time-container" class="field-container conditional-field"></div>
-                        <div id="field-ceremony_location-container" class="field-container conditional-field"></div>
-                        <div id="field-ceremony_maps_url-container" class="field-container conditional-field sm:col-span-2"></div>
-                        <div id="field-party_maps_url-container" class="field-container conditional-field sm:col-span-2"></div>
-                        <div id="field-Maps_embed_url-container" class="field-container conditional-field sm:col-span-2"></div>
-                     </div>
-                </div>
-
-                <!-- ============================================== -->
-                <!-- === NEW: Schedule Items Formset Card       === -->
-                <!-- ============================================== -->
-                <!-- UPDATED: Changed ID and added classes to work as a Special Field -->
-                <div id="field-schedule_items-container" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 field-container" style="display: none;">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-3">
-                        {% translate "Event Schedule / Timeline" %}
-                    </h3>
-                    <div id="schedule-item-formset" class="mt-6 space-y-6">
-                        {{ schedule_item_formset.management_form }}
-                        {% for form in schedule_item_formset %}
-                            <div class="schedule-item-form border border-gray-200 dark:border-gray-700 rounded-md p-4 relative">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <!-- Activity Type -->
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-500 uppercase">{{ form.activity_type.label }}</label>
-                                        {{ form.activity_type }}
-                                    </div>
-                                    <!-- Time -->
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-500 uppercase">{{ form.time.label }}</label>
-                                        {{ form.time }}
-                                    </div>
-                                    <!-- Location -->
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-500 uppercase">{{ form.location.label }}</label>
-                                        {{ form.location }}
-                                    </div>
-                                    <!-- Description -->
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-500 uppercase">{{ form.description.label }}</label>
-                                        {{ form.description }}
-                                    </div>
-                                </div>
-
-                                <!-- Hidden ID -->
-                                {{ form.id }}
-
-                                <!-- Delete Button -->
-                                <div class="hidden">{{ form.DELETE }}</div>
-                                <button type="button" class="delete-schedule-btn absolute top-2 right-2 text-gray-400 hover:text-red-600">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <div class="mt-4">
-                        <button type="button" id="add-schedule-item" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                            + {% translate "Add Schedule Item" %}
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Invitation Content Card -->
-                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-3">{% translate "Invitation Content" %}</h3>
-                     <div class="mt-6 grid grid-cols-1 gap-6">
-                        <div id="field-invitation_wording-container" class="field-container conditional-field"></div>
-                        <div id="field-schedule_details-container" class="field-container conditional-field"></div>
-                        <div id="field-other_info-container" class="field-container conditional-field"></div>
-                        <div id="field-calendar_description-container" class="field-container conditional-field"></div>
-                     </div>
-                </div>
-
-                <!-- Media & Photos Card -->
-                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-3">{% translate "Media & Photos" %}</h3>
-                     <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div id="field-couple_photo-container" class="field-container conditional-field"></div>
-                        <div id="field-landscape_photo-container" class="field-container conditional-field"></div>
-                        <div id="field-main_invitation_image-container" class="field-container conditional-field sm:col-span-2"></div>
-                        <div id="field-audio_greeting-container" class="field-container conditional-field sm:col-span-2"></div>
-                     </div>
-                </div>
-
-            <!-- This is a hidden div to hold all the form fields for easy manipulation by JS -->
-            <div id="field-source" style="display: none;">
-                {% for field in form %}
-                    {% if field.name != 'selected_design' and field.name != 'event_type' %}
-                        <div id="source-field-{{ field.name }}-container">
-                            <!-- FIX: Error Styling for Dynamic Fields -->
-                            <label for="{{ field.id_for_label }}" class="block text-sm font-medium {% if field.errors %}text-red-700 dark:text-red-400{% else %}text-gray-700 dark:text-gray-300{% endif %}">
-                                {{ field.label }}
-
-                                <!-- Mandatory Asterisk -->
-                                {% if field.field.required %}
-                                    <span class="text-red-500">*</span>
-                                {% endif %}
-
-                                <!-- FIX FOR LOCKED PLAN: Add locked badge to event_date ONLY (removed party_time) -->
-                                {% if is_locked_plan and field.name == 'event_date' %}
-                                    <span class="ml-2 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">
-                                        <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
-                                        {% translate "Locked" %}
-                                    </span>
-                                {% endif %}
-                            </label>
-                            <div class="mt-1 relative rounded-md shadow-sm">
-                                {% if field.name == 'title' or field.name == 'venue_name' or field.name == 'ceremony_location' %}
-                                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.243 3.03a1 1 0 01.727 1.213L9.53 6h1.214a1 1 0 110 2H9.53l-.44 1.76a1 1 0 11-1.94.486L7.53 8H6.316a1 1 0 110-2h1.214l.44-1.76a1 1 0 011.213-.727zM12 8a1 1 0 100-2h1.214l.44-1.76a1 1 0 111.94.486L15.145 6H16.36a1 1 0 110 2h-1.214l-.44 1.76a1 1 0 11-1.94-.486L13.145 8H12z" clip-rule="evenodd" /></svg>
-                                    </div>
-                                {% elif field.name == 'event_date' %}
-                                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg>
-                                    </div>
-                                {% elif field.name == 'ceremony_time' or field.name == 'party_time' %}
-                                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd" /></svg>
-                                    </div>
-                                {% endif %}
-                                {{ field }}
-
-                                <!-- FIX FOR LOCKED PLAN: Send hidden value for event_date if locked (removed party_time) -->
-                                {% if is_locked_plan and field.name == 'event_date' %}
-                                    <input type="hidden" name="{{ field.name }}" value="{{ field.value|date:'Y-m-d' }}">
-                                {% endif %}
-                            </div>
-
-                            <!-- FIX: Display Field Errors -->
-                            {% if field.errors %}
-                                <p class="mt-2 text-sm text-red-600 dark:text-red-400">
-                                    {{ field.errors|striptags }}
-                                </p>
-                            {% endif %}
-
-                            {% if field.help_text %}<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ field.help_text }}</p>{% endif %}
-                        </div>
+                    {% if form.event_type.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.event_type.errors.0 }}</p>
                     {% endif %}
-                {% endfor %}
+                </div>
+
+                <!-- Selector Design (Grid) -->
+                <div id="design-selection-container">
+                    <label class="block text-lg font-bold text-gray-900 dark:text-white mb-4">{% translate "Alegeți Designul Invitației" %}</label>
+
+                    <!-- Folosim available_designs din context pentru a avea acces la proprietățile obiectelor -->
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto p-1 custom-scrollbar {% if is_locked_plan %}opacity-60 pointer-events-none{% endif %}">
+                        {% for design in available_designs %}
+                        <div class="relative design-option design-wrapper" data-event-type="{{ design.event_type|lower|slugify }}">
+                            <label class="cursor-pointer group block h-full">
+                                <!-- Radio Input Manual -->
+                                <input type="radio" name="selected_design" value="{{ design.id }}"
+                                       id="design_{{ design.id }}"
+                                       class="peer sr-only"
+                                       {% if form.instance.selected_design.id == design.id %}checked{% endif %}
+                                       {% if is_locked_plan %}disabled{% endif %}>
+
+                                <div class="design-card rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900 transition-all h-full flex flex-col relative hover:border-indigo-300 peer-checked:border-indigo-600 peer-checked:ring-2 peer-checked:ring-indigo-600 peer-checked:ring-offset-2">
+                                    <!-- Image Preview -->
+                                    <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-800 relative">
+                                        {% if design.preview_image_path %}
+                                            <img src="{% static design.preview_image_path %}" alt="{{ design.name }}" class="object-cover w-full h-48">
+                                        {% else %}
+                                            <div class="flex items-center justify-center h-48 bg-gray-100 text-gray-400 text-xs">Fără Preview</div>
+                                        {% endif %}
+
+                                        <!-- Checkmark Badge -->
+                                        <div class="check-icon absolute top-2 right-2 bg-indigo-600 text-white rounded-full p-1 transition-all duration-200 shadow-md opacity-0 transform scale-0 peer-checked:opacity-100 peer-checked:scale-100">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 text-center bg-white dark:bg-gray-800">
+                                        <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ design.name }}</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if is_locked_plan %}
+                        <input type="hidden" name="selected_design" value="{{ form.instance.selected_design.id }}">
+                    {% endif %}
+
+                    {% if form.selected_design.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.selected_design.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================== STEP 2: DETALII EVENIMENT ========================== -->
+        <div class="step-content" data-step="2">
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 space-y-6">
+
+                <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white border-b pb-2">{% translate "Informații Principale" %}</h3>
+
+                <!-- Titlu Intern -->
+                <div id="field-title-container">
+                    <label for="id_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% translate "Nume Eveniment (Intern)" %}</label>
+                    {% render_field form.title class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg py-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Nunta Ana & Andrei" %}
+                    <p class="mt-1 text-xs text-gray-500">{% translate "Acest nume apare doar în dashboard-ul tău." %}</p>
+                    {% if form.title.errors %}<p class="text-sm text-red-600 mt-1">{{ form.title.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- Data Eveniment -->
+                <div id="field-event_date-container">
+                    <label for="id_event_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% translate "Data Evenimentului" %}</label>
+                    <input type="date" name="event_date" id="id_event_date" value="{{ form.event_date.value|date:'Y-m-d' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg py-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" {% if is_locked_plan %}disabled{% endif %}>
+
+                    {% if is_locked_plan %}
+                        <input type="hidden" name="event_date" value="{{ form.instance.event_date|date:'Y-m-d' }}">
+                    {% endif %}
+                    {% if form.event_date.errors %}<p class="text-sm text-red-600 mt-1">{{ form.event_date.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Miri / Protagonisti -->
+                    <div id="field-bride_name-container" class="conditional-field">
+                        <label for="id_bride_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Prenume Mireasă" %}</label>
+                        {% render_field form.bride_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                    </div>
+                    <div id="field-groom_name-container" class="conditional-field">
+                        <label for="id_groom_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Prenume Mire" %}</label>
+                        {% render_field form.groom_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                    </div>
+                    <!-- For Baptism -->
+                    <div id="field-child_name-container" class="conditional-field hidden">
+                        <label for="id_child_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Nume Copil (Botez)" %}</label>
+                        {% render_field form.child_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                    </div>
+                </div>
+
+                <!-- Parents -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div id="field-bride_parents-container" class="conditional-field">
+                        <label for="id_bride_parents" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Părinții Miresei" %}</label>
+                        {% render_field form.bride_parents rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                    </div>
+                    <div id="field-groom_parents-container" class="conditional-field">
+                        <label for="id_groom_parents" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Părinții Mirelui" %}</label>
+                        {% render_field form.groom_parents rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                    </div>
+                </div>
+
+                <div id="field-invitation_wording-container">
+                    <label for="id_invitation_wording" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Text Invitație (Introductiv)" %}</label>
+                    {% render_field form.invitation_wording rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Noi, alături de părinți..." %}
+                    <p class="text-xs text-gray-500 mt-1">{% translate "Acest text apare la începutul invitației." %}</p>
+                </div>
+
+            </div>
+        </div>
+
+         <!-- Text Invitație -->
+
+
+        <!-- ========================== STEP 3: LOCAȚIE & PROGRAM ========================== -->
+        <div class="step-content" data-step="3">
+            <div class="space-y-6">
+
+                <!-- Locations Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Ceremony -->
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-l-4 border-indigo-500">
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            {% translate "Cununia / Ceremonia" %}
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Ora" %}</label>
+                                <input type="time" name="ceremony_time" id="id_ceremony_time" value="{{ form.ceremony_time.value|date:'H:i' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Locația (Nume)" %}</label>
+                                {% render_field form.ceremony_location class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Link Waze/Maps" %}</label>
+                                {% render_field form.ceremony_maps_url class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="https://maps.google.com/..." %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Party -->
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-l-4 border-pink-500">
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z"></path></svg>
+                            {% translate "Petrecerea" %}
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Ora" %}</label>
+                                <input type="time" name="party_time" id="id_party_time" value="{{ form.party_time.value|date:'H:i' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Locația (Nume)" %}</label>
+                                {% render_field form.venue_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Adresa Completă" %}</label>
+                                {% render_field form.venue_address class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Link Waze/Maps" %}</label>
+                                {% render_field form.party_maps_url class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule Formset -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mt-6" id="schedule-items-section">
+                    <h3 class="text-lg font-bold mb-4 flex items-center justify-between">
+                        <span>{% translate "Cronologie (Timeline)" %}</span>
+                        <span class="text-xs font-normal text-gray-500">{% translate "Adaugă momente cheie" %}</span>
+                    </h3>
+
+                    {{ schedule_item_formset.management_form }}
+                    <div id="schedule_items-formset-container" class="space-y-4">
+                        {% for form in schedule_item_formset %}
+                            <div class="schedule_items-form bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 relative group">
+                                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <div class="hidden">{{ form.DELETE }}</div> <!-- Hidden Delete Checkbox -->
+
+                                <div class="grid grid-cols-12 gap-4 items-start">
+                                    <div class="col-span-4 sm:col-span-3">
+                                        <label class="block text-xs text-gray-500">{% translate "Ora" %}</label>
+                                        {% render_field form.time class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                                    </div>
+                                    <div class="col-span-8 sm:col-span-8">
+                                        <label class="block text-xs text-gray-500">{% translate "Activitate" %}</label>
+                                        {% render_field form.activity_type class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                                        <label class="block text-xs text-gray-500 mt-2">{% translate "Descriere (Opțional)" %}</label>
+                                        {% render_field form.description class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                                    </div>
+                                    <div class="col-span-12 sm:col-span-1 flex justify-end items-center pt-4">
+                                        {% if schedule_item_formset.can_delete %}
+                                            <button type="button" class="delete-form-btn text-red-500 hover:text-red-700 p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="button" id="add-schedule_items-btn" class="mt-4 w-full flex items-center justify-center py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-indigo-500 hover:text-indigo-500 transition-colors font-medium">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        {% translate "Adaugă Activitate în Program" %}
+                    </button>
+                </div>
+
+                <!-- Hidden Template for Empty Form (Schedule) -->
+                <div id="empty-schedule_items-form" class="hidden">
+                    <div class="schedule_items-form bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 relative mt-4">
+                        <div class="grid grid-cols-12 gap-4 items-start">
+                            <div class="col-span-4 sm:col-span-3">
+                                <label class="block text-xs text-gray-500">{% translate "Ora" %}</label>
+                                {% render_field schedule_item_formset.empty_form.time class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                            </div>
+                            <div class="col-span-8 sm:col-span-8">
+                                <label class="block text-xs text-gray-500">{% translate "Activitate" %}</label>
+                                {% render_field schedule_item_formset.empty_form.activity_type class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                                <label class="block text-xs text-gray-500 mt-2">{% translate "Descriere (Opțional)" %}</label>
+                                {% render_field schedule_item_formset.empty_form.description class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                            </div>
+                            <div class="col-span-12 sm:col-span-1 flex justify-end pt-4">
+                                <div class="hidden">{{ schedule_item_formset.empty_form.DELETE }}</div>
+                                <button type="button" class="delete-form-btn text-red-500 hover:text-red-700 p-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Action Buttons -->
-            <!-- FIX: Added button loader state -->
-            <div class="pt-5 flex flex-col sm:flex-row-reverse gap-3 conditional-field">
-                <button type="submit"
-                        :disabled="loading"
-                        :class="loading ? 'cursor-not-allowed opacity-75' : ''"
-                        class="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-all duration-200">
-                    <!-- Text Normal -->
-                    <span x-show="!loading">
-                        {% if object %}
-                            {% translate "Save Changes" %}
-                        {% else %}
-                            {% translate "Create Event" %}
-                        {% endif %}
-                    </span>
-                    <!-- Spinner Animatie -->
-                    <span x-show="loading" class="flex items-center" style="display: none;">
-                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        {% translate "Processing..." %}
-                    </span>
+        <!-- ========================== STEP 4: INVITAȚI SPECIALI (NAȘI) ========================== -->
+        <div class="step-content" data-step="4">
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h3 class="text-lg font-bold mb-4">{% translate "Nași de Cununie / Botez" %}</h3>
+                <p class="text-sm text-gray-500 mb-6">{% translate "Adăugați numele nașilor așa cum doriți să apară pe invitație (ex: 'Ion și Maria Popescu' sau separat)." %}</p>
+
+                {{ godparent_formset.management_form }}
+                <div id="godparents-formset-container" class="space-y-4">
+                    {% for form in godparent_formset %}
+                        <div class="godparents-form bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800 flex items-center justify-between">
+                            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                            <div class="flex-grow mr-4">
+                                <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase mb-1">{% translate "Nume Naș(i)" %}</label>
+                                {% render_field form.name class="mt-1 block w-full rounded-md border-indigo-200 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                            </div>
+
+                            <div class="hidden">{{ form.DELETE }}</div>
+                            {% if godparent_formset.can_delete and form.instance.pk %}
+                                <button type="button" class="delete-form-btn text-gray-400 hover:text-red-500 p-2 mt-4 transition-colors">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <button type="button" id="add-godparents-btn" class="mt-6 w-full py-3 bg-indigo-50 dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 rounded-lg font-bold hover:bg-indigo-100 transition-colors flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    {% translate "Adaugă încă o pereche de nași" %}
                 </button>
 
-                <button type="button" id="live-preview-button" disabled class="w-full sm:w-auto inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
-                    {% translate "Live Preview" %}
+                 <!-- Hidden Template for Empty Form (Godparent) -->
+                 <div id="empty-godparents-form" class="hidden">
+                    <div class="godparents-form bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800 flex items-center justify-between mt-4">
+                        <div class="flex-grow mr-4">
+                             <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase mb-1">{% translate "Nume Naș(i)" %}</label>
+                            {% render_field godparent_formset.empty_form.name class="mt-1 block w-full rounded-md border-indigo-200 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
+                        </div>
+                        <div class="hidden">{{ godparent_formset.empty_form.DELETE }}</div>
+                        <button type="button" class="delete-form-btn text-gray-400 hover:text-red-500 p-2 mt-4">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================== STEP 5: MEDIA & CONȚINUT ========================== -->
+        <div class="step-content" data-step="5">
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 space-y-8">
+
+                <!-- Main Photo -->
+                <div id="field-couple_photo-container">
+                    <label class="block text-lg font-bold text-gray-900 dark:text-white mb-2">{% translate "Poza Principală (Mirii/Bebelușul)" %}</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition-colors bg-gray-50 dark:bg-gray-900">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                <label for="id_couple_photo" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 px-2">
+                                    <span>{% translate "Încarcă o poză" %}</span>
+                                    {{ form.couple_photo }}
+                                </label>
+                            </div>
+                            <p class="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                            {% if object.couple_photo %}
+                                <div class="mt-4">
+                                    <p class="text-xs font-bold text-green-600">{% translate "Poza Curentă:" %}</p>
+                                    <img src="{{ object.couple_photo.url }}" class="h-24 object-contain mx-auto rounded shadow-sm">
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Galerie Foto (Formset Reintrodus) -->
+                <div class="mt-10 pt-6 border-t border-slate-200">
+                    <div class="mb-6">
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Galerie Foto
+                        </h3>
+                        <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">
+                            Poți încărca până la 6 fotografii. (Format recomandat: JPG/PNG, max 5MB)
+                        </p>
+                    </div>
+
+                    {{ gallery_image_formset.management_form }}
+
+                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for form in gallery_image_formset %}
+                            <div class="relative bg-slate-50 dark:bg-gray-700 rounded-xl border border-slate-200 dark:border-gray-600 p-4 shadow-sm hover:shadow-md transition-shadow">
+                                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+                                {% if form.instance.pk and form.instance.image %}
+                                    <div class="mb-4">
+                                        <div class="aspect-w-16 aspect-h-9 w-full overflow-hidden rounded-lg bg-gray-200 mb-2">
+                                            <img src="{{ form.instance.image.url }}" alt="Imagine galerie" class="h-32 w-full object-cover">
+                                        </div>
+
+                                        {% if gallery_image_formset.can_delete %}
+                                            <div class="flex items-center justify-between px-1">
+                                                <span class="text-xs font-semibold text-slate-600 dark:text-gray-300">Șterge?</span>
+                                                {{ form.DELETE }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <div class="mb-2 flex justify-center items-center h-32 bg-white dark:bg-gray-600 border-2 border-dashed border-slate-300 rounded-lg">
+                                        <span class="text-slate-400 text-xs">Liber</span>
+                                    </div>
+                                {% endif %}
+
+                                <div class="mt-2">
+                                    {{ form.image }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Audio Greeting -->
+                <div id="field-audio_greeting-container" class="mt-6 border-t pt-6">
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Mesaj Audio / Muzică de fundal" %}</label>
+                    <input type="file" name="audio_greeting" id="id_audio_greeting" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================== STICKY FOOTER ACTIONS ========================== -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 safe-area-bottom">
+            <div class="max-w-5xl mx-auto flex justify-between items-center gap-4">
+
+                <!-- Prev Button -->
+                <button type="button" id="prevBtn" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed hidden">
+                    {% translate "Înapoi" %}
+                </button>
+
+                <!-- Center: Preview Button -->
+                {% if object %}
+                <button type="button" id="live-preview-button" class="text-indigo-600 font-medium text-sm flex flex-col items-center justify-center p-2 rounded hover:bg-indigo-50">
+                    <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    <span>Preview</span>
+                </button>
+                {% endif %}
+
+                <!-- Next / Save Button -->
+                <button type="button" id="nextBtn" class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-indigo-700 transition-colors flex items-center justify-center">
+                    {% translate "Înainte" %}
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+
+                <button type="submit" id="submitBtn" class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-green-700 transition-colors hidden items-center justify-center">
+                    {% translate "Salvează" %}
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </button>
+
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<!-- Preview Modal -->
+<div id="preview-modal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center">
+    <div id="modal-overlay" class="absolute inset-0 bg-gray-900/90 backdrop-blur-sm transition-opacity"></div>
+
+    <div class="relative bg-white dark:bg-gray-800 w-full h-full md:h-[90vh] md:w-[90vw] md:max-w-6xl md:rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-transform transform scale-100">
+
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                Live Preview
+            </h3>
+
+            <div class="flex items-center gap-2">
+                <button type="button" id="open-new-window-btn" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors" title="Deschide în fereastră nouă">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    <span class="hidden sm:inline">Deschide Separat</span>
+                </button>
+
+                <div class="h-6 w-px bg-gray-300 mx-1"></div>
+
+                <button type="button" id="close-preview-button" class="text-gray-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-all focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-        </form>
-    </div>
+        </div>
 
-    <!-- Hidden template for new forms -->
-    <div id="empty-godparent-form" style="display: none;">
-        <div class="godparent-form flex items-center space-x-4">
-            <div class="flex-grow">
-                {{ godparent_formset.empty_form.name }}
-            </div>
-            <div class="hidden">{{ godparent_formset.empty_form.DELETE }}</div>
-            <button type="button" class="delete-godparent-btn p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-                <span class="sr-only">{% translate "Remove" %}</span>
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.84.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" /></svg>
-            </button>
+        <div class="flex-1 bg-gray-100 dark:bg-gray-900 relative w-full h-full">
+            <iframe id="preview-iframe" class="w-full h-full border-0 block" title="Invitation Preview"></iframe>
         </div>
     </div>
+</div>
 
-    <!-- Hidden Template for New Schedule Items -->
-    <div id="empty-schedule-form" style="display: none;">
-        <div class="schedule-item-form border border-gray-200 dark:border-gray-700 rounded-md p-4 relative mt-4">
-             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><label class="block text-xs font-medium text-gray-500 uppercase">{{ schedule_item_formset.empty_form.activity_type.label }}</label>{{ schedule_item_formset.empty_form.activity_type }}</div>
-                <div><label class="block text-xs font-medium text-gray-500 uppercase">{{ schedule_item_formset.empty_form.time.label }}</label>{{ schedule_item_formset.empty_form.time }}</div>
-                <div><label class="block text-xs font-medium text-gray-500 uppercase">{{ schedule_item_formset.empty_form.location.label }}</label>{{ schedule_item_formset.empty_form.location }}</div>
-                <div><label class="block text-xs font-medium text-gray-500 uppercase">{{ schedule_item_formset.empty_form.description.label }}</label>{{ schedule_item_formset.empty_form.description }}</div>
-            </div>
-            <div class="hidden">{{ schedule_item_formset.empty_form.DELETE }}</div>
-            <button type="button" class="delete-schedule-btn absolute top-2 right-2 text-gray-400 hover:text-red-600">
-                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-            </button>
-        </div>
-    </div>
-
-    <!-- Preview Modal HTML -->
-    <div id="preview-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 p-4 sm:p-8" style="display: none;">
-        <div class="bg-white dark:bg-gray-800 w-full h-full max-w-4xl mx-auto rounded-lg shadow-2xl flex flex-col">
-            <div class="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{% translate "Invitation Preview" %}</h3>
-                <button id="close-preview-button" class="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white text-3xl leading-none">&times;</button>
-            </div>
-            <div class="flex-grow overflow-y-auto">
-                <iframe id="preview-iframe" class="w-full h-full border-0"></iframe>
-            </div>
-        </div>
-    </div>
 {% endblock %}
-
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- Move all form fields from the hidden source to their new card locations ---
-        const fieldSource = document.getElementById('field-source');
-        if (fieldSource) {
-            const allFields = fieldSource.querySelectorAll('[id^="source-field-"]');
-            allFields.forEach(sourceContainer => {
-                const fieldName = sourceContainer.id.replace('source-field-', '').replace('-container', '');
-                const targetContainer = document.getElementById('field-' + fieldName + '-container');
-                if (targetContainer) {
-                    while(sourceContainer.firstChild) {
-                        targetContainer.appendChild(sourceContainer.firstChild);
-                    }
+
+        // --- WIZARD LOGIC ---
+        let currentStep = 1;
+        const totalSteps = 5;
+        const form = document.getElementById('event-form');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const progressBar = document.getElementById('progress-bar');
+        const stepLabel = document.getElementById('current-step-label');
+        const stepIndicators = document.querySelectorAll('.step-indicator');
+
+        function showStep(step) {
+            document.querySelectorAll('.step-content').forEach(el => {
+                el.classList.remove('active');
+                if(parseInt(el.dataset.step) === step) {
+                    el.classList.add('active');
                 }
             });
-            fieldSource.remove();
-        }
 
-        const eventTypeSelect = document.getElementById('id_event_type');
-        const designRadios = document.querySelectorAll('.design-radio');
-        const designSpecificFields = {{ design_specific_fields_json|safe }};
-        const fieldGroups = {
-            // UPDATED: Used event_date and added party_time
-            wedding: ['title', 'event_date', 'party_time', 'bride_name', 'groom_name', 'bride_parents', 'groom_parents', 'godparents_names', 'venue_name', 'venue_address', 'ceremony_time', 'ceremony_location', 'ceremony_maps_url', 'party_maps_url', 'invitation_wording', 'schedule_details', 'other_info', 'calendar_description'],
-            baptism: ['title', 'event_date', 'party_time', 'child_name', 'parents_names', 'godparents_names', 'venue_name', 'venue_address', 'ceremony_time', 'ceremony_location', 'ceremony_maps_url', 'party_maps_url', 'invitation_wording', 'calendar_description'],
-            image_upload: ['title', 'event_date', 'Maps_embed_url', 'main_invitation_image']
-        };
-
-        function updateFormVisibility() {
-            const selectedType = eventTypeSelect.value ? eventTypeSelect.value.toLowerCase().replace(' ', '_') : '';
-            const selectedDesignRadio = document.querySelector('.design-radio:checked');
-            const selectedDesignName = selectedDesignRadio ? selectedDesignRadio.dataset.designName : null;
-
-            document.querySelectorAll('.conditional-section, .conditional-field, .field-container').forEach(el => el.style.display = 'none');
-            document.getElementById('live-preview-button').disabled = true;
-
-            // NEW: Handle Godparents Section Visibility
-            const godparentsSection = document.getElementById('godparents-section');
-            if (godparentsSection) {
-                // Only show godparents for Wedding or Baptism
-                if (['wedding', 'baptism'].includes(selectedType)) {
-                    godparentsSection.style.display = 'block';
-                } else {
-                    godparentsSection.style.display = 'none';
-                }
+            // Update Buttons
+            if (step === 1) {
+                prevBtn.classList.add('hidden');
+            } else {
+                prevBtn.classList.remove('hidden');
             }
 
-            const designSelectionContainer = document.getElementById('design-selection-container');
-            if (selectedType) {
-                designSelectionContainer.style.display = 'block';
-                document.querySelectorAll('.design-wrapper').forEach(wrapper => {
-                    wrapper.style.display = (wrapper.dataset.eventType === selectedType) ? 'block' : 'none';
-                });
+            if (step === totalSteps) {
+                nextBtn.classList.add('hidden');
+                submitBtn.classList.remove('hidden');
+                submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.classList.remove('hidden');
+                submitBtn.classList.add('hidden');
             }
 
-            if (selectedDesignRadio) {
-                document.getElementById('live-preview-button').disabled = false;
-                document.getElementById('form-fields-wrapper').style.display = 'block';
+            // Update Progress
+            const percentage = (step / totalSteps) * 100;
+            progressBar.style.width = percentage + '%';
+            stepLabel.innerText = step;
 
-                if (fieldGroups[selectedType]) {
-                    fieldGroups[selectedType].forEach(fieldName => {
-                        const fieldContainer = document.getElementById('field-' + fieldName + '-container');
-                        if (fieldContainer) fieldContainer.style.display = 'block';
-                    });
-                }
-
-                if (selectedDesignName && designSpecificFields[selectedDesignName]) {
-                    const specialFieldsForDesign = designSpecificFields[selectedDesignName];
-                    specialFieldsForDesign.forEach(fieldName => {
-                        const fieldContainer = document.getElementById('field-' + fieldName + '-container');
-                        if (fieldContainer) fieldContainer.style.display = 'block';
-                    });
-                }
-                document.querySelector('.pt-5.conditional-field').style.display = 'flex';
-            }
-        }
-
-        // --- UPDATED: JavaScript for managing the Godparent formset ---
-        const addGodparentBtn = document.getElementById('add-godparent-form');
-        const godparentFormset = document.getElementById('godparent-formset');
-        const emptyFormTemplate = document.getElementById('empty-godparent-form').innerHTML;
-        const totalFormsInput = document.querySelector('input[name="godparents-TOTAL_FORMS"]');
-
-        if(addGodparentBtn){
-            addGodparentBtn.addEventListener('click', function() {
-                let formNum = parseInt(totalFormsInput.value);
-                const newFormHtml = emptyFormTemplate.replace(/__prefix__/g, formNum);
-
-                const newFormDiv = document.createElement('div');
-                newFormDiv.innerHTML = newFormHtml;
-                // The new form is already wrapped in the correct div from the template
-                const formContainer = newFormDiv.querySelector('.godparent-form');
-                godparentFormset.appendChild(formContainer);
-
-                totalFormsInput.value = formNum + 1;
+            // Highlight Step Labels
+            stepIndicators.forEach((lbl, idx) => {
+                if (idx + 1 === step) lbl.classList.add('text-indigo-600', 'font-bold');
+                else lbl.classList.remove('text-indigo-600', 'font-bold');
             });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // --- NEW: Event delegation for handling delete clicks ---
-        if(godparentFormset){
-             godparentFormset.addEventListener('click', function(event) {
-                const deleteButton = event.target.closest('.delete-godparent-btn');
-                if (!deleteButton) return;
-
-                const formContainer = deleteButton.closest('.godparent-form');
-                if (!formContainer) return;
-
-                // Find the hidden DELETE checkbox within this form row
-                const deleteInput = formContainer.querySelector('input[id$="-DELETE"]');
-
-                if (deleteInput) {
-                    // This is an existing form. Check the box and hide the row.
-                    deleteInput.checked = true;
-                    formContainer.style.display = 'none';
-                } else {
-                    // This is a new, unsaved form. Just remove it from the page.
-                    formContainer.remove();
+        nextBtn.addEventListener('click', function() {
+            // Validare simplă HTML5 pentru pasul curent
+            const currentStepEl = document.querySelector(`.step-content[data-step="${currentStep}"]`);
+            const inputs = currentStepEl.querySelectorAll('input[required], select[required], textarea[required]');
+            let valid = true;
+            inputs.forEach(input => {
+                if (!input.checkValidity()) {
+                    input.reportValidity();
+                    valid = false;
                 }
             });
-        }
 
-        // --- Schedule Item Formset Logic ---
-        const addScheduleBtn = document.getElementById('add-schedule-item');
-        const scheduleFormset = document.getElementById('schedule-item-formset');
-        const emptyScheduleTemplate = document.getElementById('empty-schedule-form').innerHTML;
-        const totalScheduleFormsInput = document.querySelector('input[name="schedule_items-TOTAL_FORMS"]');
-
-        if(addScheduleBtn){
-            addScheduleBtn.addEventListener('click', function() {
-                let formNum = parseInt(totalScheduleFormsInput.value);
-                const newFormHtml = emptyScheduleTemplate.replace(/__prefix__/g, formNum);
-                const newFormDiv = document.createElement('div');
-                newFormDiv.innerHTML = newFormHtml;
-                scheduleFormset.appendChild(newFormDiv.firstElementChild);
-                totalScheduleFormsInput.value = formNum + 1;
-            });
-        }
-
-        if(scheduleFormset){
-             scheduleFormset.addEventListener('click', function(event) {
-                const deleteButton = event.target.closest('.delete-schedule-btn');
-                if (!deleteButton) return;
-                const formContainer = deleteButton.closest('.schedule-item-form');
-                const deleteInput = formContainer.querySelector('input[id$="-DELETE"]');
-                if (deleteInput) {
-                    deleteInput.checked = true;
-                    formContainer.style.display = 'none';
-                } else {
-                    formContainer.remove();
-                }
-            });
-        }
-
-        // --- Add padding to inputs that have an icon ---
-        // UPDATED: Use event_date and party_time instead of date_time
-        const fieldsWithIcons = ['title', 'event_date', 'party_time', 'venue_name', 'ceremony_location', 'ceremony_time'];
-        fieldsWithIcons.forEach(fieldName => {
-            const fieldContainer = document.getElementById('field-' + fieldName + '-container');
-            if (fieldContainer) {
-                const input = fieldContainer.querySelector('input, textarea');
-                if (input) {
-                    input.classList.add('pl-10');
+            if(valid) {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    showStep(currentStep);
                 }
             }
         });
 
-        // --- LIVE PREVIEW FUNCTIONS ---
-        const form = document.getElementById('event-form');
-        const previewUrl = "{% url 'invapp:event_preview' %}";
-        const previewModal = document.getElementById('preview-modal');
-        const closePreviewButton = document.getElementById('close-preview-button');
-        const previewIframe = document.getElementById('preview-iframe');
+        prevBtn.addEventListener('click', function() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        });
 
-        async function handlePreview(event) {
-            event.preventDefault();
+        // --- FORMSET LOGIC (Dynamic Add/Remove) ---
+        function setupFormset(prefix) {
+            const containerId = `${prefix}-formset-container`;
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const addButton = document.getElementById(`add-${prefix}-btn`);
+            const totalForms = document.querySelector(`#id_${prefix}-TOTAL_FORMS`);
+            const emptyFormTemplate = document.getElementById(`empty-${prefix}-form`).innerHTML;
+
+            // Delete Buttons Logic (Event Delegation)
+            container.addEventListener('click', function(e) {
+                const btn = e.target.closest('.delete-form-btn');
+                if (!btn) return;
+
+                const formRow = btn.closest(`.${prefix}-form`);
+                // Căutăm câmpul hidden DELETE generat de Django
+                const deleteInput = formRow.querySelector('input[name$="-DELETE"]');
+
+                if (deleteInput) {
+                    // Dacă e formular existent, bifăm DELETE și ascundem
+                    deleteInput.checked = true;
+                    formRow.style.display = 'none';
+                } else {
+                    // Dacă e formular nou dinamic, îl ștergem din DOM
+                    formRow.remove();
+                    let count = parseInt(totalForms.value);
+                    totalForms.value = count - 1;
+                }
+            });
+
+            // Add Button Logic
+            if(addButton){
+                addButton.addEventListener('click', function() {
+                    const count = parseInt(totalForms.value);
+                    const newFormHtml = emptyFormTemplate.replace(/__prefix__/g, count);
+
+                    const div = document.createElement('div');
+                    div.innerHTML = newFormHtml;
+
+                    container.appendChild(div.firstElementChild);
+                    totalForms.value = count + 1;
+                });
+            }
+        }
+
+        // Initialize Formsets (Numele trebuie să coincidă cu contextul din views.py)
+        setupFormset('godparents');
+        setupFormset('schedule_items');
+
+        // --- CONDITIONAL LOGIC (Filtering Designs & Fields) ---
+        const eventTypeInput = document.getElementById('id_event_type');
+        const brideContainer = document.getElementById('field-bride_name-container');
+        const groomContainer = document.getElementById('field-groom_name-container');
+        const childContainer = document.getElementById('field-child_name-container');
+        const designOptions = document.querySelectorAll('.design-wrapper');
+
+        function updateFormVisibility() {
+            const val = eventTypeInput.value.toLowerCase();
+
+            // 1. Ascunde/Arată câmpuri specifice
+            if (val.includes('botez') || val === 'baptism') {
+                if(brideContainer) brideContainer.classList.add('hidden');
+                if(groomContainer) groomContainer.classList.add('hidden');
+                if(childContainer) childContainer.classList.remove('hidden');
+            } else {
+                if(brideContainer) brideContainer.classList.remove('hidden');
+                if(groomContainer) groomContainer.classList.remove('hidden');
+                if(childContainer) childContainer.classList.add('hidden');
+            }
+
+            // 2. Filtrare Design-uri în funcție de tip
+            designOptions.forEach(opt => {
+                const designType = opt.dataset.eventType;
+                // Logica de potrivire (conține string-ul tipului)
+                if (designType.includes(val) || val === '') {
+                    opt.style.display = 'block';
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
+        }
+
+        if(eventTypeInput) {
+            eventTypeInput.addEventListener('change', updateFormVisibility);
+            updateFormVisibility(); // Inițializare la load
+        }
+
+// --- LIVE PREVIEW SCRIPT FINAL ---
+    const previewBtn = document.getElementById('live-preview-button');
+    const previewModal = document.getElementById('preview-modal');
+    const closePreviewBtn = document.getElementById('close-preview-button');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const newWindowBtn = document.getElementById('open-new-window-btn');
+    const previewIframe = document.getElementById('preview-iframe');
+    // Luăm token-ul CSRF defensiv (dacă există)
+    const csrfElement = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrfToken = csrfElement ? csrfElement.value : '';
+
+    // Funcții Modal
+    function openModal() {
+        if(previewModal) {
+            previewModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Blochează scroll spate
+        }
+    }
+
+    function closeModal() {
+        if(previewModal) {
+            previewModal.classList.add('hidden');
+            document.body.style.overflow = '';
+            if(previewIframe) previewIframe.srcdoc = ''; // Resetăm conținutul
+        }
+    }
+
+    // --- LOGICA PRINCIPALĂ ---
+    if (previewBtn) {
+        previewBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+
+            // 1. UI Feedback
+            const originalBtnContent = previewBtn.innerHTML;
+            previewBtn.innerHTML = '<span class="animate-spin inline-block mr-2">↻</span> Generare...';
+            previewBtn.disabled = true;
+
             const formData = {};
-            const formElements = form.elements;
+            const formElements = document.getElementById('event-form').elements;
             const promises = [];
-            const MAX_FILE_SIZE_MB = 2.5;
-            const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+            const MAX_FILE_SIZE = 10 * 1024 * 1024; // Mărim limita la 10MB (pt video/audio)
+
+            // Funcție Helper citire fișier
             const readFileAsDataURL = (file) => {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -649,61 +815,114 @@
                     reader.readAsDataURL(file);
                 });
             };
+
+            // 2. Procesare Formular
             for (const element of formElements) {
                 if (!element.name) continue;
+
                 if (element.type === 'file') {
+                    // CAZUL A: UPLOAD NOU (Userul a ales un fișier acum)
                     if (element.files && element.files.length > 0) {
                         const file = element.files[0];
-                        if (file.size > MAX_FILE_SIZE_BYTES) {
-                            alert('{% translate "File is too large! Please upload a file smaller than 2.5 MB." %}');
+                        if (file.size > MAX_FILE_SIZE) {
+                            alert(`Fișierul ${file.name} este prea mare (Max 10MB).`);
+                            previewBtn.innerHTML = originalBtnContent;
+                            previewBtn.disabled = false;
                             return;
                         }
-                        const promise = readFileAsDataURL(file).then(dataUrl => { formData[element.name] = dataUrl; });
-                        promises.push(promise);
-                    } else {
-                        const container = element.closest('.field-container');
-                        if(container){
-                            const existingImageLink = container.querySelector('a[href*="/media/"]');
-                            if (existingImageLink) { formData[element.name] = existingImageLink.textContent; }
+                        // Transformăm în Base64 (Imagine, Audio sau Video)
+                        promises.push(readFileAsDataURL(file).then(data => formData[element.name] = data));
+                    }
+                    // CAZUL B: FIȘIER EXISTENT (Userul NU a schimbat fișierul)
+                    // --- AICI ESTE FIX-UL SPECIALISTULUI ---
+                    else {
+                        const container = element.closest('div');
+                        const existingLink = container ? container.querySelector('a[href*="/media/"]') : null;
+
+                        if (existingLink) {
+                            // Luăm calea din href (ex: /media/event_photos/poza.jpg)
+                            let rawPath = existingLink.getAttribute('href');
+
+                            // 1. Curățăm prefixul "/media/" pentru a nu-l dubla în Django
+                            // Rezultat: "event_photos/poza.jpg"
+                            if (rawPath.startsWith('/media/')) {
+                                rawPath = rawPath.replace('/media/', '');
+                            }
+
+                            // 2. Curățăm și slash-ul de început dacă a mai rămas
+                            if (rawPath.startsWith('/')) {
+                                rawPath = rawPath.substring(1);
+                            }
+
+                            formData[element.name] = rawPath;
                         }
                     }
-                } else if (element.type === 'radio') {
+                }
+                else if (element.type === 'radio') {
                     if (element.checked) formData[element.name] = element.value;
-                } else {
+                }
+                else {
                     formData[element.name] = element.value;
                 }
             }
+
             await Promise.all(promises);
+
+            // 3. Trimitere către Django
             try {
-                const response = await fetch(previewUrl, {
+                const response = await fetch("{% url 'invapp:event_preview' %}", {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
                     body: JSON.stringify(formData)
                 });
-                if (!response.ok) throw new Error(`Preview failed: ${response.statusText}`);
-                const htmlPreview = await response.text();
-                previewIframe.srcdoc = htmlPreview;
-                previewModal.style.display = 'flex';
+
+                if (!response.ok) throw new Error('Network error');
+
+                const htmlContent = await response.text();
+
+                // 4. Afișare
+                if(previewIframe) {
+                    previewIframe.srcdoc = htmlContent;
+                    openModal();
+                }
+
             } catch (error) {
-                console.error('Error fetching preview:', error);
-                alert('{% translate "Could not generate a preview. Please check the developer console." %}');
+                console.error(error);
+                alert('Eroare la generare. Verifică consola.');
+            } finally {
+                previewBtn.innerHTML = originalBtnContent;
+                previewBtn.disabled = false;
             }
-        }
-        function closeModal() {
-            previewModal.style.display = 'none';
-            previewIframe.srcdoc = '';
-        }
-
-        // Event Listeners
-        if(eventTypeSelect) eventTypeSelect.addEventListener('change', updateFormVisibility);
-        designRadios.forEach(radio => radio.addEventListener('change', updateFormVisibility));
-        if(document.getElementById('live-preview-button')) document.getElementById('live-preview-button').addEventListener('click', handlePreview);
-        if(closePreviewButton) closePreviewButton.addEventListener('click', closeModal);
-        if(previewModal) previewModal.addEventListener('click', function(event) {
-            if (event.target === previewModal) { closeModal(); }
         });
+    }
 
-        updateFormVisibility();
+    // Evenimente Închidere
+    if (closePreviewBtn) closePreviewBtn.addEventListener('click', closeModal);
+    if (modalOverlay) modalOverlay.addEventListener('click', closeModal);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && previewModal && !previewModal.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
+
+    // Eveniment Deschidere Tab Nou
+    if (newWindowBtn) {
+        newWindowBtn.addEventListener('click', () => {
+            const content = previewIframe.srcdoc;
+            if (!content) return alert("Generează întâi preview-ul!");
+
+            const newWin = window.open('', '_blank');
+            if (newWin) {
+                newWin.document.write(content);
+                newWin.document.close();
+            } else {
+                alert("Browserul a blocat fereastra nouă.");
+            }
+        });
+    }
     });
 </script>
 {% endblock %}

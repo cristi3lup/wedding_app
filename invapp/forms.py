@@ -4,7 +4,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 # Make sure all relevant models are imported
-from .models import RSVP, Guest, TableAssignment, Table, Event, Godparent, ScheduleItem
+from .models import RSVP, Guest, TableAssignment, Table, Event, Godparent, ScheduleItem, GalleryImage
 from .models import CardDesign
 from django import forms
 from django.db.models import Q
@@ -487,3 +487,26 @@ class ReviewForm(forms.ModelForm):
             # Rating-ul va fi gestionat prin Alpine.js, dar avem nevoie de un input hidden
             'rating': forms.HiddenInput()
         }
+
+# Formularul pentru o singură poză (simplu)
+class GalleryImageForm(forms.ModelForm):
+    class Meta:
+        model = GalleryImage
+        fields = ['image']
+        widgets = {
+            'image': forms.ClearableFileInput(attrs={
+                'class': 'block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100'
+            })
+        }
+
+# FormSet-ul care leagă Event de GalleryImage
+GalleryImageFormSet = inlineformset_factory(
+    Event,
+    GalleryImage,
+    form=GalleryImageForm,
+    fields=['image'],
+    extra=1,  # Arată 1 câmp gol pentru upload nou
+    max_num=6,  # Limita maximă (trebuie să coincidă cu logica ta)
+    validate_max=True,  # Validează dacă userul încearcă să trimită 7
+    can_delete=True  # Permite ștergerea imaginilor existente
+)
