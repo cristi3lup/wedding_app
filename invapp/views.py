@@ -40,12 +40,11 @@ from .forms import (
 @xframe_options_exempt
 def event_preview(request):
     """
-    Preview logic with Cloudinary Fix (Pure Object Approach).
-    Using SimpleNamespace instead of Event() model to prevent Django from prepending MEDIA_URL.
+    Preview logic with Debugging for Cloudinary URL issues.
     """
     if request.method == 'POST':
         try:
-            # 1. Extragere date
+            # 1. Extract Data
             if request.content_type == 'application/json':
                 try:
                     data = json.loads(request.body)
@@ -54,29 +53,25 @@ def event_preview(request):
             else:
                 data = request.POST.dict()
 
-            # 2. Construire Mock Event (folosind SimpleNamespace, NU Event model)
-            # Asta previne orice logica interna Django de a adauga /media/ la string-uri
-            event_data = {}
+            print("DEBUG: Preview Data Keys:", data.keys())
 
-            # Copiem toate câmpurile primite care există în model
-            # (sau pur și simplu tot ce primim, pentru flexibilitate)
+            # 2. Build Mock Event
+            event_data = {}
             for key, value in data.items():
                 if value == "":
                     event_data[key] = None
                 else:
                     event_data[key] = value
 
-            # --- 2.1 Procesare Date Speciale (Date/Time) ---
-            # Template-ul așteaptă obiecte datetime/date, nu string-uri
+            # --- 2.1 Process Dates/Times ---
             if 'event_date' in event_data and event_data['event_date']:
                 try:
                     event_data['event_date'] = datetime.strptime(event_data['event_date'], '%Y-%m-%d').date()
                 except ValueError:
-                    pass  # Lăsăm string dacă formatul e greșit
+                    pass
 
             if 'party_time' in event_data and event_data['party_time']:
                 try:
-                    # Dacă e format HH:MM
                     event_data['party_time'] = datetime.strptime(event_data['party_time'], '%H:%M').time()
                 except ValueError:
                     pass
@@ -87,33 +82,43 @@ def event_preview(request):
                 except ValueError:
                     pass
 
-            # 3. FIX IMAGINI (Cloudinary & Base64)
+            # 3. FIX IMAGES (Cloudinary & Base64)
             image_fields = ['couple_photo', 'landscape_photo', 'main_invitation_image']
 
             for field_name in image_fields:
                 raw_val = data.get(field_name)
 
                 if raw_val and isinstance(raw_val, str):
-                    # CAZ 1: URL Absolut (Cloudinary/S3)
-                    if raw_val.startswith('http://') or raw_val.startswith('https://'):
-                        # Setăm un obiect care are .url = link-ul direct
-                        event_data[field_name] = SimpleNamespace(url=raw_val)
+                    # CRITIC: Curățăm spațiile goale care pot păcăli startswith
+                    raw_val = raw_val.strip()
 
-                    # CAZ 2: Base64 (Upload nou)
+                    print(f"DEBUG: Processing {field_name}. Value starts with: {raw_val[:10]}")
+
+                    # CASE 1: Absolute URL (Cloudinary/S3)
+                    if raw_val.startswith('http://') or raw_val.startswith('https://'):
+                        event_data[field_name] = SimpleNamespace(url=raw_val)
+                        print(f"DEBUG: {field_name} -> Absolute URL kept intact")
+
+                    # CASE 2: Base64 (New Upload)
                     elif raw_val.startswith('data:image'):
                         event_data[field_name] = SimpleNamespace(url=raw_val)
+                        print(f"DEBUG: {field_name} -> Base64 used")
 
-                    # CAZ 3: Cale relativă locală (fără /media/ în string, dar template-ul ar putea avea nevoie)
-                    # Dacă template-ul face {{ event.photo.url }}, noi returnăm calea completă locală
+                    # CASE 3: Relative Path (Local Dev or partial path)
                     elif raw_val:
-                        clean_val = raw_val.replace('/media/', '')  # Curățăm prefixul dacă există
-                        local_url = f"{settings.MEDIA_URL}{clean_val}"
-                        event_data[field_name] = SimpleNamespace(url=local_url)
+                        # Curățăm /media/ dacă există deja, pentru a nu-l dubla
+                        clean_val = raw_val.replace('/media/', '')
+
+                        # Construim URL local folosind settings.MEDIA_URL (de obicei /media/)
+                        media_url = settings.MEDIA_URL.rstrip('/')
+                        final_url = f"{media_url}/{clean_val.lstrip('/')}"
+
+                        event_data[field_name] = SimpleNamespace(url=final_url)
+                        print(f"DEBUG: {field_name} -> Local URL constructed: {final_url}")
                 else:
-                    # Dacă nu avem imagine, setăm None sau un obiect gol safe
                     event_data[field_name] = None
 
-            # Convertim dicționarul în obiect (dot notation access: event.title)
+            # Convert dict to object
             event_instance = SimpleNamespace(**event_data)
 
             # 4. Design & Template
@@ -124,7 +129,6 @@ def event_preview(request):
                 try:
                     design = CardDesign.objects.get(pk=design_id)
                     template_name = design.template_name
-                    # Adăugăm design-ul pe obiectul mock
                     event_instance.selected_design = design
                 except (CardDesign.DoesNotExist, ValueError):
                     pass
@@ -142,7 +146,7 @@ def event_preview(request):
             return render(request, template_name, context)
 
         except Exception as e:
-            print(f"Preview Error: {e}")
+            print(f"ERROR in Preview: {e}")
             return HttpResponse(f"Error generating preview: {str(e)}", status=500)
 
     return HttpResponse("Method not allowed", status=405)

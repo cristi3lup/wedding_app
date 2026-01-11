@@ -895,111 +895,98 @@
         }
 
 // --- LIVE PREVIEW SCRIPT FINAL ---
-    const previewBtn = document.getElementById('live-preview-button');
-    const previewModal = document.getElementById('preview-modal');
-    const closePreviewBtn = document.getElementById('close-preview-button');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const newWindowBtn = document.getElementById('open-new-window-btn');
-    const previewIframe = document.getElementById('preview-iframe');
-    const csrfElement = document.querySelector('[name=csrfmiddlewaretoken]');
-    const csrfToken = csrfElement ? csrfElement.value : '';
+        const previewBtn = document.getElementById('live-preview-button');
+        const previewModal = document.getElementById('preview-modal');
+        const closePreviewBtn = document.getElementById('close-preview-button');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const newWindowBtn = document.getElementById('open-new-window-btn');
+        const previewIframe = document.getElementById('preview-iframe');
+        // Luăm CSRF token defensiv
+        const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
 
-    // Funcții Modal
-    function openModal() {
-        if(previewModal) {
-            previewModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Blochează scroll spate
+        function openModal() {
+            if(previewModal) {
+                previewModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
         }
-    }
 
-    function closeModal() {
-        if(previewModal) {
-            previewModal.classList.add('hidden');
-            document.body.style.overflow = '';
-            if(previewIframe) previewIframe.srcdoc = ''; // Resetăm conținutul
+        function closeModal() {
+            if(previewModal) {
+                previewModal.classList.add('hidden');
+                document.body.style.overflow = '';
+                if(previewIframe) previewIframe.srcdoc = '';
+            }
         }
-    }
 
-    // --- LOGICA PRINCIPALĂ ---
-    if (previewBtn) {
-        previewBtn.addEventListener('click', async function(e) {
-            e.preventDefault();
+        if (previewBtn) {
+            previewBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const originalBtnContent = previewBtn.innerHTML;
+                previewBtn.innerHTML = '<span class="animate-spin inline-block mr-2">↻</span> Procesare...';
+                // previewBtn.disabled = true; // Opțional
 
-            // 1. UI Feedback
-            const originalBtnContent = previewBtn.innerHTML;
-            previewBtn.innerHTML = '<span class="animate-spin inline-block mr-2">↻</span> {% translate "Processing..." %}';
-            // Don't disable button here because autosave might trigger it repeatedly
-            // previewBtn.disabled = true;
+                const formData = {};
+                const formElements = document.getElementById('event-form').elements;
+                const promises = [];
+                const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-            const formData = {};
-            const formElements = document.getElementById('event-form').elements;
-            const promises = [];
-            const MAX_FILE_SIZE = 10 * 1024 * 1024; // Mărim limita la 10MB (pt video/audio)
+                const readFileAsDataURL = (file) => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                };
 
-            // Funcție Helper citire fișier
-            const readFileAsDataURL = (file) => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-            };
+                for (const element of formElements) {
+                    if (!element.name) continue;
 
-            // 2. Procesare Formular
-            for (const element of formElements) {
-                if (!element.name) continue;
-
-                if (element.type === 'file') {
-                    // CAZUL A: UPLOAD NOU (Userul a ales un fișier acum)
-                    if (element.files && element.files.length > 0) {
-                        const file = element.files[0];
-                        if (file.size > MAX_FILE_SIZE) {
-                            alert(`Fișierul ${file.name} este prea mare (Max 10MB).`);
-                            previewBtn.innerHTML = originalBtnContent;
-                            // previewBtn.disabled = false;
-                            return;
-                        }
-                        // Transformăm în Base64 (Imagine, Audio sau Video)
-                        promises.push(readFileAsDataURL(file).then(data => formData[element.name] = data));
-                    }
-                    // CAZUL B: FIȘIER EXISTENT (Userul NU a schimbat fișierul)
-                    // --- AICI ESTE FIX-UL SPECIALISTULUI ---
-                    else {
-                        const container = element.closest('div');
-                        const existingLink = container ? container.querySelector('a[href*="/media/"]') : null;
-
-                        if (existingLink) {
-                            // Luăm calea din href (ex: /media/event_photos/poza.jpg)
-                            let rawPath = existingLink.getAttribute('href');
-
-                            // 1. Curățăm prefixul "/media/" pentru a nu-l dubla în Django
-                            // Rezultat: "event_photos/poza.jpg"
-                            if (rawPath.startsWith('/media/')) {
-                                rawPath = rawPath.replace('/media/', '');
+                    if (element.type === 'file') {
+                        // CAZ A: UTILIZATORUL A UPLOADAT UN FIȘIER NOU ACUM
+                        if (element.files && element.files.length > 0) {
+                            const file = element.files[0];
+                            if (file.size > MAX_FILE_SIZE) {
+                                alert(`Fișierul ${file.name} este prea mare (Max 10MB).`);
+                                previewBtn.innerHTML = originalBtnContent;
+                                return;
                             }
-
-                            // 2. Curățăm și slash-ul de început dacă a mai rămas
-                            if (rawPath.startsWith('/')) {
-                                rawPath = rawPath.substring(1);
-                            }
-
-                            formData[element.name] = rawPath;
+                            promises.push(readFileAsDataURL(file).then(data => formData[element.name] = data));
                         }
-                    }
-                }
-                else if (element.type === 'radio' || element.type === 'checkbox') {
-                    // FIX CRITIC: Checkbox-urile trebuie verificate explicit!
-                    // Dacă trimitem valoarea 'on' pentru un checkbox nebifat (delete-uri in formset),
-                    // Django va crede că vrem să ștergem totul.
-                    if (element.checked) {
+                        // CAZ B: NU E FIȘIER NOU, CĂUTĂM CEL EXISTENT (Link-ul Django)
+                        else {
+                            const container = element.closest('div');
+                            // Căutăm orice link valid care nu e "#" (ancoră goală)
+                            const existingLink = container ? container.querySelector('a[href]:not([href="#"])') : null;
+
+                            if (existingLink) {
+                                let rawPath = existingLink.getAttribute('href');
+
+                                if (rawPath) {
+                                    // 1. E URL ABSOLUT (Cloudinary/S3)? Îl trimitem exact așa!
+                                    if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
+                                        formData[element.name] = rawPath;
+                                    }
+                                    // 2. E URL LOCAL (Dev)? Curățăm /media/ pentru a nu-l dubla în backend
+                                    else if (rawPath.includes('/media/')) {
+                                        // /media/invitation_images/poza.jpg -> invitation_images/poza.jpg
+                                        formData[element.name] = rawPath.replace('/media/', '');
+                                    }
+                                    // 3. Fallback: Trimitem calea brută
+                                    else {
+                                        formData[element.name] = rawPath;
+                                    }
+                                }
+                            }
+                        }
+                    } else if (element.type === 'radio' || element.type === 'checkbox') {
+                        if (element.checked) formData[element.name] = element.value;
+                    } else {
                         formData[element.name] = element.value;
                     }
                 }
-                else {
-                    formData[element.name] = element.value;
-                }
-            }
 
             await Promise.all(promises);
 
