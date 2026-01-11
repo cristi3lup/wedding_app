@@ -40,7 +40,8 @@ from .forms import (
 @xframe_options_exempt
 def event_preview(request):
     """
-    Preview logic with Cloudinary Fix.
+    Preview logic with Cloudinary Fix (Pure Object Approach).
+    Using SimpleNamespace instead of Event() model to prevent Django from prepending MEDIA_URL.
     """
     if request.method == 'POST':
         try:
@@ -53,59 +54,77 @@ def event_preview(request):
             else:
                 data = request.POST.dict()
 
-            # 2. Construire instanță Event
-            event_instance = Event()
+            # 2. Construire Mock Event (folosind SimpleNamespace, NU Event model)
+            # Asta previne orice logica interna Django de a adauga /media/ la string-uri
+            event_data = {}
 
-            # Populare câmpuri
-            for field in Event._meta.fields:
-                if field.name in data:
-                    val = data[field.name]
-                    if val == "": val = None
-                    setattr(event_instance, field.name, val)
+            # Copiem toate câmpurile primite care există în model
+            # (sau pur și simplu tot ce primim, pentru flexibilitate)
+            for key, value in data.items():
+                if value == "":
+                    event_data[key] = None
+                else:
+                    event_data[key] = value
 
-            # 3. FIX IMAGINI (Aici e rezolvarea pentru eroarea din loguri)
+            # --- 2.1 Procesare Date Speciale (Date/Time) ---
+            # Template-ul așteaptă obiecte datetime/date, nu string-uri
+            if 'event_date' in event_data and event_data['event_date']:
+                try:
+                    event_data['event_date'] = datetime.strptime(event_data['event_date'], '%Y-%m-%d').date()
+                except ValueError:
+                    pass  # Lăsăm string dacă formatul e greșit
+
+            if 'party_time' in event_data and event_data['party_time']:
+                try:
+                    # Dacă e format HH:MM
+                    event_data['party_time'] = datetime.strptime(event_data['party_time'], '%H:%M').time()
+                except ValueError:
+                    pass
+
+            if 'ceremony_time' in event_data and event_data['ceremony_time']:
+                try:
+                    event_data['ceremony_time'] = datetime.strptime(event_data['ceremony_time'], '%H:%M').time()
+                except ValueError:
+                    pass
+
+            # 3. FIX IMAGINI (Cloudinary & Base64)
             image_fields = ['couple_photo', 'landscape_photo', 'main_invitation_image']
 
             for field_name in image_fields:
                 raw_val = data.get(field_name)
 
                 if raw_val and isinstance(raw_val, str):
-                    # Dacă e URL Cloudinary (începe cu http), îl transformăm în obiect
+                    # CAZ 1: URL Absolut (Cloudinary/S3)
                     if raw_val.startswith('http://') or raw_val.startswith('https://'):
-                        # <--- ASTA REZOLVĂ EROAREA: Creăm un obiect cu proprietatea .url
-                        # Astfel template-ul {{ event.photo.url }} returnează direct string-ul,
-                        # fără ca Django să adauge /media/
-                        mock_img = SimpleNamespace(url=raw_val)
-                        setattr(event_instance, field_name, mock_img)
+                        # Setăm un obiect care are .url = link-ul direct
+                        event_data[field_name] = SimpleNamespace(url=raw_val)
 
-                    # Dacă e Base64 (upload nou)
+                    # CAZ 2: Base64 (Upload nou)
                     elif raw_val.startswith('data:image'):
-                        mock_img = SimpleNamespace(url=raw_val)
-                        setattr(event_instance, field_name, mock_img)
+                        event_data[field_name] = SimpleNamespace(url=raw_val)
 
-                    # Dacă e cale relativă (local dev), o lăsăm string sau o procesăm dacă e nevoie
-                    # De obicei Django template-ul adaugă MEDIA_URL automat doar dacă accesăm .url pe un FileField real
-                    # Aici, fiind un obiect dummy, e mai safe să îl facem tot SimpleNamespace
+                    # CAZ 3: Cale relativă locală (fără /media/ în string, dar template-ul ar putea avea nevoie)
+                    # Dacă template-ul face {{ event.photo.url }}, noi returnăm calea completă locală
                     elif raw_val:
-                        # Curățăm dublurile de /media/ dacă există
-                        clean_val = raw_val
-                        if clean_val.startswith('/media/'):
-                            clean_val = clean_val.replace('/media/', '', 1)
-
-                        # Construim URL-ul complet local
+                        clean_val = raw_val.replace('/media/', '')  # Curățăm prefixul dacă există
                         local_url = f"{settings.MEDIA_URL}{clean_val}"
-                        mock_img = SimpleNamespace(url=local_url)
-                        setattr(event_instance, field_name, mock_img)
+                        event_data[field_name] = SimpleNamespace(url=local_url)
+                else:
+                    # Dacă nu avem imagine, setăm None sau un obiect gol safe
+                    event_data[field_name] = None
+
+            # Convertim dicționarul în obiect (dot notation access: event.title)
+            event_instance = SimpleNamespace(**event_data)
 
             # 4. Design & Template
             design_id = data.get('selected_design')
-            # Default fallback template
             template_name = 'invapp/invites/default_invite.html'
 
             if design_id:
                 try:
                     design = CardDesign.objects.get(pk=design_id)
                     template_name = design.template_name
+                    # Adăugăm design-ul pe obiectul mock
                     event_instance.selected_design = design
                 except (CardDesign.DoesNotExist, ValueError):
                     pass
