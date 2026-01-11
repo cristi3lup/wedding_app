@@ -309,3 +309,10 @@ LOGGING = {
     'handlers': {'console': {'class': 'logging.StreamHandler'}},
     'root': {'handlers': ['console'], 'level': 'WARNING'},
 }
+
+# ==========================================================
+# === UPLOAD LIMITS (Fix pentru Eroarea 500)             ===
+# ==========================================================
+# Setăm limita la 20MB pentru a permite poze mari + conversie Base64
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 20 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 20 MB
