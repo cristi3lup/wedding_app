@@ -72,7 +72,10 @@ def event_preview(request):
                 if raw_val and isinstance(raw_val, str):
                     # Dacă e URL Cloudinary (începe cu http), îl transformăm în obiect
                     if raw_val.startswith('http://') or raw_val.startswith('https://'):
-                        mock_img = SimpleNamespace(url=raw_val)  # <--- ASTA REZOLVĂ EROAREA
+                        # <--- ASTA REZOLVĂ EROAREA: Creăm un obiect cu proprietatea .url
+                        # Astfel template-ul {{ event.photo.url }} returnează direct string-ul,
+                        # fără ca Django să adauge /media/
+                        mock_img = SimpleNamespace(url=raw_val)
                         setattr(event_instance, field_name, mock_img)
 
                     # Dacă e Base64 (upload nou)
@@ -80,8 +83,23 @@ def event_preview(request):
                         mock_img = SimpleNamespace(url=raw_val)
                         setattr(event_instance, field_name, mock_img)
 
+                    # Dacă e cale relativă (local dev), o lăsăm string sau o procesăm dacă e nevoie
+                    # De obicei Django template-ul adaugă MEDIA_URL automat doar dacă accesăm .url pe un FileField real
+                    # Aici, fiind un obiect dummy, e mai safe să îl facem tot SimpleNamespace
+                    elif raw_val:
+                        # Curățăm dublurile de /media/ dacă există
+                        clean_val = raw_val
+                        if clean_val.startswith('/media/'):
+                            clean_val = clean_val.replace('/media/', '', 1)
+
+                        # Construim URL-ul complet local
+                        local_url = f"{settings.MEDIA_URL}{clean_val}"
+                        mock_img = SimpleNamespace(url=local_url)
+                        setattr(event_instance, field_name, mock_img)
+
             # 4. Design & Template
             design_id = data.get('selected_design')
+            # Default fallback template
             template_name = 'invapp/invites/default_invite.html'
 
             if design_id:
