@@ -59,6 +59,11 @@
         background: #888;
         border-radius: 3px;
     }
+
+    /* Autosave Indicator */
+    #autosave-status {
+        transition: opacity 0.3s ease;
+    }
 </style>
 {% endblock %}
 
@@ -82,9 +87,15 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                 {% if object %}{% translate "Modifică Detaliile" %}{% else %}{% translate "Configurează Evenimentul" %}{% endif %}
             </h1>
-            <span class="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full dark:bg-indigo-900 dark:text-indigo-200">
-                Pasul <span id="current-step-label">1</span> din 5
-            </span>
+            <div class="flex flex-col items-end">
+                <span class="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full dark:bg-indigo-900 dark:text-indigo-200">
+                    Pasul <span id="current-step-label">1</span> din 5
+                </span>
+                <!-- Autosave Status Indicator -->
+                <div id="autosave-status" class="text-xs font-medium mt-1 text-gray-500 opacity-0 h-4">
+                    <!-- Text injected by JS -->
+                </div>
+            </div>
         </div>
 
         <!-- Stepper Visual -->
@@ -211,7 +222,7 @@
 
                 <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white border-b pb-2">{% translate "Informații Principale" %}</h3>
 
-                <!-- Titlu Intern -->
+                <!-- COMUN: Titlu Intern -->
                 <div id="field-title-container">
                     <label for="id_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% translate "Nume Eveniment (Intern)" %}</label>
                     {% render_field form.title class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg py-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Nunta Ana & Andrei" %}
@@ -219,7 +230,7 @@
                     {% if form.title.errors %}<p class="text-sm text-red-600 mt-1">{{ form.title.errors.0 }}</p>{% endif %}
                 </div>
 
-                <!-- Data Eveniment -->
+                <!-- COMUN: Data Eveniment -->
                 <div id="field-event_date-container">
                     <label for="id_event_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% translate "Data Evenimentului" %}</label>
                     <input type="date" name="event_date" id="id_event_date" value="{{ form.event_date.value|date:'Y-m-d' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg py-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" {% if is_locked_plan %}disabled{% endif %}>
@@ -230,52 +241,63 @@
                     {% if form.event_date.errors %}<p class="text-sm text-red-600 mt-1">{{ form.event_date.errors.0 }}</p>{% endif %}
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Miri / Protagonisti -->
-                    <div id="field-bride_name-container" class="conditional-field">
+                <!-- SPECIFIC NUNTA (Bride/Groom) -->
+                <div id="wedding-names-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div id="field-bride_name-container">
                         <label for="id_bride_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Prenume Mireasă" %}</label>
                         {% render_field form.bride_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                     </div>
-                    <div id="field-groom_name-container" class="conditional-field">
+                    <div id="field-groom_name-container">
                         <label for="id_groom_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Prenume Mire" %}</label>
                         {% render_field form.groom_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                     </div>
-                    <!-- For Baptism -->
-                    <div id="field-child_name-container" class="conditional-field hidden">
+                </div>
+
+                <!-- SPECIFIC BOTEZ (Child) -->
+                <div id="baptism-names-container" class="hidden">
+                    <div id="field-child_name-container">
                         <label for="id_child_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Nume Copil (Botez)" %}</label>
                         {% render_field form.child_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                     </div>
                 </div>
 
-                <!-- Parents -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <div id="field-bride_parents-container" class="conditional-field">
+                <!-- SPECIFIC NUNTA (Parents) -->
+                <div id="wedding-parents-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div id="field-bride_parents-container">
                         <label for="id_bride_parents" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Părinții Miresei" %}</label>
                         {% render_field form.bride_parents rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                     </div>
-                    <div id="field-groom_parents-container" class="conditional-field">
+                    <div id="field-groom_parents-container">
                         <label for="id_groom_parents" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Părinții Mirelui" %}</label>
                         {% render_field form.groom_parents rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
                     </div>
                 </div>
 
-                <div id="field-invitation_wording-container">
-                    <label for="id_invitation_wording" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Text Invitație (Introductiv)" %}</label>
-                    {% render_field form.invitation_wording rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Noi, alături de părinți..." %}
-                    <p class="text-xs text-gray-500 mt-1">{% translate "Acest text apare la începutul invitației." %}</p>
+                <!-- SPECIFIC BOTEZ (Parents) -->
+                <div id="baptism-parents-container" class="hidden pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div id="field-parents_names-container">
+                        <label for="id_parents_names" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Părinții (Botez)" %}</label>
+                        {% render_field form.parents_names rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Maria și Alexandru Popescu" %}
+                    </div>
+                </div>
+
+                <!-- NUNTA & BOTEZ (Text) -->
+                <div id="text-content-section" class="pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div id="field-invitation_wording-container">
+                        <label for="id_invitation_wording" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Text Invitație (Introductiv)" %}</label>
+                        {% render_field form.invitation_wording rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Noi, alături de părinți..." %}
+                        <p class="text-xs text-gray-500 mt-1">{% translate "Acest text apare la începutul invitației." %}</p>
+                    </div>
                 </div>
 
             </div>
         </div>
 
-         <!-- Text Invitație -->
-
-
         <!-- ========================== STEP 3: LOCAȚIE & PROGRAM ========================== -->
         <div class="step-content" data-step="3">
             <div class="space-y-6">
 
-                <!-- Locations Grid -->
+                <!-- Locations Grid (Always Visible) -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Ceremony -->
                     <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-l-4 border-indigo-500">
@@ -326,8 +348,8 @@
                     </div>
                 </div>
 
-                <!-- Schedule Formset -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mt-6" id="schedule-items-section">
+                <!-- Schedule Formset (Hidden for Image Upload) -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mt-6" id="timeline-section">
                     <h3 class="text-lg font-bold mb-4 flex items-center justify-between">
                         <span>{% translate "Cronologie (Timeline)" %}</span>
                         <span class="text-xs font-normal text-gray-500">{% translate "Adaugă momente cheie" %}</span>
@@ -397,7 +419,7 @@
 
         <!-- ========================== STEP 4: INVITAȚI SPECIALI (NAȘI) ========================== -->
         <div class="step-content" data-step="4">
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <div id="godparents-section" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                 <h3 class="text-lg font-bold mb-4">{% translate "Nași de Cununie / Botez" %}</h3>
                 <p class="text-sm text-gray-500 mb-6">{% translate "Adăugați numele nașilor așa cum doriți să apară pe invitație (ex: 'Ion și Maria Popescu' sau separat)." %}</p>
 
@@ -446,83 +468,131 @@
         <div class="step-content" data-step="5">
             <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 space-y-8">
 
-                <!-- Main Photo -->
-                <div id="field-couple_photo-container">
-                    <label class="block text-lg font-bold text-gray-900 dark:text-white mb-2">{% translate "Poza Principală (Mirii/Bebelușul)" %}</label>
+                <!-- Main Photo (Wedding / Baptism Header) -->
+                <div id="media-wedding-baptism-section">
+                    <div id="field-couple_photo-container">
+                        <label id="label-couple-photo" class="block text-lg font-bold text-gray-900 dark:text-white mb-2">{% translate "Poza Principală (Mirii)" %}</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition-colors bg-gray-50 dark:bg-gray-900">
+                            <div class="space-y-1 text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                    <label for="id_couple_photo" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 px-2">
+                                        <span>{% translate "Încarcă o poză" %}</span>
+                                        {{ form.couple_photo }}
+                                    </label>
+                                </div>
+                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                                {% if object.couple_photo %}
+                                    <div class="mt-4">
+                                        <p class="text-xs font-bold text-green-600">{% translate "Poza Curentă:" %}</p>
+                                        <img src="{{ object.couple_photo.url }}" class="h-24 object-contain mx-auto rounded shadow-sm">
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Landscape Photo -->
+                    <div id="field-landscape_photo-container" class="mt-6">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Poză Secundară (Peisaj/Story)" %}</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition-colors bg-gray-50 dark:bg-gray-900">
+                             <div class="space-y-1 text-center">
+                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                    <label for="id_landscape_photo" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 px-2">
+                                        <span>{% translate "Încarcă o poză" %}</span>
+                                        {{ form.landscape_photo }}
+                                    </label>
+                                </div>
+                                {% if object.landscape_photo %}
+                                    <div class="mt-4">
+                                        <p class="text-xs font-bold text-green-600">{% translate "Poza Curentă:" %}</p>
+                                        <img src="{{ object.landscape_photo.url }}" class="h-24 object-contain mx-auto rounded shadow-sm">
+                                    </div>
+                                {% endif %}
+                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Galerie Foto (Formset Reintrodus) -->
+                    <div class="mt-10 pt-6 border-t border-slate-200">
+                        <div class="mb-6">
+                            <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Galerie Foto
+                            </h3>
+                            <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">
+                                Poți încărca până la 6 fotografii. (Format recomandat: JPG/PNG, max 5MB)
+                            </p>
+                        </div>
+
+                        {{ gallery_image_formset.management_form }}
+
+                        <div class="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                            {% for form in gallery_image_formset %}
+                                <div class="relative bg-slate-50 dark:bg-gray-700 rounded-xl border border-slate-200 dark:border-gray-600 p-4 shadow-sm hover:shadow-md transition-shadow">
+                                    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+                                    {% if form.instance.pk and form.instance.image %}
+                                        <div class="mb-4">
+                                            <div class="aspect-w-16 aspect-h-9 w-full overflow-hidden rounded-lg bg-gray-200 mb-2">
+                                                <img src="{{ form.instance.image.url }}" alt="Imagine galerie" class="h-32 w-full object-cover">
+                                            </div>
+
+                                            {% if gallery_image_formset.can_delete %}
+                                                <div class="flex items-center justify-between px-1">
+                                                    <span class="text-xs font-semibold text-slate-600 dark:text-gray-300">Șterge?</span>
+                                                    {{ form.DELETE }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div class="mb-2 flex justify-center items-center h-32 bg-white dark:bg-gray-600 border-2 border-dashed border-slate-300 rounded-lg">
+                                            <span class="text-slate-400 text-xs">Liber</span>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="mt-2">
+                                        {{ form.image }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Audio Greeting -->
+                    <div id="field-audio_greeting-container" class="mt-6 border-t pt-6">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Mesaj Audio / Muzică de fundal" %}</label>
+                        <input type="file" name="audio_greeting" id="id_audio_greeting" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    </div>
+                </div>
+
+                <!-- Main Invitation Image (Image Upload Only) -->
+                <div id="media-image-upload-section" class="hidden">
+                    <label class="block text-lg font-bold text-gray-900 dark:text-white mb-2">{% translate "Imagine Principală Invitație" %}</label>
                     <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition-colors bg-gray-50 dark:bg-gray-900">
                         <div class="space-y-1 text-center">
                             <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                             <div class="text-sm text-gray-600 dark:text-gray-400">
-                                <label for="id_couple_photo" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 px-2">
-                                    <span>{% translate "Încarcă o poză" %}</span>
-                                    {{ form.couple_photo }}
+                                <label for="id_main_invitation_image" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 px-2">
+                                    <span>{% translate "Încarcă imaginea" %}</span>
+                                    {{ form.main_invitation_image }}
                                 </label>
                             </div>
                             <p class="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
-                            {% if object.couple_photo %}
+                            {% if object.main_invitation_image %}
                                 <div class="mt-4">
-                                    <p class="text-xs font-bold text-green-600">{% translate "Poza Curentă:" %}</p>
-                                    <img src="{{ object.couple_photo.url }}" class="h-24 object-contain mx-auto rounded shadow-sm">
+                                    <p class="text-xs font-bold text-green-600">{% translate "Imagine Curentă:" %}</p>
+                                    <img src="{{ object.main_invitation_image.url }}" class="h-24 object-contain mx-auto rounded shadow-sm">
                                 </div>
                             {% endif %}
                         </div>
                     </div>
-                </div>
-
-                <!-- Galerie Foto (Formset Reintrodus) -->
-                <div class="mt-10 pt-6 border-t border-slate-200">
-                    <div class="mb-6">
-                        <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Galerie Foto
-                        </h3>
-                        <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">
-                            Poți încărca până la 6 fotografii. (Format recomandat: JPG/PNG, max 5MB)
-                        </p>
-                    </div>
-
-                    {{ gallery_image_formset.management_form }}
-
-                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-6">
-                        {% for form in gallery_image_formset %}
-                            <div class="relative bg-slate-50 dark:bg-gray-700 rounded-xl border border-slate-200 dark:border-gray-600 p-4 shadow-sm hover:shadow-md transition-shadow">
-                                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-
-                                {% if form.instance.pk and form.instance.image %}
-                                    <div class="mb-4">
-                                        <div class="aspect-w-16 aspect-h-9 w-full overflow-hidden rounded-lg bg-gray-200 mb-2">
-                                            <img src="{{ form.instance.image.url }}" alt="Imagine galerie" class="h-32 w-full object-cover">
-                                        </div>
-
-                                        {% if gallery_image_formset.can_delete %}
-                                            <div class="flex items-center justify-between px-1">
-                                                <span class="text-xs font-semibold text-slate-600 dark:text-gray-300">Șterge?</span>
-                                                {{ form.DELETE }}
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                {% else %}
-                                    <div class="mb-2 flex justify-center items-center h-32 bg-white dark:bg-gray-600 border-2 border-dashed border-slate-300 rounded-lg">
-                                        <span class="text-slate-400 text-xs">Liber</span>
-                                    </div>
-                                {% endif %}
-
-                                <div class="mt-2">
-                                    {{ form.image }}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- Audio Greeting -->
-                <div id="field-audio_greeting-container" class="mt-6 border-t pt-6">
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Mesaj Audio / Muzică de fundal" %}</label>
-                    <input type="file" name="audio_greeting" id="id_audio_greeting" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                 </div>
 
             </div>
@@ -652,12 +722,16 @@
         nextBtn.addEventListener('click', function() {
             // Validare simplă HTML5 pentru pasul curent
             const currentStepEl = document.querySelector(`.step-content[data-step="${currentStep}"]`);
-            const inputs = currentStepEl.querySelectorAll('input[required], select[required], textarea[required]');
+            // Selectam doar input-urile vizibile pentru validare
+            const inputs = currentStepEl.querySelectorAll('input:not(.hidden), select:not(.hidden), textarea:not(.hidden)');
             let valid = true;
             inputs.forEach(input => {
-                if (!input.checkValidity()) {
-                    input.reportValidity();
-                    valid = false;
+                // Verificăm dacă elementul e vizibil (uneori clasa hidden e pe părinte)
+                if (input.offsetParent !== null && input.hasAttribute('required')) {
+                    if (!input.checkValidity()) {
+                        input.reportValidity();
+                        valid = false;
+                    }
                 }
             });
 
@@ -728,29 +802,87 @@
 
         // --- CONDITIONAL LOGIC (Filtering Designs & Fields) ---
         const eventTypeInput = document.getElementById('id_event_type');
-        const brideContainer = document.getElementById('field-bride_name-container');
-        const groomContainer = document.getElementById('field-groom_name-container');
-        const childContainer = document.getElementById('field-child_name-container');
+
+        // --- Containers ---
+        // Names
+        const weddingNames = document.getElementById('wedding-names-container');
+        const baptismNames = document.getElementById('baptism-names-container');
+        // Parents
+        const weddingParents = document.getElementById('wedding-parents-container');
+        const baptismParents = document.getElementById('baptism-parents-container');
+        // Content
+        const textContent = document.getElementById('text-content-section');
+        const timeline = document.getElementById('timeline-section');
+        const godparents = document.getElementById('godparents-section');
+        // Media
+        const mediaWeddingBaptism = document.getElementById('media-wedding-baptism-section');
+        const mediaImageUpload = document.getElementById('media-image-upload-section');
+        // Labels
+        const coupleLabel = document.getElementById('label-couple-photo');
+
         const designOptions = document.querySelectorAll('.design-wrapper');
 
         function updateFormVisibility() {
             const val = eventTypeInput.value.toLowerCase();
 
-            // 1. Ascunde/Arată câmpuri specifice
-            if (val.includes('botez') || val === 'baptism') {
-                if(brideContainer) brideContainer.classList.add('hidden');
-                if(groomContainer) groomContainer.classList.add('hidden');
-                if(childContainer) childContainer.classList.remove('hidden');
+            // Logică Tip Eveniment
+            if (val === 'image_upload') {
+                // 1. IMAGE UPLOAD ONLY
+                // Ascunde Nume, Parinti, Text, Timeline, Nasi, Media Standard
+                if(weddingNames) weddingNames.classList.add('hidden');
+                if(baptismNames) baptismNames.classList.add('hidden');
+                if(weddingParents) weddingParents.classList.add('hidden');
+                if(baptismParents) baptismParents.classList.add('hidden');
+                if(textContent) textContent.classList.add('hidden');
+                if(timeline) timeline.classList.add('hidden');
+                if(godparents) godparents.classList.add('hidden');
+                if(mediaWeddingBaptism) mediaWeddingBaptism.classList.add('hidden');
+
+                // Arată Media Image Upload
+                if(mediaImageUpload) mediaImageUpload.classList.remove('hidden');
+
+            } else if (val.includes('botez') || val === 'baptism') {
+                // 2. BOTEZ
+                // Arată Nume Copil, Părinți Botez, Media Standard (cu label modificat)
+                if(weddingNames) weddingNames.classList.add('hidden');
+                if(baptismNames) baptismNames.classList.remove('hidden');
+
+                if(weddingParents) weddingParents.classList.add('hidden');
+                if(baptismParents) baptismParents.classList.remove('hidden');
+
+                if(textContent) textContent.classList.remove('hidden');
+                if(timeline) timeline.classList.remove('hidden');
+                if(godparents) godparents.classList.remove('hidden');
+
+                if(mediaWeddingBaptism) mediaWeddingBaptism.classList.remove('hidden');
+                if(mediaImageUpload) mediaImageUpload.classList.add('hidden');
+
+                // Label Change
+                if(coupleLabel) coupleLabel.innerText = "Poză Copil/Familie";
+
             } else {
-                if(brideContainer) brideContainer.classList.remove('hidden');
-                if(groomContainer) groomContainer.classList.remove('hidden');
-                if(childContainer) childContainer.classList.add('hidden');
+                // 3. NUNTĂ (Default)
+                // Arată Nume Miri, Părinți Miri, Media Standard
+                if(weddingNames) weddingNames.classList.remove('hidden');
+                if(baptismNames) baptismNames.classList.add('hidden');
+
+                if(weddingParents) weddingParents.classList.remove('hidden');
+                if(baptismParents) baptismParents.classList.add('hidden');
+
+                if(textContent) textContent.classList.remove('hidden');
+                if(timeline) timeline.classList.remove('hidden');
+                if(godparents) godparents.classList.remove('hidden');
+
+                if(mediaWeddingBaptism) mediaWeddingBaptism.classList.remove('hidden');
+                if(mediaImageUpload) mediaImageUpload.classList.add('hidden');
+
+                // Label Change
+                if(coupleLabel) coupleLabel.innerText = "Poza Principală (Mirii)";
             }
 
-            // 2. Filtrare Design-uri în funcție de tip
+            // Filtrare Design-uri în funcție de tip
             designOptions.forEach(opt => {
                 const designType = opt.dataset.eventType;
-                // Logica de potrivire (conține string-ul tipului)
                 if (designType.includes(val) || val === '') {
                     opt.style.display = 'block';
                 } else {
@@ -771,7 +903,6 @@
     const modalOverlay = document.getElementById('modal-overlay');
     const newWindowBtn = document.getElementById('open-new-window-btn');
     const previewIframe = document.getElementById('preview-iframe');
-    // Luăm token-ul CSRF defensiv (dacă există)
     const csrfElement = document.querySelector('[name=csrfmiddlewaretoken]');
     const csrfToken = csrfElement ? csrfElement.value : '';
 
@@ -799,7 +930,8 @@
             // 1. UI Feedback
             const originalBtnContent = previewBtn.innerHTML;
             previewBtn.innerHTML = '<span class="animate-spin inline-block mr-2">↻</span> Generare...';
-            previewBtn.disabled = true;
+            // Don't disable button here because autosave might trigger it repeatedly
+            // previewBtn.disabled = true;
 
             const formData = {};
             const formElements = document.getElementById('event-form').elements;
@@ -827,7 +959,7 @@
                         if (file.size > MAX_FILE_SIZE) {
                             alert(`Fișierul ${file.name} este prea mare (Max 10MB).`);
                             previewBtn.innerHTML = originalBtnContent;
-                            previewBtn.disabled = false;
+                            // previewBtn.disabled = false;
                             return;
                         }
                         // Transformăm în Base64 (Imagine, Audio sau Video)
@@ -858,8 +990,13 @@
                         }
                     }
                 }
-                else if (element.type === 'radio') {
-                    if (element.checked) formData[element.name] = element.value;
+                else if (element.type === 'radio' || element.type === 'checkbox') {
+                    // FIX CRITIC: Checkbox-urile trebuie verificate explicit!
+                    // Dacă trimitem valoarea 'on' pentru un checkbox nebifat (delete-uri in formset),
+                    // Django va crede că vrem să ștergem totul.
+                    if (element.checked) {
+                        formData[element.name] = element.value;
+                    }
                 }
                 else {
                     formData[element.name] = element.value;
@@ -891,10 +1028,10 @@
 
             } catch (error) {
                 console.error(error);
-                alert('Eroare la generare. Verifică consola.');
+                // alert('Eroare la generare. Verifică consola.');
             } finally {
                 previewBtn.innerHTML = originalBtnContent;
-                previewBtn.disabled = false;
+                // previewBtn.disabled = false;
             }
         });
     }

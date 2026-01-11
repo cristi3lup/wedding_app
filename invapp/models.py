@@ -227,6 +227,7 @@ class CardDesign(models.Model):
 
 # Represents the main wedding event details
 class Event(models.Model):
+    # event Type
     class EventTypeChoices(models.TextChoices):
         WEDDING = 'wedding', _('Wedding')
         BAPTISM = 'baptism', _('Baptism')
@@ -241,20 +242,6 @@ class Event(models.Model):
     )
 
     # --- BAPTISM-SPECIFIC FIELDS ---
-    main_invitation_image = models.ImageField(
-        upload_to='invitation_images/',
-        null=True,
-        blank=True,
-        verbose_name=_("Main Invitation Image"),
-        help_text=_("Upload your main invitation image designed in Canva (or another tool).")
-    )
-    audio_greeting = models.FileField(
-        upload_to='audio_greetings/',
-        blank=True,
-        null=True,
-        verbose_name=_("Audio Greeting"),
-        help_text=_("Optional: Upload an audio greeting (e.g., MP3, M4A, WAV).")
-    )
     child_name = models.CharField(
         max_length=200,
         blank=True,
@@ -293,7 +280,7 @@ class Event(models.Model):
         verbose_name=_("Groom's Parents"),
         help_text=_("Names of the groom's parents (e.g., 'George & Mary Smith').")
     )
-
+    # GENERAL FIELDS
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='events')
     selected_design = models.ForeignKey(CardDesign, on_delete=models.SET_NULL, null=True, blank=True,
                                         related_name='events')
@@ -378,6 +365,22 @@ class Event(models.Model):
         null=True,
         verbose_name=_("Other Information"),
         help_text=_("Other information (e.g., Dress code, Gift registry)")
+    )
+    # --- MEDIA-SPECIFIC FIELDS ---
+
+    main_invitation_image = models.ImageField(
+        upload_to='invitation_images/',
+        null=True,
+        blank=True,
+        verbose_name=_("Main Invitation Image"),
+        help_text=_("Upload your main invitation image designed in Canva (or another tool).")
+    )
+    audio_greeting = models.FileField(
+        upload_to='audio_greetings/',
+        blank=True,
+        null=True,
+        verbose_name=_("Audio Greeting"),
+        help_text=_("Optional: Upload an audio greeting (e.g., MP3, M4A, WAV).")
     )
 
     couple_photo = models.ImageField(
