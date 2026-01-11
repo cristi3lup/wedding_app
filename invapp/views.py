@@ -53,7 +53,7 @@ def event_preview(request):
             else:
                 data = request.POST.dict()
 
-            print("DEBUG: Preview Data Keys:", data.keys())
+            print(f"DEBUG: Preview Data Received. Keys: {list(data.keys())}")
 
             # 2. Build Mock Event
             event_data = {}
@@ -89,32 +89,38 @@ def event_preview(request):
                 raw_val = data.get(field_name)
 
                 if raw_val and isinstance(raw_val, str):
-                    # CRITIC: Curățăm spațiile goale care pot păcăli startswith
+                    # CRITIC: Clean whitespace
                     raw_val = raw_val.strip()
 
-                    print(f"DEBUG: Processing {field_name}. Value starts with: {raw_val[:10]}")
+                    print(f"DEBUG: Processing {field_name}. Value starts with: '{raw_val[:10]}...'")
 
                     # CASE 1: Absolute URL (Cloudinary/S3)
-                    if raw_val.startswith('http://') or raw_val.startswith('https://'):
+                    # Use 'in' check to be safer against subtle prefixes
+                    if 'http://' in raw_val or 'https://' in raw_val:
+                        # Extract the URL if it got messed up
+                        if not raw_val.startswith('http'):
+                            start = raw_val.find('http')
+                            if start != -1:
+                                raw_val = raw_val[start:]
+
                         event_data[field_name] = SimpleNamespace(url=raw_val)
-                        print(f"DEBUG: {field_name} -> Absolute URL kept intact")
+                        print(f"DEBUG: {field_name} treated as Absolute URL: {raw_val}")
 
                     # CASE 2: Base64 (New Upload)
                     elif raw_val.startswith('data:image'):
                         event_data[field_name] = SimpleNamespace(url=raw_val)
-                        print(f"DEBUG: {field_name} -> Base64 used")
+                        print(f"DEBUG: {field_name} treated as Base64")
 
                     # CASE 3: Relative Path (Local Dev or partial path)
                     elif raw_val:
-                        # Curățăm /media/ dacă există deja, pentru a nu-l dubla
+                        # Strip existing /media/ to avoid doubling
                         clean_val = raw_val.replace('/media/', '')
-
-                        # Construim URL local folosind settings.MEDIA_URL (de obicei /media/)
+                        # Construct local URL
                         media_url = settings.MEDIA_URL.rstrip('/')
                         final_url = f"{media_url}/{clean_val.lstrip('/')}"
 
                         event_data[field_name] = SimpleNamespace(url=final_url)
-                        print(f"DEBUG: {field_name} -> Local URL constructed: {final_url}")
+                        print(f"DEBUG: {field_name} treated as Local URL: {final_url}")
                 else:
                     event_data[field_name] = None
 
@@ -132,6 +138,8 @@ def event_preview(request):
                     event_instance.selected_design = design
                 except (CardDesign.DoesNotExist, ValueError):
                     pass
+
+            print(f"DEBUG: Rendering template {template_name}")
 
             # 5. Context
             context = {
