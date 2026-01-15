@@ -818,14 +818,33 @@ def event_preview_view(request):
         mock_event = SimpleNamespace(**data)
 
         # --- 2. Gestionare Imagini (Images) ---
-        for field in ['couple_photo', 'landscape_photo', 'main_invitation_image']:
+        # Am adăugat și audio_greeting deoarece poate fi stocat tot pe Cloudinary
+        for field in ['couple_photo', 'landscape_photo', 'main_invitation_image', 'audio_greeting']:
             img = data.get(field)
-            if img and img.startswith('data:image'):
-                setattr(mock_event, field, SimpleNamespace(url=img))
-            elif isinstance(img, str):
-                setattr(mock_event, field, SimpleNamespace(url=f"{settings.MEDIA_URL}{img}"))
-            else:
+
+            if not img:
                 setattr(mock_event, field, None)
+                continue
+
+            img = img.strip()
+
+            # Cazul A: Upload nou (Base64) sau URL Absolut existent (Cloudinary/HTTPS)
+            if img.startswith('data:') or img.startswith('http://') or img.startswith('https://'):
+                setattr(mock_event, field, SimpleNamespace(url=img))
+
+            # Cazul B: URL Local (Development)
+            else:
+                # Eliminăm slash-ul de la început pentru a preveni dublarea cu MEDIA_URL
+                clean_path = img.lstrip('/')
+
+                # Dacă calea conține deja 'media/', ne asigurăm că formatul este corect
+                if clean_path.startswith('media/'):
+                    final_url = f"/{clean_path}"
+                else:
+                    # settings.MEDIA_URL este de obicei '/media/'
+                    final_url = f"{settings.MEDIA_URL}{clean_path}"
+
+                setattr(mock_event, field, SimpleNamespace(url=final_url))
 
         # --- 3. Gestionare Design ---
         design_id = data.get('selected_design')
