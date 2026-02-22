@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /ro/
+Allow: /en/
+Disallow: /admin/
+Disallow: /accounts/
+Sitemap: https://invapp-romania.ro/sitemap.xml

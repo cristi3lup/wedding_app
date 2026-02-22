@@ -1,0 +1,31 @@
+{% load i18n %}
+<div x-show="importOpen" 
+     x-transition:enter="ease-out duration-300" 
+     x-transition:enter-start="opacity-0" 
+     x-transition:enter-end="opacity-100" 
+     x-transition:leave="ease-in duration-200" 
+     x-transition:leave-start="opacity-100" 
+     x-transition:leave-end="opacity-0" 
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" 
+     x-cloak>
+    <div @click.away="importOpen = false" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-md border border-gray-100 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{% translate "Import Guests" %}</h3>
+            <button @click="importOpen = false" class="text-gray-400 hover:text-gray-600"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            {% translate "Upload an Excel file (.xlsx) with columns: 'Honorific', 'Name', 'Email', 'Phone Number', 'Max Attendees'." %}
+        </p>
+        <form action="{% url 'invapp:guest_import' event_id=event.id %}" method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <div class="relative group">
+                <input type="file" name="guest_file" accept=".xlsx" required
+                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-300 transition-all cursor-pointer border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-4 hover:border-indigo-400"/>
+            </div>
+            <div class="flex space-x-3 pt-2">
+                <button type="button" @click="importOpen = false" class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 transition-colors">{% translate "Cancel" %}</button>
+                <button type="submit" class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 dark:shadow-none transition-all">{% translate "Upload" %}</button>
+            </div>
+        </form>
+    </div>
+</div>

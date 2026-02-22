@@ -1,1074 +1,509 @@
 {% extends "invapp/base.html" %}
-{% load i18n %}
-{% load static %}
-{% load widget_tweaks %}
+{% load i18n %}{% load static %}{% load widget_tweaks %}
 
 {% block title %}
-    {% if object %}
-        {% translate "Edit Event:" %} {{ object.title }}
-    {% else %}
-        {% translate "Create New Event" %}
-    {% endif %}
+    {% if object %}{% translate "Edit" %} {{ object.title }}{% else %}{% translate "Create Event" %}{% endif %}
 {% endblock %}
 
 {% block page_specific_styles %}
 <style>
-    /* Wizard Steps Transition */
-    .step-content {
-        display: none;
-        animation: fadeIn 0.4s ease-in-out;
-    }
-    .step-content.active {
-        display: block;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    [x-cloak] { display: none !important; }
+    
+    .slide-left-enter { transform: translateX(100%); opacity: 0; }
+    .slide-left-enter-active { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .slide-left-leave-active { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(-100%); opacity: 0; }
+    
+    .slide-right-enter { transform: translateX(-100%); opacity: 0; }
+    .slide-right-enter-active { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .slide-right-leave-active { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(100%); opacity: 0; }
 
-    /* Design Radio Selector Override */
-    .design-radio-input:checked + .design-card {
-        border-color: #4F46E5; /* Indigo-600 */
-        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
-        transform: scale(1.02);
-    }
-    .design-radio-input:checked + .design-card .check-icon {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    /* Mobile Sticky Bar SafeArea */
-    .safe-area-bottom {
-        padding-bottom: env(safe-area-inset-bottom, 20px);
-    }
-
-    /* Loading Spinner Overlay */
-    .loading-overlay {
+    .glass-pill {
         background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+    .dark .glass-pill {
+        background: rgba(17, 24, 39, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    /* Custom Scrollbar for Design Grid */
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
+    .app-input {
+        @apply w-full h-14 px-5 rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-base dark:text-white;
     }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f1f1f1;
+    
+    .preview-phone-frame {
+        box-shadow: 0 0 0 10px #111827, 0 0 0 12px #374151, 0 40px 60px -15px rgba(0, 0, 0, 0.3);
     }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-    }
-
-    /* Autosave Indicator */
-    #autosave-status {
-        transition: opacity 0.3s ease;
-    }
+    
+    .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 16px); }
 </style>
 {% endblock %}
 
+{% block page_header %}{% endblock %}
+
 {% block content %}
-<div class="max-w-5xl mx-auto pb-32 lg:pb-12 px-4 sm:px-6 lg:px-8" x-data="{ loading: false }">
+<div class="max-w-[1600px] mx-auto min-h-[100dvh] flex flex-col" 
+     x-data="eventWizard()" 
+     x-init="init()"
+     @input="triggerPreview(false)">
 
-    <!-- Loading State -->
-    <div x-show="loading" class="fixed inset-0 z-50 flex items-center justify-center loading-overlay" style="display: none;">
+    <div x-show="loading" class="fixed inset-0 z-[110] flex items-center justify-center bg-white/70 backdrop-blur-sm" style="display: none;">
         <div class="flex flex-col items-center">
-            <svg class="animate-spin h-10 w-10 text-indigo-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span class="text-indigo-600 font-bold animate-pulse">{% translate "Processing..." %}</span>
+            <svg class="animate-spin h-10 w-10 text-indigo-600 mb-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <span class="text-indigo-600 font-bold">{% translate "Saving..." %}</span>
         </div>
     </div>
 
-    <!-- Header & Progress Bar -->
-    <div class="py-6">
-        <div class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                {% if object %}{% translate "Modifică Detaliile" %}{% else %}{% translate "Configurează Evenimentul" %}{% endif %}
-            </h1>
-            <div class="flex flex-col items-end">
-                <span class="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full dark:bg-indigo-900 dark:text-indigo-200">
-                    {% translate "Step" %} <span id="current-step-label">1</span> {% translate "of" %} 5
-                </span>
-                <!-- Autosave Status Indicator -->
-                <div id="autosave-status" class="text-xs font-medium mt-1 text-gray-500 opacity-0 h-4">
-                    <!-- Text injected by JS -->
-                </div>
-            </div>
-        </div>
+    <!-- MAIN GRID LAYOUT -->
+    <div class="lg:grid lg:grid-cols-12 lg:gap-12 px-4 sm:px-6 lg:px-8 pb-40 lg:pt-4">
+        
+        <!-- LEFT: FORM SECTION -->
+        <div class="lg:col-span-7 xl:col-span-8 relative">
+            
+            <form method="post" enctype="multipart/form-data" id="event-form" @submit="loading = true">
+                {% csrf_token %}
+                {{ form.media }}
 
-        <!-- Stepper Visual -->
-        <div class="relative">
-            <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200 dark:bg-gray-700">
-                <div id="progress-bar" style="width: 20%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-600 transition-all duration-500"></div>
-            </div>
-            <div class="flex justify-between text-xs text-gray-500 font-medium px-1">
-                <span class="step-label text-indigo-600 font-bold">1. {% translate "Design" %}</span>
-                <span class="step-label">2. {% translate "Details" %}</span>
-                <span class="step-label">3. {% translate "Location" %}</span>
-                <span class="step-label">4. {% translate "Guests" %}</span>
-                <span class="step-label">5. {% translate "Media" %}</span>
-            </div>
-        </div>
-    </div>
-
-    {% if is_locked_plan %}
-    <div class="mb-6 rounded-md bg-yellow-50 dark:bg-yellow-900/50 p-4 border-l-4 border-yellow-400">
-        <div class="flex">
-            <div class="ml-3">
-                <p class="text-sm text-yellow-700 dark:text-yellow-300">
-                    {% translate "Your plan locks certain details (Date, Type, Design)." %}
-                    <a href="{% url 'invapp:landing_page' %}#pricing" class="font-medium underline">{% translate "Upgrade" %}</a>
-                </p>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <form method="post" enctype="multipart/form-data" id="event-form" class="space-y-6" @submit="loading = true">
-        {% csrf_token %}
-
-        <!-- Errors Summary -->
-        {% if form.errors or godparent_formset.errors or schedule_item_formset.errors or gallery_image_formset.errors %}
-        <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-6 rounded-md">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm text-red-700 dark:text-red-200">
-                        {% translate "Please correct the errors below." %}
-                    </p>
-                    {{ form.non_field_errors }}
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- ========================== STEP 1: TIP & DESIGN ========================== -->
-        <div class="step-content active" data-step="1">
-            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 space-y-6">
-
-                <!-- Tip Eveniment -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">{% translate "What type of event are you organizing?" %}</label>
-                    <div class="relative">
-                        {% render_field form.event_type class="block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-
-                        {% if is_locked_plan %}
-                            <input type="hidden" name="event_type" value="{{ form.instance.event_type }}">
-                        {% endif %}
+                <!-- STEP 1: STYLE -->
+                <div x-show="step === 1" x-cloak
+                     x-transition:enter="slide-left-enter-active" x-transition:enter-start="slide-left-enter"
+                     x-transition:leave="slide-left-leave-active" x-transition:leave-end="slide-left-leave"
+                     class="space-y-10">
+                    
+                    <div class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-sm border border-gray-100 dark:border-gray-700">
+                        <label class="block text-xl font-bold mb-6 dark:text-white">{% translate "Event Type" %}</label>
+                        {% render_field form.event_type class="app-input" x-model="eventType" @change="handleTypeChange()" %}
                     </div>
-                    {% if form.event_type.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.event_type.errors.0 }}</p>
-                    {% endif %}
-                </div>
 
-                <!-- Selector Design (Grid) -->
-                <div id="design-selection-container">
-                    <label class="block text-lg font-bold text-gray-900 dark:text-white mb-4">{% translate "Choose Invitation Design" %}</label>
-
-                    <!-- Folosim available_designs din context pentru a avea acces la proprietățile obiectelor -->
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto p-1 custom-scrollbar {% if is_locked_plan %}opacity-60 pointer-events-none{% endif %}">
-                        {% for design in available_designs %}
-                        <div class="relative design-option design-wrapper" data-event-type="{{ design.event_type|lower|slugify }}">
-                            <label class="cursor-pointer group block h-full">
-                                <!-- Radio Input Manual -->
-                                <input type="radio" name="selected_design" value="{{ design.id }}"
-                                       id="design_{{ design.id }}"
-                                       class="peer sr-only"
-                                       {% if form.instance.selected_design.id == design.id %}checked{% endif %}
-                                       {% if is_locked_plan %}disabled{% endif %}>
-
-                                <div class="design-card rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900 transition-all h-full flex flex-col relative hover:border-indigo-300 peer-checked:border-indigo-600 peer-checked:ring-2 peer-checked:ring-indigo-600 peer-checked:ring-offset-2">
-                                    <!-- Image Preview -->
-                                    <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-800 relative">
+                    <div class="space-y-6">
+                        <h3 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 ml-4">{% translate "Available Designs" %}</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[65vh] overflow-y-auto custom-scrollbar pr-2">
+                            {% for design in available_designs %}
+                            <div class="design-wrapper" data-event-type="{{ design.event_type|lower|slugify }}">
+                                <label class="relative block group cursor-pointer">
+                                    <input type="radio" name="selected_design" value="{{ design.id }}" class="sr-only peer" 
+                                           {% if form.instance.selected_design.id == design.id %}checked{% endif %} required @change="triggerPreview(true)">
+                                    <div class="aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-transparent transition-all duration-300 peer-checked:border-indigo-600 peer-checked:scale-[0.96] shadow-sm peer-checked:shadow-xl">
                                         {% if design.preview_image_path %}
-                                            <img src="{% static design.preview_image_path %}" alt="{{ design.name }}" class="object-cover w-full h-48">
-                                        {% else %}
-                                            <div class="flex items-center justify-center h-48 bg-gray-100 text-gray-400 text-xs">{% translate "No Preview" %}</div>
+                                            <img src="{% static design.preview_image_path %}" class="w-full h-full object-cover">
                                         {% endif %}
-
-                                        <!-- Checkmark Badge -->
-                                        <div class="check-icon absolute top-2 right-2 bg-indigo-600 text-white rounded-full p-1 transition-all duration-200 shadow-md opacity-0 transform scale-0 peer-checked:opacity-100 peer-checked:scale-100">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                        <div class="absolute bottom-4 left-0 w-full text-center">
+                                            <span class="inline-block bg-white/90 dark:bg-gray-900/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase text-indigo-600 opacity-0 peer-checked:opacity-100 transition-all">
+                                                {{ design.name }}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div class="p-3 text-center bg-white dark:bg-gray-800">
-                                        <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ design.name }}</span>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                        {% endfor %}
-                    </div>
-
-                    {% if is_locked_plan %}
-                        <input type="hidden" name="selected_design" value="{{ form.instance.selected_design.id }}">
-                    {% endif %}
-
-                    {% if form.selected_design.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.selected_design.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-            </div>
-        </div>
-
-        <!-- ========================== STEP 2: DETALII EVENIMENT ========================== -->
-        <div class="step-content" data-step="2">
-            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 space-y-6">
-
-                <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white border-b pb-2">{% translate "Main Information" %}</h3>
-
-                <!-- COMUN: Titlu Intern -->
-                <div id="field-title-container">
-                    <label for="id_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% translate "Event Name (Internal)" %}</label>
-                    {% render_field form.title class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg py-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Nunta Ana & Andrei" %}
-                    <p class="mt-1 text-xs text-gray-500">{% translate "This name appears only in your dashboard." %}</p>
-                    {% if form.title.errors %}<p class="text-sm text-red-600 mt-1">{{ form.title.errors.0 }}</p>{% endif %}
-                </div>
-
-                <!-- COMUN: Data Eveniment -->
-                <div id="field-event_date-container">
-                    <label for="id_event_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% translate "Event Date" %}</label>
-                    <input type="date" name="event_date" id="id_event_date" value="{{ form.event_date.value|date:'Y-m-d' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg py-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" {% if is_locked_plan %}disabled{% endif %}>
-
-                    {% if is_locked_plan %}
-                        <input type="hidden" name="event_date" value="{{ form.instance.event_date|date:'Y-m-d' }}">
-                    {% endif %}
-                    {% if form.event_date.errors %}<p class="text-sm text-red-600 mt-1">{{ form.event_date.errors.0 }}</p>{% endif %}
-                </div>
-
-                <!-- SPECIFIC NUNTA (Bride/Groom) -->
-                <div id="wedding-names-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div id="field-bride_name-container">
-                        <label for="id_bride_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Bride's First Name" %}</label>
-                        {% render_field form.bride_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                    </div>
-                    <div id="field-groom_name-container">
-                        <label for="id_groom_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Groom's First Name" %}</label>
-                        {% render_field form.groom_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                    </div>
-                </div>
-
-                <!-- SPECIFIC BOTEZ (Child) -->
-                <div id="baptism-names-container" class="hidden">
-                    <div id="field-child_name-container">
-                        <label for="id_child_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Child's Name (Baptism)" %}</label>
-                        {% render_field form.child_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                    </div>
-                </div>
-
-                <!-- SPECIFIC NUNTA (Parents) -->
-                <div id="wedding-parents-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <div id="field-bride_parents-container">
-                        <label for="id_bride_parents" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Bride's Parents" %}</label>
-                        {% render_field form.bride_parents rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                    </div>
-                    <div id="field-groom_parents-container">
-                        <label for="id_groom_parents" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Groom's Parents" %}</label>
-                        {% render_field form.groom_parents rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                    </div>
-                </div>
-
-                <!-- SPECIFIC BOTEZ (Parents) -->
-                <div id="baptism-parents-container" class="hidden pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <div id="field-parents_names-container">
-                        <label for="id_parents_names" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{% translate "Parents (Baptism)" %}</label>
-                        {% render_field form.parents_names rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Maria and Alexandru Popescu" %}
-                    </div>
-                </div>
-
-                <!-- NUNTA & BOTEZ (Text) -->
-                <div id="text-content-section" class="pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <div id="field-invitation_wording-container">
-                        <label for="id_invitation_wording" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Invitation Text (Introductory)" %}</label>
-                        {% render_field form.invitation_wording rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Together with our parents..." %}
-                        <p class="text-xs text-gray-500 mt-1">{% translate "This text appears at the beginning of the invitation." %}</p>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- ========================== STEP 3: LOCAȚIE & PROGRAM ========================== -->
-        <div class="step-content" data-step="3">
-            <div class="space-y-6">
-
-                <!-- Locations Grid (Always Visible) -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Ceremony -->
-                    <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-l-4 border-indigo-500">
-                        <h4 class="font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                            {% translate "Wedding / Ceremony" %}
-                        </h4>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Time" %}</label>
-                                <input type="time" name="ceremony_time" id="id_ceremony_time" value="{{ form.ceremony_time.value|date:'H:i' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                </label>
                             </div>
-                            <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Location (Name)" %}</label>
-                                {% render_field form.ceremony_location class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Waze/Maps Link" %}</label>
-                                {% render_field form.ceremony_maps_url class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="https://maps.google.com/..." %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Party -->
-                    <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-l-4 border-pink-500">
-                        <h4 class="font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z"></path></svg>
-                            {% translate "Reception / Party" %}
-                        </h4>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Time" %}</label>
-                                <input type="time" name="party_time" id="id_party_time" value="{{ form.party_time.value|date:'H:i' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Location (Name)" %}</label>
-                                {% render_field form.venue_name class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Full Address" %}</label>
-                                {% render_field form.venue_address class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold uppercase text-gray-500">{% translate "Waze/Maps Link" %}</label>
-                                {% render_field form.party_maps_url class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Schedule Formset (Hidden for Image Upload) -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mt-6" id="timeline-section">
-                    <h3 class="text-lg font-bold mb-4 flex items-center justify-between">
-                        <span>{% translate "Timeline" %}</span>
-                        <span class="text-xs font-normal text-gray-500">{% translate "Add key moments" %}</span>
-                    </h3>
-
-                    {{ schedule_item_formset.management_form }}
-                    <div id="schedule_items-formset-container" class="space-y-4">
-                        {% for form in schedule_item_formset %}
-                            <div class="schedule_items-form bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 relative group">
-                                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                                <div class="hidden">{{ form.DELETE }}</div> <!-- Hidden Delete Checkbox -->
-
-                                <div class="grid grid-cols-12 gap-4 items-start">
-                                    <div class="col-span-4 sm:col-span-3">
-                                        <label class="block text-xs text-gray-500">{% translate "Time" %}</label>
-                                        {% render_field form.time class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                                    </div>
-                                    <div class="col-span-8 sm:col-span-8">
-                                        <label class="block text-xs text-gray-500">{% translate "Activity" %}</label>
-                                        {% render_field form.activity_type class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                                        <label class="block text-xs text-gray-500 mt-2">{% translate "Description (Optional)" %}</label>
-                                        {% render_field form.description class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                                    </div>
-                                    <div class="col-span-12 sm:col-span-1 flex justify-end items-center pt-4">
-                                        {% if schedule_item_formset.can_delete %}
-                                            <button type="button" class="delete-form-btn text-red-500 hover:text-red-700 p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            </button>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-
-                    <button type="button" id="add-schedule_items-btn" class="mt-4 w-full flex items-center justify-center py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-indigo-500 hover:text-indigo-500 transition-colors font-medium">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                        {% translate "Add Activity to Schedule" %}
-                    </button>
-                </div>
-
-                <!-- Hidden Template for Empty Form (Schedule) -->
-                <div id="empty-schedule_items-form" class="hidden">
-                    <div class="schedule_items-form bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 relative mt-4">
-                        <div class="grid grid-cols-12 gap-4 items-start">
-                            <div class="col-span-4 sm:col-span-3">
-                                <label class="block text-xs text-gray-500">{% translate "Time" %}</label>
-                                {% render_field schedule_item_formset.empty_form.time class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                            </div>
-                            <div class="col-span-8 sm:col-span-8">
-                                <label class="block text-xs text-gray-500">{% translate "Activity" %}</label>
-                                {% render_field schedule_item_formset.empty_form.activity_type class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                                <label class="block text-xs text-gray-500 mt-2">{% translate "Description (Optional)" %}</label>
-                                {% render_field schedule_item_formset.empty_form.description class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                            </div>
-                            <div class="col-span-12 sm:col-span-1 flex justify-end pt-4">
-                                <div class="hidden">{{ schedule_item_formset.empty_form.DELETE }}</div>
-                                <button type="button" class="delete-form-btn text-red-500 hover:text-red-700 p-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================== STEP 4: INVITAȚI SPECIALI (NAȘI) ========================== -->
-        <div class="step-content" data-step="4">
-            <div id="godparents-section" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                <h3 class="text-lg font-bold mb-4">{% translate "Godparents" %}</h3>
-                <p class="text-sm text-gray-500 mb-6">{% translate "Add godparents' names as you want them to appear on the invitation (e.g. 'John and Mary Smith' or separately)." %}</p>
-
-                {{ godparent_formset.management_form }}
-                <div id="godparents-formset-container" class="space-y-4">
-                    {% for form in godparent_formset %}
-                        <div class="godparents-form bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800 flex items-center justify-between">
-                            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                            <div class="flex-grow mr-4">
-                                <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase mb-1">{% translate "Godparent(s) Name" %}</label>
-                                {% render_field form.name class="mt-1 block w-full rounded-md border-indigo-200 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                            </div>
-
-                            <div class="hidden">{{ form.DELETE }}</div>
-                            {% if godparent_formset.can_delete and form.instance.pk %}
-                                <button type="button" class="delete-form-btn text-gray-400 hover:text-red-500 p-2 mt-4 transition-colors">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                </button>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-
-                <button type="button" id="add-godparents-btn" class="mt-6 w-full py-3 bg-indigo-50 dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 rounded-lg font-bold hover:bg-indigo-100 transition-colors flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    {% translate "Add another pair of godparents" %}
-                </button>
-
-                 <!-- Hidden Template for Empty Form (Godparent) -->
-                 <div id="empty-godparents-form" class="hidden">
-                    <div class="godparents-form bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800 flex items-center justify-between mt-4">
-                        <div class="flex-grow mr-4">
-                             <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase mb-1">{% translate "Godparent(s) Name" %}</label>
-                            {% render_field godparent_formset.empty_form.name class="mt-1 block w-full rounded-md border-indigo-200 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %}
-                        </div>
-                        <div class="hidden">{{ godparent_formset.empty_form.DELETE }}</div>
-                        <button type="button" class="delete-form-btn text-gray-400 hover:text-red-500 p-2 mt-4">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================== STEP 5: MEDIA & CONȚINUT ========================== -->
-        <div class="step-content" data-step="5">
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 space-y-8">
-
-                <!-- Main Photo (Wedding / Baptism Header) -->
-                <div id="media-wedding-baptism-section">
-                    <div id="field-couple_photo-container">
-                        <label id="label-couple-photo" class="block text-lg font-bold text-gray-900 dark:text-white mb-2">{% translate "Main Photo (Couple)" %}</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition-colors bg-gray-50 dark:bg-gray-900">
-                            <div class="space-y-1 text-center">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <div class="text-sm text-gray-600 dark:text-gray-400">
-                                    <label for="id_couple_photo" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 px-2">
-                                        <span>{% translate "Upload a photo" %}</span>
-                                        {{ form.couple_photo }}
-                                    </label>
-                                </div>
-                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
-                                {% if object.couple_photo %}
-                                    <div class="mt-4">
-                                        <p class="text-xs font-bold text-green-600">{% translate "Current Photo:" %}</p>
-                                        <img src="{{ object.couple_photo.url }}" class="h-24 object-contain mx-auto rounded shadow-sm">
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Landscape Photo -->
-                    <div id="field-landscape_photo-container" class="mt-6">
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Secondary Photo (Landscape/Story)" %}</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition-colors bg-gray-50 dark:bg-gray-900">
-                             <div class="space-y-1 text-center">
-                                <div class="text-sm text-gray-600 dark:text-gray-400">
-                                    <label for="id_landscape_photo" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 px-2">
-                                        <span>{% translate "Upload a photo" %}</span>
-                                        {{ form.landscape_photo }}
-                                    </label>
-                                </div>
-                                {% if object.landscape_photo %}
-                                    <div class="mt-4">
-                                        <p class="text-xs font-bold text-green-600">{% translate "Current Photo:" %}</p>
-                                        <img src="{{ object.landscape_photo.url }}" class="h-24 object-contain mx-auto rounded shadow-sm">
-                                    </div>
-                                {% endif %}
-                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Galerie Foto (Formset Reintrodus) -->
-                    <div id="gallery-section" class="mt-10 pt-6 border-t border-slate-200">
-                        <div class="mb-6">
-                            <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                {% translate "Photo Gallery" %}
-                            </h3>
-                            <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">
-                                {% translate "You can upload up to 6 photos. (Recommended format: JPG/PNG, max 5MB)" %}
-                            </p>
-                        </div>
-
-                        {{ gallery_image_formset.management_form }}
-
-                        <div class="grid grid-cols-2 lg:grid-cols-3 gap-6">
-                            {% for form in gallery_image_formset %}
-                                <div class="relative bg-slate-50 dark:bg-gray-700 rounded-xl border border-slate-200 dark:border-gray-600 p-4 shadow-sm hover:shadow-md transition-shadow">
-                                    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-
-                                    {% if form.instance.pk and form.instance.image %}
-                                        <div class="mb-4">
-                                            <div class="aspect-w-16 aspect-h-9 w-full overflow-hidden rounded-lg bg-gray-200 mb-2">
-                                                <img src="{{ form.instance.image.url }}" alt="Imagine galerie" class="h-32 w-full object-cover">
-                                            </div>
-
-                                            {% if gallery_image_formset.can_delete %}
-                                                <div class="flex items-center justify-between px-1">
-                                                    <span class="text-xs font-semibold text-slate-600 dark:text-gray-300">{% translate "Delete?" %}</span>
-                                                    {{ form.DELETE }}
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    {% else %}
-                                        <div class="mb-2 flex justify-center items-center h-32 bg-white dark:bg-gray-600 border-2 border-dashed border-slate-300 rounded-lg">
-                                            <span class="text-slate-400 text-xs">{% translate "Empty" %}</span>
-                                        </div>
-                                    {% endif %}
-
-                                    <div class="mt-2">
-                                        {{ form.image }}
-                                    </div>
-                                </div>
                             {% endfor %}
                         </div>
                     </div>
+                </div>
 
-                    <!-- Audio Greeting -->
-                    <div id="field-audio_greeting-container" class="mt-6 border-t pt-6">
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{% translate "Audio Message / Background Music" %}</label>
-                        <input type="file" name="audio_greeting" id="id_audio_greeting" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                <!-- STEP 2: INFO & PEOPLE -->
+                <div x-show="step === 2" x-cloak
+                     x-transition:enter="transition ease-out duration-400" x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:leave="transition ease-in duration-300" x-transition:leave-end="opacity-0 scale-95"
+                     class="space-y-8">
+                    
+                    <div class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-sm border border-gray-100 dark:border-gray-700 space-y-8">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center text-indigo-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </div>
+                            <h3 class="text-xl font-bold dark:text-white">{% translate "Primary Details" %}</h3>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div><label class="text-xs font-black uppercase text-gray-400">{% translate "Internal Title" %}</label>{% render_field form.title class="app-input mt-2" placeholder="..." required="required" %}</div>
+                            
+                            <div x-show="!isImageUpload()">
+                                <label class="text-xs font-black uppercase text-gray-400">{% translate "Event Date" %}</label>
+                                <input type="date" name="event_date" value="{{ form.event_date.value|date:'Y-m-d' }}" class="app-input mt-2" required @change="triggerPreview(true)">
+                            </div>
+
+                            <!-- Wedding Block -->
+                            <div x-show="isWedding()" class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                                    <div><label class="text-xs font-black uppercase tracking-widest text-indigo-400">{% translate "Bride" %}</label>{% render_field form.bride_name class="app-input mt-2" %}</div>
+                                    <div><label class="text-xs font-black uppercase tracking-widest text-indigo-400">{% translate "Groom" %}</label>{% render_field form.groom_name class="app-input mt-2" %}</div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t dark:border-gray-700">
+                                    <div><label class="text-xs font-black uppercase tracking-widest text-gray-400">{% translate "Bride's Parents" %}</label>{% render_field form.bride_parents class="app-input mt-2" %}</div>
+                                    <div><label class="text-xs font-black uppercase tracking-widest text-gray-400">{% translate "Groom's Parents" %}</label>{% render_field form.groom_parents class="app-input mt-2" %}</div>
+                                </div>
+                            </div>
+
+                            <!-- Baptism Block -->
+                            <div x-show="isBaptism()" class="space-y-6 pt-4">
+                                <div>
+                                    <label class="text-xs font-black uppercase tracking-widest text-indigo-400">{% translate "Child Name" %}</label>
+                                    {% render_field form.child_name class="app-input mt-2" %}
+                                </div>
+                                <div class="pt-4 border-t dark:border-gray-700">
+                                    <label class="text-xs font-black uppercase tracking-widest text-gray-400">{% translate "Parents' Names" %}</label>
+                                    {% render_field form.parents_names class="app-input mt-2" %}
+                                </div>
+                            </div>
+
+                            <div x-show="!isImageUpload()" class="pt-6 border-t dark:border-gray-700">
+                                <label class="text-xs font-black uppercase text-gray-400">{% translate "Invitation Text" %}</label>
+                                {% render_field form.invitation_wording rows="4" class="w-full p-5 rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white mt-2" %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Godparents (Only for Wedding/Baptism) -->
+                    <div x-show="!isImageUpload()" class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-sm border border-gray-100 dark:border-gray-700 space-y-6">
+                        <h3 class="text-xl font-bold dark:text-white">{% translate "Godparents" %}</h3>
+                        {{ godparent_formset.management_form }}
+                        <div id="godparents-formset-container" class="space-y-4">
+                            {% for g_form in godparent_formset %}
+                            <div class="godparents-form relative bg-gray-50 dark:bg-gray-900/50 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 group">
+                                {% for hidden in g_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <div class="hidden">{{ g_form.DELETE }}</div>
+                                <button type="button" class="delete-form-btn absolute -top-2 -right-2 w-10 h-10 bg-red-500 text-white rounded-full shadow-lg flex items-center justify-center transform active:scale-75 transition-all">&times;</button>
+                                {% render_field g_form.name class="app-input" placeholder="Name" %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-godparents-btn" class="w-full h-16 border-2 border-dashed border-indigo-200 rounded-[2rem] text-indigo-600 font-black text-xs uppercase tracking-widest">
+                            {% translate "+ Add Godparent" %}
+                        </button>
                     </div>
                 </div>
 
-                <!-- Main Invitation Image (Image Upload Only) -->
-                <div id="media-image-upload-section" class="hidden">
-                    <label class="block text-lg font-bold text-gray-900 dark:text-white mb-2">{% translate "Main Invitation Image" %}</label>
-                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition-colors bg-gray-50 dark:bg-gray-900">
-                        <div class="space-y-1 text-center">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            <div class="text-sm text-gray-600 dark:text-gray-400">
-                                <label for="id_main_invitation_image" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 px-2">
-                                    <span>{% translate "Upload image" %}</span>
-                                    {{ form.main_invitation_image }}
-                                </label>
+                <!-- STEP 3: LOCATIONS -->
+                <div x-show="step === 3" x-cloak class="space-y-8">
+                    <h2 class="text-2xl font-black dark:text-white">{% translate "Locations" %}</h2>
+                    <div class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-sm border border-gray-100 dark:border-gray-700 space-y-10">
+                        <div class="space-y-6">
+                            <h4 class="text-sm font-black uppercase text-indigo-500 tracking-widest">{% translate "Ceremony" %}</h4>
+                            {% render_field form.ceremony_location class="app-input" placeholder="Location Name" %}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input type="time" name="ceremony_time" value="{{ form.ceremony_time.value|date:'H:i' }}" class="app-input" @change="triggerPreview(true)">
+                                {% render_field form.ceremony_maps_url class="app-input" placeholder="Maps URL" %}
                             </div>
-                            <p class="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
-                            {% if object.main_invitation_image %}
-                                <div class="mt-4">
-                                    <p class="text-xs font-bold text-green-600">{% translate "Current Image:" %}</p>
-                                    <img src="{{ object.main_invitation_image.url }}" class="h-24 object-contain mx-auto rounded shadow-sm">
-                                </div>
-                            {% endif %}
+                        </div>
+                        
+                        <div class="pt-10 border-t dark:border-gray-700 space-y-6">
+                            <h4 class="text-sm font-black uppercase text-pink-500 tracking-widest">{% translate "Party" %}</h4>
+                            {% render_field form.venue_name class="app-input" placeholder="Venue Name" %}
+                            <input type="time" name="party_time" value="{{ form.party_time.value|date:'H:i' }}" class="app-input" @change="triggerPreview(true)">
+                            {% render_field form.venue_address class="app-input" placeholder="Address" %}
+                            {% render_field form.party_maps_url class="app-input" placeholder="Maps URL" %}
                         </div>
                     </div>
                 </div>
 
-            </div>
+                <!-- STEP 4: TIMELINE -->
+                <div x-show="step === 4" x-cloak class="space-y-12">
+                    <div class="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-700 space-y-6">
+                        <h3 class="text-xl font-bold dark:text-white">{% translate "Event Timeline" %}</h3>
+                        {{ schedule_item_formset.management_form }}
+                        <div id="schedule_items-formset-container" class="space-y-4">
+                            {% for s_form in schedule_item_formset %}
+                            <div class="schedule_items-form relative bg-gray-50 dark:bg-gray-900/50 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 group">
+                                {% for hidden in s_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <div class="hidden">{{ s_form.DELETE }}</div>
+                                <button type="button" class="delete-form-btn absolute -top-2 -right-2 w-10 h-10 bg-red-500 text-white rounded-full shadow-lg flex items-center justify-center transform active:scale-75 transition-all">&times;</button>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <input type="time" name="{{ s_form.time.html_name }}" value="{{ s_form.time.value|date:'H:i' }}" class="app-input" @change="triggerPreview(true)">
+                                    <div class="col-span-2">{% render_field s_form.activity_type class="app-input" %}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-schedule_items-btn" class="w-full h-16 border-2 border-dashed border-pink-200 rounded-[2rem] text-pink-600 font-black text-xs uppercase tracking-widest">
+                            {% translate "+ Add Timeline Item" %}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 5: MEDIA -->
+                <div x-show="step === 5" x-cloak class="space-y-10">
+                    <div class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-sm border border-gray-100 dark:border-gray-700 space-y-10">
+                        
+                        <!-- Couple Photo (Standard) -->
+                        <div x-show="!isImageUpload()" class="space-y-4">
+                            <label class="block text-xs font-black uppercase tracking-widest text-gray-400">{% translate "Main Cover Image" %}</label>
+                            <div class="relative aspect-video bg-gray-50 dark:bg-gray-900 rounded-[2.5rem] overflow-hidden border-2 border-dashed border-gray-200">
+                                <input type="file" name="couple_photo" class="absolute inset-0 opacity-0 cursor-pointer z-20" @change="handleFileUpload($event, 'couple_photo')">
+                                <template x-if="!previews.couple_photo">
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                                        <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <span class="text-[10px] font-black uppercase tracking-widest">Tap to Upload</span>
+                                    </div>
+                                </template>
+                                <div class="w-full h-full" x-show="previews.couple_photo">
+                                    <img :src="previews.couple_photo" class="w-full h-full object-cover">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Image Upload Only Field -->
+                        <div x-show="isImageUpload()" class="space-y-4">
+                            <label class="block text-xs font-black uppercase tracking-widest text-gray-400">{% translate "Full Invitation Image" %}</label>
+                            <div class="relative aspect-[3/4] bg-gray-50 dark:bg-gray-900 rounded-[2.5rem] overflow-hidden border-2 border-dashed border-gray-200">
+                                <input type="file" name="main_invitation_image" class="absolute inset-0 opacity-0 cursor-pointer z-20" @change="handleFileUpload($event, 'main_invitation_image')">
+                                <template x-if="!previews.main_invitation_image">
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                                        <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <span class="text-[10px] font-black uppercase tracking-widest">Upload Your Design</span>
+                                    </div>
+                                </template>
+                                <div class="w-full h-full" x-show="previews.main_invitation_image">
+                                    <img :src="previews.main_invitation_image" class="w-full h-full object-contain">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-10 border-t dark:border-gray-700">
+                            <label class="block text-xs font-black uppercase text-gray-400 tracking-widest mb-4">{% translate "Background Music" %}</label>
+                            <div class="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-[2rem] flex items-center gap-4">
+                                <div class="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                                </div>
+                                <div class="flex-1 overflow-hidden">{{ form.audio_greeting }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
 
-        <!-- ========================== STICKY FOOTER ACTIONS ========================== -->
-        <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 safe-area-bottom">
-            <div class="max-w-5xl mx-auto flex justify-between items-center gap-4">
-
-                <!-- Prev Button -->
-                <button type="button" id="prevBtn" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed hidden">
-                    {% translate "Back" %}
-                </button>
-
-                <!-- Center: Preview Button (MODIFICAT: Apare mereu) -->
-                <button type="button" id="live-preview-button" class="text-indigo-600 font-medium text-sm flex flex-col items-center justify-center p-2 rounded hover:bg-indigo-50">
-                    <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                    <span>{% translate "Preview" %}</span>
-                </button>
-
-                <!-- Next / Save Button -->
-                <button type="button" id="nextBtn" class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-indigo-700 transition-colors flex items-center justify-center">
-                    {% translate "Next" %}
-                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                </button>
-
-                <button type="submit" id="submitBtn" class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-green-700 transition-colors hidden items-center justify-center">
-                    {% translate "Save" %}
-                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                </button>
-
-            </div>
-        </div>
-
-    </form>
-</div>
-
-<!-- Preview Modal -->
-<div id="preview-modal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center">
-    <div id="modal-overlay" class="absolute inset-0 bg-gray-900/90 backdrop-blur-sm transition-opacity"></div>
-
-    <div class="relative bg-white dark:bg-gray-800 w-full h-full md:h-[90vh] md:w-[90vw] md:max-w-6xl md:rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-transform transform scale-100">
-
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                {% translate "Live Preview" %}
-            </h3>
-
-            <div class="flex items-center gap-2">
-                <button type="button" id="open-new-window-btn" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors" title="{% translate 'Open in new window' %}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                    <span class="hidden sm:inline">{% translate "Open Separately" %}</span>
-                </button>
-
-                <div class="h-6 w-px bg-gray-300 mx-1"></div>
-
-                <button type="button" id="close-preview-button" class="text-gray-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-all focus:outline-none">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <!-- RIGHT: PERSISTENT PREVIEW -->
+        <div class="hidden lg:block lg:col-span-5 xl:col-span-4">
+            <div class="sticky top-24">
+                <div class="relative mx-auto w-full max-w-[310px] h-[calc(100vh-200px)] min-h-[500px] preview-phone-frame bg-gray-900 rounded-[3rem] overflow-hidden border-[10px] border-gray-800">
+                    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-gray-800 rounded-b-2xl z-20"></div>
+                    <iframe id="persistent-preview-iframe" class="w-full h-full bg-white border-0" src="about:blank"></iframe>
+                    <div id="iframe-loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10 hidden">
+                        <svg class="animate-spin h-8 w-8 text-indigo-600" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </div>
+                </div>
+                <button type="button" onclick="runPreview()" class="mt-6 mx-auto flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-indigo-600 transition-all group">
+                    <svg class="w-3 h-3 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    {% translate "Refresh Preview" %}
                 </button>
             </div>
         </div>
+    </div>
 
-        <div class="flex-1 bg-gray-100 dark:bg-gray-900 relative w-full h-full">
-            <iframe id="preview-iframe" class="w-full h-full border-0 block" title="Invitation Preview"></iframe>
+    <!-- THE FLOATING ACTION PILL -->
+    <div class="fixed bottom-8 left-1/2 -translate-x-1/2 w-[94%] max-w-lg z-50 transition-all" 
+         :class="showMobilePreview ? 'opacity-0 pointer-events-none' : 'opacity-100' ">
+        <div class="glass-pill h-20 rounded-full px-4 flex items-center justify-between shadow-2xl">
+            
+            <button type="button" @click="prev()" x-show="step > 1" x-transition
+                    class="w-14 h-14 flex items-center justify-center text-gray-400 hover:text-gray-900 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+            <div x-show="step === 1" class="w-14 h-14"></div>
+
+            <div class="flex-1 px-4" x-show="!(isImageUpload() && step === 2)">
+                <button type="button" @click="next()" x-show="step < 5"
+                        :disabled="!stepValid"
+                        :class="stepValid ? 'bg-indigo-600 shadow-indigo-200' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed grayscale' "
+                        class="w-full h-14 rounded-full text-white font-black text-xs uppercase tracking-widest transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2">
+                    <span x-text="step === 4 ? '{% translate 'Final Step' %}' : '{% translate 'Next Step' %}'"></span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+                <button type="submit" form="event-form" x-show="step === 5"
+                        class="w-full h-14 rounded-full bg-green-600 text-white font-black text-xs uppercase tracking-widest shadow-xl active:scale-95">
+                    {% translate "Ready to Save" %}
+                </button>
+            </div>
+            
+            <!-- Quick Finish for Image Upload -->
+            <div class="flex-1 px-4" x-show="isImageUpload() && step === 2">
+                 <button type="button" @click="step = 5; validateStep();" class="w-full h-14 rounded-full bg-indigo-600 text-white font-black text-xs uppercase tracking-widest shadow-xl active:scale-95">
+                    {% translate "Go to Upload" %}
+                </button>
+            </div>
+
+            <button type="button" @click="openMobilePreview()" 
+                    class="lg:hidden w-14 h-14 flex items-center justify-center text-indigo-600 relative">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                <span class="absolute top-3 right-3 w-2 h-2 bg-indigo-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse"></span>
+            </button>
+            <div class="hidden lg:block w-14 h-14"></div>
+        </div>
+    </div>
+
+    <!-- FULLSCREEN MOBILE PREVIEW -->
+    <div x-show="showMobilePreview" x-cloak
+         x-transition:enter="transition ease-out duration-500" x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
+         x-transition:leave="transition ease-in duration-400" x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
+         class="fixed inset-0 z-[100] bg-white dark:bg-gray-900 flex flex-col lg:hidden">
+        <div class="p-5 border-b dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-xl">
+            <span class="text-[10px] font-black tracking-widest uppercase text-gray-400">{% translate "Live View" %}</span>
+            <button @click="showMobilePreview = false" class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-500">&times;</button>
+        </div>
+        <div class="flex-1 w-full bg-white relative">
+             <iframe id="preview-iframe" class="w-full h-full border-0"></iframe>
         </div>
     </div>
 </div>
 
-{% endblock %}
-
-{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+function eventWizard() {
+    return {
+        step: 1,
+        stepValid: false,
+        eventType: '',
+        showMobilePreview: false,
+        previews: { couple_photo: null, main_invitation_image: null },
+        previewTimer: null,
+        
+        init() {
+            this.eventType = document.getElementById('id_event_type')?.value || '';
+            this.handleTypeChange();
+            this.validateStep();
+            this.initFormset('godparents');
+            this.initFormset('schedule_items');
+            this.triggerPreview(true);
+        },
 
-        // --- WIZARD LOGIC ---
-        let currentStep = 1;
-        const totalSteps = 5;
-        const form = document.getElementById('event-form');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        const progressBar = document.getElementById('progress-bar');
-        const stepLabel = document.getElementById('current-step-label');
-        const stepIndicators = document.querySelectorAll('.step-indicator');
+        next() {
+            if (this.step < 5) {
+                // Skip logic for Image Upload
+                if (this.isImageUpload() && this.step === 2) { this.step = 5; }
+                else { this.step++; }
+                
+                this.validateStep();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                this.triggerPreview(true);
+            }
+        },
 
-        function showStep(step) {
-            document.querySelectorAll('.step-content').forEach(el => {
-                el.classList.remove('active');
-                if(parseInt(el.dataset.step) === step) {
-                    el.classList.add('active');
+        prev() {
+            if (this.step > 1) {
+                if (this.isImageUpload() && this.step === 5) { this.step = 2; }
+                else { this.step--; }
+                
+                this.validateStep();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        },
+
+        isWedding() {
+            const val = this.eventType.toLowerCase();
+            return val === 'wedding' || (!val.includes('botez') && val !== 'baptism' && val !== 'image_upload');
+        },
+        isBaptism() {
+            const val = this.eventType.toLowerCase();
+            return val.includes('botez') || val === 'baptism';
+        },
+        isImageUpload() {
+            return this.eventType === 'image_upload';
+        },
+
+        handleTypeChange() {
+            const val = this.eventType.toLowerCase();
+            document.querySelectorAll('.design-wrapper').forEach(opt => {
+                const type = opt.dataset.eventType || '';
+                opt.style.display = (type.includes(val) || val === '') ? 'block' : 'none';
+            });
+            this.validateStep();
+            this.triggerPreview(true);
+        },
+
+        validateStep() {
+            const currentStepEl = document.querySelector(`.step-content[data-step="${this.step}"]`);
+            if (!currentStepEl) { this.stepValid = true; return; }
+            const required = [...currentStepEl.querySelectorAll('input[required], select[required]')];
+            this.stepValid = required.every(i => {
+                if (i.type === 'radio') return document.querySelector(`input[name="${i.name}"]:checked`);
+                return i.value.trim() !== '';
+            });
+        },
+
+        handleFileUpload(e, key) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ex) => { this.previews[key] = ex.target.result; this.triggerPreview(true); };
+                reader.readAsDataURL(file);
+            }
+        },
+
+        openMobilePreview() {
+            this.showMobilePreview = true;
+            this.triggerPreview(true);
+        },
+
+        triggerPreview(immediate = false) {
+            clearTimeout(this.previewTimer);
+            if (immediate) { runPreview(); } 
+            else { this.previewTimer = setTimeout(() => runPreview(), 100); }
+        },
+
+        initFormset(prefix) {
+            const btn = document.getElementById(`add-${prefix}-btn`);
+            const container = document.getElementById(`${prefix}-formset-container`);
+            const total = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
+            const tpl = document.getElementById(`empty-${prefix}-form`)?.innerHTML;
+
+            btn?.addEventListener('click', () => {
+                const count = parseInt(total.value);
+                if (tpl) {
+                    container.insertAdjacentHTML('beforeend', tpl.replace(/__prefix__/g, count));
+                    total.value = count + 1;
+                    this.triggerPreview(true);
                 }
             });
 
-            // Update Buttons
-            if (step === 1) {
-                prevBtn.classList.add('hidden');
-            } else {
-                prevBtn.classList.remove('hidden');
-            }
-
-            if (step === totalSteps) {
-                nextBtn.classList.add('hidden');
-                submitBtn.classList.remove('hidden');
-                submitBtn.style.display = 'flex';
-            } else {
-                nextBtn.classList.remove('hidden');
-                submitBtn.classList.add('hidden');
-            }
-
-            // Update Progress
-            const percentage = (step / totalSteps) * 100;
-            progressBar.style.width = percentage + '%';
-            stepLabel.innerText = step;
-
-            // Highlight Step Labels
-            stepIndicators.forEach((lbl, idx) => {
-                if (idx + 1 === step) lbl.classList.add('text-indigo-600', 'font-bold');
-                else lbl.classList.remove('text-indigo-600', 'font-bold');
-            });
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        nextBtn.addEventListener('click', function() {
-            // Validare simplă HTML5 pentru pasul curent
-            const currentStepEl = document.querySelector(`.step-content[data-step="${currentStep}"]`);
-            // Selectam doar input-urile vizibile pentru validare
-            const inputs = currentStepEl.querySelectorAll('input:not(.hidden), select:not(.hidden), textarea:not(.hidden)');
-            let valid = true;
-            inputs.forEach(input => {
-                // Verificăm dacă elementul e vizibil (uneori clasa hidden e pe părinte)
-                if (input.offsetParent !== null && input.hasAttribute('required')) {
-                    if (!input.checkValidity()) {
-                        input.reportValidity();
-                        valid = false;
-                    }
+            container?.addEventListener('click', (e) => {
+                if (e.target.closest('.delete-form-btn')) {
+                    const row = e.target.closest(`.${prefix}-form`);
+                    const del = row.querySelector(`input[name$="-DELETE"]`);
+                    if (del) { del.checked = true; row.style.display = 'none'; }
+                    else row.remove();
+                    this.triggerPreview(true);
                 }
             });
-
-            if(valid) {
-                if (currentStep < totalSteps) {
-                    currentStep++;
-                    showStep(currentStep);
-                }
-            }
-        });
-
-        prevBtn.addEventListener('click', function() {
-            if (currentStep > 1) {
-                currentStep--;
-                showStep(currentStep);
-            }
-        });
-
-        // --- FORMSET LOGIC (Dynamic Add/Remove) ---
-        function setupFormset(prefix) {
-            const containerId = `${prefix}-formset-container`;
-            const container = document.getElementById(containerId);
-            if (!container) return;
-
-            const addButton = document.getElementById(`add-${prefix}-btn`);
-            const totalForms = document.querySelector(`#id_${prefix}-TOTAL_FORMS`);
-            const emptyFormTemplate = document.getElementById(`empty-${prefix}-form`).innerHTML;
-
-            // Delete Buttons Logic (Event Delegation)
-            container.addEventListener('click', function(e) {
-                const btn = e.target.closest('.delete-form-btn');
-                if (!btn) return;
-
-                const formRow = btn.closest(`.${prefix}-form`);
-                // Căutăm câmpul hidden DELETE generat de Django
-                const deleteInput = formRow.querySelector('input[name$="-DELETE"]');
-
-                if (deleteInput) {
-                    // Dacă e formular existent, bifăm DELETE și ascundem
-                    deleteInput.checked = true;
-                    formRow.style.display = 'none';
-                } else {
-                    // Dacă e formular nou dinamic, îl ștergem din DOM
-                    formRow.remove();
-                    let count = parseInt(totalForms.value);
-                    totalForms.value = count - 1;
-                }
-            });
-
-            // Add Button Logic
-            if(addButton){
-                addButton.addEventListener('click', function() {
-                    const count = parseInt(totalForms.value);
-                    const newFormHtml = emptyFormTemplate.replace(/__prefix__/g, count);
-
-                    const div = document.createElement('div');
-                    div.innerHTML = newFormHtml;
-
-                    container.appendChild(div.firstElementChild);
-                    totalForms.value = count + 1;
-                });
-            }
-        }
-
-        // Initialize Formsets (Numele trebuie să coincidă cu contextul din views.py)
-        setupFormset('godparents');
-        setupFormset('schedule_items');
-
-        // --- CONDITIONAL LOGIC (Filtering Designs & Fields) ---
-        const eventTypeInput = document.getElementById('id_event_type');
-
-        // --- Containers ---
-        // Names
-        const weddingNames = document.getElementById('wedding-names-container');
-        const baptismNames = document.getElementById('baptism-names-container');
-        // Parents
-        const weddingParents = document.getElementById('wedding-parents-container');
-        const baptismParents = document.getElementById('baptism-parents-container');
-        // Content
-        const textContent = document.getElementById('text-content-section');
-        const timeline = document.getElementById('timeline-section');
-        const godparents = document.getElementById('godparents-section');
-        // Media
-        const mediaWeddingBaptism = document.getElementById('media-wedding-baptism-section');
-        const mediaImageUpload = document.getElementById('media-image-upload-section');
-        // Labels
-        const coupleLabel = document.getElementById('label-couple-photo');
-
-        const designOptions = document.querySelectorAll('.design-wrapper');
-
-        function updateFormVisibility() {
-            const val = eventTypeInput.value.toLowerCase();
-
-            // Logică Tip Eveniment
-            if (val === 'image_upload') {
-                // 1. IMAGE UPLOAD ONLY
-                // Ascunde Nume, Parinti, Text, Timeline, Nasi, Media Standard
-                if(weddingNames) weddingNames.classList.add('hidden');
-                if(baptismNames) baptismNames.classList.add('hidden');
-                if(weddingParents) weddingParents.classList.add('hidden');
-                if(baptismParents) baptismParents.classList.add('hidden');
-                if(textContent) textContent.classList.add('hidden');
-                if(timeline) timeline.classList.add('hidden');
-                if(godparents) godparents.classList.add('hidden');
-                if(mediaWeddingBaptism) mediaWeddingBaptism.classList.add('hidden');
-
-                // Arată Media Image Upload
-                if(mediaImageUpload) mediaImageUpload.classList.remove('hidden');
-
-            } else if (val.includes('botez') || val === 'baptism') {
-                // 2. BOTEZ
-                // Arată Nume Copil, Părinți Botez, Media Standard (cu label modificat)
-                if(weddingNames) weddingNames.classList.add('hidden');
-                if(baptismNames) baptismNames.classList.remove('hidden');
-
-                if(weddingParents) weddingParents.classList.add('hidden');
-                if(baptismParents) baptismParents.classList.remove('hidden');
-
-                if(textContent) textContent.classList.remove('hidden');
-                if(timeline) timeline.classList.remove('hidden');
-                if(godparents) godparents.classList.remove('hidden');
-
-                if(mediaWeddingBaptism) mediaWeddingBaptism.classList.remove('hidden');
-                if(mediaImageUpload) mediaImageUpload.classList.add('hidden');
-
-                // Label Change
-                if(coupleLabel) coupleLabel.innerText = "{% translate 'Child/Family Photo' %}";
-
-            } else {
-                // 3. NUNTĂ (Default)
-                // Arată Nume Miri, Părinți Miri, Media Standard
-                if(weddingNames) weddingNames.classList.remove('hidden');
-                if(baptismNames) baptismNames.classList.add('hidden');
-
-                if(weddingParents) weddingParents.classList.remove('hidden');
-                if(baptismParents) baptismParents.classList.add('hidden');
-
-                if(textContent) textContent.classList.remove('hidden');
-                if(timeline) timeline.classList.remove('hidden');
-                if(godparents) godparents.classList.remove('hidden');
-
-                if(mediaWeddingBaptism) mediaWeddingBaptism.classList.remove('hidden');
-                if(mediaImageUpload) mediaImageUpload.classList.add('hidden');
-
-                // Label Change
-                if(coupleLabel) coupleLabel.innerText = "{% translate 'Main Photo (Couple)' %}";
-            }
-
-            // Filtrare Design-uri în funcție de tip
-            designOptions.forEach(opt => {
-                const designType = opt.dataset.eventType;
-                if (designType.includes(val) || val === '') {
-                    opt.style.display = 'block';
-                } else {
-                    opt.style.display = 'none';
-                }
-            });
-        }
-
-        if(eventTypeInput) {
-            eventTypeInput.addEventListener('change', updateFormVisibility);
-            updateFormVisibility(); // Inițializare la load
-        }
-
-// --- LIVE PREVIEW SCRIPT FINAL ---
-    const previewBtn = document.getElementById('live-preview-button');
-    const previewModal = document.getElementById('preview-modal');
-    const closePreviewBtn = document.getElementById('close-preview-button');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const newWindowBtn = document.getElementById('open-new-window-btn');
-    const previewIframe = document.getElementById('preview-iframe');
-    const csrfElement = document.querySelector('[name=csrfmiddlewaretoken]');
-    const csrfToken = csrfElement ? csrfElement.value : '';
-
-    // Funcții Modal
-    function openModal() {
-        if(previewModal) {
-            previewModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Blochează scroll spate
         }
     }
+}
 
-    function closeModal() {
-        if(previewModal) {
-            previewModal.classList.add('hidden');
-            document.body.style.overflow = '';
-            if(previewIframe) previewIframe.srcdoc = ''; // Resetăm conținutul
-        }
-    }
-
-    // --- LOGICA PRINCIPALĂ ---
-    if (previewBtn) {
-        previewBtn.addEventListener('click', async function(e) {
-            e.preventDefault();
-
-            // 1. UI Feedback
-            const originalBtnContent = previewBtn.innerHTML;
-            previewBtn.innerHTML = '<span class="animate-spin inline-block mr-2">↻</span> {% translate "Processing..." %}';
-            // Don't disable button here because autosave might trigger it repeatedly
-            // previewBtn.disabled = true;
-
-            const formData = {};
-            const formElements = document.getElementById('event-form').elements;
-            const promises = [];
-            const MAX_FILE_SIZE = 10 * 1024 * 1024; // Mărim limita la 10MB (pt video/audio)
-
-            // Funcție Helper citire fișier
-            const readFileAsDataURL = (file) => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-            };
-
-            // 2. Procesare Formular
-            for (const element of formElements) {
-                if (!element.name) continue;
-
-                // FIX CRITIC: Ignorăm câmpurile care sunt ASCUNSE (hidden)
-                // Asta previne trimiterea imaginii "couple_photo" când suntem pe "image_upload"
-                if (element.offsetParent === null && element.type !== 'hidden') {
-                    continue;
-                }
-
-                if (element.type === 'file') {
-                    // CAZUL A: UPLOAD NOU (Userul a ales un fișier acum)
-                    if (element.files && element.files.length > 0) {
-                        const file = element.files[0];
-                        if (file.size > MAX_FILE_SIZE) {
-                            alert(`Fișierul ${file.name} este prea mare (Max 10MB).`);
-                            previewBtn.innerHTML = originalBtnContent;
-                            // previewBtn.disabled = false;
-                            return;
-                        }
-                        // Transformăm în Base64 (Imagine, Audio sau Video)
-                        promises.push(readFileAsDataURL(file).then(data => formData[element.name] = data));
-                    }
-                    // CAZUL B: FIȘIER EXISTENT (Userul NU a schimbat fișierul)
-                    // --- AICI ESTE FIX-UL SPECIALISTULUI ---
-                    else {
-                        const container = element.closest('div');
-                        const existingLink = container ? container.querySelector('a[href]:not([href="#"])') : null;
-
-                        if (existingLink) {
-                            // Luăm calea din href (ex: /media/event_photos/poza.jpg)
-                            let rawPath = existingLink.getAttribute('href');
-
-                            if (rawPath) {
-                                rawPath = rawPath.trim(); // Curățăm spațiile
-
-                                // 1. E URL ABSOLUT (Cloudinary/S3)? Îl trimitem exact așa!
-                                if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
-                                    formData[element.name] = rawPath;
-                                }
-                                // 2. E URL LOCAL (Dev)? Curățăm /media/ pentru a nu-l dubla în backend
-                                else if (rawPath.includes('/media/')) {
-                                    // /media/invitation_images/poza.jpg -> invitation_images/poza.jpg
-                                    formData[element.name] = rawPath.replace('/media/', '');
-                                }
-                                // 3. Fallback: Trimitem calea brută
-                                else {
-                                    formData[element.name] = rawPath;
-                                }
-                            }
-                        }
-                    }
-                }
-                else if (element.type === 'radio' || element.type === 'checkbox') {
-                    // FIX CRITIC: Checkbox-urile trebuie verificate explicit!
-                    // Dacă trimitem valoarea 'on' pentru un checkbox nebifat (delete-uri in formset),
-                    // Django va crede că vrem să ștergem totul.
-                    if (element.checked) {
-                        formData[element.name] = element.value;
-                    }
-                }
-                else {
-                    formData[element.name] = element.value;
-                }
-            }
-
-            await Promise.all(promises);
-
-            // 3. Trimitere către Django
-            try {
-                const response = await fetch("{% url 'invapp:event_preview' %}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (!response.ok) throw new Error('Network error');
-
-                const htmlContent = await response.text();
-
-                // 4. Afișare
-                if(previewIframe) {
-                    previewIframe.srcdoc = htmlContent;
-                    openModal();
-                }
-
-            } catch (error) {
-                console.error(error);
-                // alert('Eroare la generare. Verifică consola.');
-            } finally {
-                previewBtn.innerHTML = originalBtnContent;
-                // previewBtn.disabled = false;
-            }
+async function runPreview() {
+    const form = document.getElementById('event-form');
+    const pIframe = document.getElementById('persistent-preview-iframe');
+    const mIframe = document.getElementById('preview-iframe');
+    const loader = document.getElementById('iframe-loader');
+    if (loader) loader.classList.remove('hidden');
+    const formData = new FormData(form);
+    const data = {};
+    for (let [k, v] of formData.entries()) { if (!(v instanceof File)) data[k] = v; }
+    try {
+        const res = await fetch("{% url 'invapp:event_preview' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(data)
         });
-    }
-
-    // Evenimente Închidere
-    if (closePreviewBtn) closePreviewBtn.addEventListener('click', closeModal);
-    if (modalOverlay) modalOverlay.addEventListener('click', closeModal);
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && previewModal && !previewModal.classList.contains('hidden')) {
-            closeModal();
-        }
-    });
-
-    // Eveniment Deschidere Tab Nou
-    if (newWindowBtn) {
-        newWindowBtn.addEventListener('click', () => {
-            const content = previewIframe.srcdoc;
-            if (!content) return alert("Generează întâi preview-ul!");
-
-            const newWin = window.open('', '_blank');
-            if (newWin) {
-                newWin.document.write(content);
-                newWin.document.close();
-            } else {
-                alert("Browserul a blocat fereastra nouă.");
-            }
-        });
-    }
-    });
+        const html = await res.text();
+        if (pIframe) pIframe.srcdoc = html;
+        if (mIframe) mIframe.srcdoc = html;
+    } catch (e) { } finally { if (loader) loader.classList.add('hidden'); }
+}
 </script>
+
+<template id="empty-godparents-form">
+    <div class="godparents-form relative bg-gray-50 dark:bg-gray-900/50 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 mt-4">
+        <button type="button" class="delete-form-btn absolute -top-2 -right-2 w-10 h-10 bg-red-500 text-white rounded-full flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        <input type="text" name="godparents-__prefix__-name" class="app-input" placeholder="Full Name">
+    </div>
+</template>
+
+<template id="empty-schedule_items-form">
+    <div class="schedule_items-form relative bg-gray-50 dark:bg-gray-900/50 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 mt-4">
+        <button type="button" class="delete-form-btn absolute -top-2 -right-2 w-10 h-10 bg-red-500 text-white rounded-full flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        <div class="grid grid-cols-3 gap-4">
+            <input type="time" name="schedule_items-__prefix__-time" class="app-input">
+            <input type="text" name="schedule_items-__prefix__-activity_type" class="app-input col-span-2" placeholder="Activity">
+        </div>
+    </div>
+</template>
 {% endblock %}

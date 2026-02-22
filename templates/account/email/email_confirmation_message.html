@@ -1,30 +1,29 @@
+{% load i18n %}
 <!DOCTYPE html>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Confirmare Cont</title>
+    <title>{% translate "Account Confirmation" %}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333333; background-color: #ffffff; padding: 20px;">
 
     <div style="max-width: 500px; margin: 0 auto;">
 
-        <!-- Salut Simplu -->
-        <p style="margin-bottom: 20px;">Salutare,</p>
+        <p style="margin-bottom: 20px;">{% translate "Hello," %}</p>
 
         <p style="margin-bottom: 20px;">
-            Îți mulțumim că te-ai înscris pe <strong>InvApp România</strong>. Te rugăm să confirmi adresa de email pentru a activa contul.
+            {% blocktrans %}Thank you for signing up on <strong>InvApp Romania</strong>. Please confirm your email address to activate your account.{% endblocktrans %}
         </p>
 
-        <!-- Link Clasic (Mai sigur pentru Spam Filters decât butoanele CSS complexe) -->
         <p style="margin-bottom: 25px;">
             <a href="{{ activate_url }}" style="background-color: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px; display: inline-block;">
-                Confirmă Contul
+                {% translate "Confirm Account" %}
             </a>
         </p>
 
         <p style="margin-bottom: 10px; font-size: 14px; color: #666;">
-            Dacă butonul de mai sus nu funcționează, poți accesa direct acest link:
+            {% translate "If the button above does not work, you can access this link directly:" %}
         </p>
 
         <p style="margin-bottom: 30px; word-break: break-all; font-size: 13px;">
@@ -34,8 +33,8 @@
         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
 
         <p style="font-size: 12px; color: #888;">
-            Acest mesaj a fost trimis automat. Te rugăm să nu răspunzi la acest email.<br>
-            © InvApp România
+            {% blocktrans %}This message was sent automatically. Please do not reply to this email.{% endblocktrans %}<br>
+            © InvApp Romania
         </p>
     </div>
 

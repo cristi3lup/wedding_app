@@ -2,14 +2,14 @@
 {% load i18n %}
 
 <!DOCTYPE html>
-<html lang="ro" class="h-full bg-gray-50">
+<html lang="en" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block head_title %}{% endblock %} | InvApp</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- Import Fonturi -->
+    <!-- Font Imports -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Montserrat', sans-serif; }
@@ -18,17 +18,17 @@
 </head>
 <body class="h-full relative">
 
-    <!-- FUNDAL CU IMAGINE BLURATĂ -->
+    <!-- BACKGROUND WITH BLURRED IMAGE -->
     <div class="absolute inset-0 z-0">
         <img src="{% static 'images/d21nkkse.png' %}" class="w-full h-full object-cover blur-md scale-105 opacity-60" alt="Background">
         <div class="absolute inset-0 bg-indigo-900/40 mix-blend-multiply"></div>
     </div>
 
-    <!-- CONȚINUT CENTRAL (MODAL LOOK) -->
+    <!-- CENTRAL CONTENT (MODAL LOOK) -->
     <div class="relative z-10 min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
-            <!-- Logo sau Titlu -->
+            <!-- Logo or Title -->
             <h2 class="text-center text-4xl font-serif font-bold text-white tracking-tight drop-shadow-lg mb-2">
                 InvApp
             </h2>
@@ -40,8 +40,8 @@
         <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
             <div class="bg-white py-8 px-4 shadow-2xl rounded-2xl sm:px-10 border border-gray-100 relative overflow-hidden">
 
-                <!-- TAB-URI SMART (Login vs Signup) -->
-                <!-- Folosim URL-ul curent pentru a decide care tab e activ -->
+                <!-- SMART TABS (Login vs Signup) -->
+                <!-- Use current URL to decide which tab is active -->
                 <div class="flex border-b border-gray-200 mb-6">
                     <a href="{% url 'account_login' %}"
                        class="w-1/2 text-center pb-3 text-sm font-medium transition-colors duration-200
@@ -63,12 +63,12 @@
                     </a>
                 </div>
 
-                <!-- ZONA DE CONȚINUT VARIABIL -->
+                <!-- VARIABLE CONTENT AREA -->
                 {% block auth_content %}{% endblock %}
 
             </div>
 
-            <!-- Link Înapoi -->
+            <!-- Back Link -->
             <div class="text-center mt-6">
                 <a href="/" class="text-sm font-medium text-black hover:text-indigo-200 transition-colors">
                     &larr; {% translate "Back to Homepage" %}

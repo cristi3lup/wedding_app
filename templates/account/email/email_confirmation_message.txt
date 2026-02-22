@@ -1,12 +1,13 @@
-Salutare!
+{% load i18n %}
+{% translate "Hello!" %}
 
-Îți mulțumim că te-ai alăturat platformei InvApp România!
+{% translate "Thank you for joining the InvApp Romania platform!" %}
 
-Pentru a activa contul și a începe să creezi invitații, te rugăm să confirmi adresa de email apăsând pe link-ul de mai jos:
+{% translate "To activate your account and start creating invitations, please confirm your email address by clicking the link below:" %}
 
 {{ activate_url }}
 
-Dacă nu ai solicitat acest cont, poți ignora acest mesaj.
+{% translate "If you did not request this account, you can ignore this message." %}
 
-Cu drag,
-Echipa InvApp
+{% translate "With love," %}
+{% translate "InvApp Team" %}

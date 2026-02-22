@@ -286,7 +286,7 @@
         <div class="container-custom">
             <h3 class="text-xl uppercase mb-8 text-gray-500 tracking-widest">{% translate "Until the big day" %}</h3>
             
-            <div class="countdown-grid" id="countdown" data-event-date="{{ event.date_time.isoformat }}">
+            <div class="countdown-grid" id="countdown" data-event-date="{{ event.event_date.isoformat }}">
                 <div class="time-block">
                     <span class="time-number" id="days">00</span>
                     <span class="time-label">{% translate "Days" %}</span>
@@ -327,7 +327,7 @@
         <div class="overlay"></div>
         <div class="parallax-content">
             <h3 class="uppercase tracking-[4px] text-sm mb-4">{% translate "Save The Date" %}</h3>
-            <h2>{{ event.date_time|date:"d . m . Y" }}</h2>
+            <h2>{{ event.event_date|date:"d . m . Y" }}</h2>
             <p class="mt-4">
                 {{ event.ceremony_time|default:"16:00" }} <br>
                 {{ event.venue_name|default:"Venue Name" }}<br>

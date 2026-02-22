@@ -300,7 +300,7 @@
         <!-- Slide 2: Date & Location -->
         <section class="py-16 px-6 bg-[#fbf9f6] text-center">
             <div class="inline-block border-y border-[#C5A059] py-2 px-8 mb-8">
-                <p class="font-serif text-3xl text-stone-800">{{ event.date_time|date:"l, F d, Y" }}</p>
+                <p class="font-serif text-3xl text-stone-800">{{ event.event_date|date:"l, F d, Y" }}</p>
             </div>
             
             <div class="space-y-6">
@@ -316,7 +316,7 @@
                 <div>
                     <div class="flex justify-center mb-2 text-[#C5A059]"><i data-lucide="wine" class="w-6 h-6"></i></div>
                     <h3 class="font-bold text-stone-800 uppercase tracking-wider text-sm">{% translate "Reception" %}</h3>
-                    <p class="font-serif text-lg">{{ event.date_time|time:"H:i" }}</p>
+                    <p class="font-serif text-lg">{{ event.party_time|time:"H:i" }}</p>
                     <p class="text-sm text-stone-500">{{ event.venue_name }}</p>
                     <p class="text-xs text-stone-400">{{ event.venue_address }}</p>
                 </div>

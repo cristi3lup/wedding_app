@@ -14,28 +14,28 @@ from cloudinary.models import CloudinaryField
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
 
 
-
 class SiteImage(models.Model):
     """
-    Imagini statice gestionabile din Admin (Hero, Logo, Bannere).
+    Static images manageable from Admin (Hero, Logo, Banners).
     """
     KEY_CHOICES = [
-        ('hero_bg', 'Hero Background (Landing)'),
-        ('logo_main', 'Logo Principal'),
-        ('feature_1', 'Imagine Feature 1'),
-        ('feature_2', 'Imagine Feature 2'),
-        ('feature_3', 'Imagine Feature 3'),
-        ('cta_bg', 'Call to Action Background'),
+        ('hero_bg', _('Hero Background (Landing)')),
+        ('logo_main', _('Primary Logo')),
+        ('feature_1', _('Feature Image 1')),
+        ('feature_2', _('Feature Image 2')),
+        ('feature_3', _('Feature Image 3')),
+        ('cta_bg', _('Call to Action Background')),
+        ('partner_promo', _('Partner Promotion (Culori)')),
     ]
 
     key = models.CharField(
         max_length=50,
         choices=KEY_CHOICES,
         unique=True,
-        help_text="Locul unde va apărea această imagine."
+        help_text=_("Where this image will appear.")
     )
-    image = models.ImageField(upload_to='site_assets/', help_text="Încarcă imaginea aici.")
-    description = models.CharField(max_length=200, blank=True, help_text="Descriere pentru Alt Text (SEO)")
+    image = models.ImageField(upload_to='site_assets/', help_text=_("Upload image here."))
+    description = models.CharField(max_length=200, blank=True, help_text=_("Description for Alt Text (SEO)"))
 
     def __str__(self):
         return self.get_key_display()
@@ -71,8 +71,8 @@ class Plan(models.Model):
     # Watermark Control
     show_watermark = models.BooleanField(
         default=True,
-        verbose_name="Show Watermark",
-        help_text="If is checked, invites from these plan will have watermark."
+        verbose_name=_("Show Watermark"),
+        help_text=_("If checked, invites from this plan will have a watermark.")
     )
 
     icon_svg_path = models.TextField(
@@ -102,20 +102,20 @@ class Plan(models.Model):
         return self.name
 
 
-# === NEW: Plan Features (pentru lista din Pricing) ===
+# === NEW: Plan Features (for Pricing list) ===
 class PlanFeature(models.Model):
     plan = models.ForeignKey(Plan, related_name='features', on_delete=models.CASCADE)
-    text_ro = models.CharField(max_length=255, verbose_name="Text Funcționalitate (RO)")
-    text_en = models.CharField(max_length=255, verbose_name="Text Funcționalitate (EN)", blank=True)
+    text_ro = models.CharField(max_length=255, verbose_name=_("Feature Text (RO)"))
+    text_en = models.CharField(max_length=255, verbose_name=_("Feature Text (EN)"), blank=True)
 
     is_included = models.BooleanField(
         default=True,
-        help_text=_("Dacă este bifat, apare cu verde (inclus). Dacă nu, apare tăiat sau gri.")
+        help_text=_("If checked, it appears in green (included). If not, it appears struck through or gray.")
     )
 
     order = models.PositiveIntegerField(
         default=0,
-        help_text=_("Ordinea de afișare în listă.")
+        help_text=_("Display order in the list.")
     )
 
     class Meta:
@@ -167,7 +167,7 @@ class CardDesign(models.Model):
         help_text=_("Path to preview image in static files (Legacy)")
     )
 
-    # --- FIX 1: Adăugat ImageField pentru Upload din Admin ---
+    # --- ImageField for Admin Upload ---
     preview_image = models.ImageField(
         upload_to='design_previews/',
         blank=True,
@@ -209,7 +209,7 @@ class CardDesign(models.Model):
         help_text=_("If unchecked, this design is hidden from the public gallery.")
     )
 
-    # --- FIX 2: Adăugat is_active pentru Admin ---
+    # --- is_active for Admin control ---
     is_active = models.BooleanField(
         default=True,
         help_text=_("Admin control: Uncheck to soft-delete/hide this design everywhere.")
@@ -502,6 +502,14 @@ class Guest(models.Model):
         help_text=_("Unique identifier for the guest's invitation link")
     )
 
+    preferred_language = models.CharField(
+        max_length=5,
+        choices=settings.LANGUAGES,
+        default='ro',
+        verbose_name=_("Preferred Language"),
+        help_text=_("The language in which the guest will see the digital invitation.")
+    )
+
     # Property to get definitive attending count
     @property
     def is_attending(self):
@@ -620,26 +628,26 @@ class UserProfile(models.Model):
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def ensure_profile_exists(sender, instance, created, **kwargs):
     """
-    Această funcție rulează la ORICE salvare a userului (Sign Up Email, Google Login, sau doar Update).
-    Garantează că userul are Profil și Plan.
+    This function runs on EVERY user save (Sign Up Email, Google Login, or just Update).
+    Guarantees that the user has a Profile and a Plan.
     """
-    # 1. Încercăm să luăm profilul sau să îl creăm dacă nu există (Safe & Self-Healing)
+    # 1. Try to get the profile or create it if it doesn't exist (Safe & Self-Healing)
     profile, newly_created = UserProfile.objects.get_or_create(user=instance)
 
-    # 2. Dacă profilul a fost creat ACUM (sau exista dar nu avea plan setat)
+    # 2. If the profile was created NOW (or existed but had no plan set)
     if newly_created or profile.plan is None:
-        # Căutăm planul Free
+        # Search for Free plan
         default_plan = Plan.objects.filter(price=0).first()
 
-        # Fallback: Dacă nu există plan Free, luăm primul plan din bază
+        # Fallback: If no Free plan exists, take the first plan in the database
         if not default_plan:
             default_plan = Plan.objects.first()
 
-        # Atribuim planul și salvăm
+        # Assign plan and save
         if default_plan:
             profile.plan = default_plan
             profile.save()
-            print(f"DEBUG: Planul '{default_plan.name}' a fost alocat userului {instance.username}")
+            print(f"DEBUG: Plan '{default_plan.name}' was allocated to user {instance.username}")
 
 
 # === NEW: Godparent Model                   ===
@@ -697,27 +705,27 @@ class ScheduleItem(models.Model):
 
 
 class FAQ(models.Model):
-    # --- Versiunea în Română (Default) ---
-    question = models.CharField(max_length=255, verbose_name="Întrebare (RO)")
-    answer = models.TextField(verbose_name="Răspuns (RO)")
+    # --- English Version (Default) ---
+    question = models.CharField(max_length=255, verbose_name=_("Question (EN)"))
+    answer = models.TextField(verbose_name=_("Answer (EN)"))
 
-    # --- Versiunea în Engleză (NOU) ---
-    question_en = models.CharField(max_length=255, blank=True, verbose_name="Question (EN)")
-    answer_en = models.TextField(blank=True, verbose_name="Answer (EN)")
+    # --- Romanian Version ---
+    question_ro = models.CharField(max_length=255, blank=True, verbose_name=_("Question (RO)"))
+    answer_ro = models.TextField(blank=True, verbose_name=_("Answer (RO)"))
 
-    order = models.PositiveIntegerField(default=0, help_text="Ordinea de afișare")
+    order = models.PositiveIntegerField(default=0, help_text=_("Display order"))
     is_visible = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['order']
-        verbose_name = "FAQ Item"
+        verbose_name = _("FAQ Item")
 
     def __str__(self):
         return self.question
 
 
 class Testimonial(models.Model):
-    # Legăm de user pentru a preveni spam-ul (un review per user)
+    # Link to user to prevent spam (one review per user)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -726,55 +734,55 @@ class Testimonial(models.Model):
         related_name='testimonial'
     )
 
-    # Păstrăm client_name ca string pentru a-l putea edita manual dacă e nevoie
-    # (sau dacă userul își șterge contul, review-ul rămâne cu nume)
-    client_name = models.CharField(max_length=100, verbose_name="Nume Client")
+    # Keep client_name as string to edit manually if needed
+    # (or if user deletes account, review remains with name)
+    client_name = models.CharField(max_length=100, verbose_name=_("Client Name"))
 
-    # Avatar opțional (dacă vrem să preluăm poza de profil în viitor)
+    # Optional avatar (if we want to pull profile photo in future)
     avatar_url = models.URLField(blank=True, null=True)
 
-    text = models.TextField(blank=True, verbose_name="Mesaj (Opțional)")
+    text = models.TextField(blank=True, verbose_name=_("Message (Optional)"))
 
     rating = models.PositiveIntegerField(
         default=5,
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Număr stele (1-5)"
+        help_text=_("Star rating (1-5)")
     )
 
-    is_featured = models.BooleanField(default=False, help_text="Apare pe prima pagină?")
-    is_active = models.BooleanField(default=True, help_text="Este vizibil public?")
+    is_featured = models.BooleanField(default=False, help_text=_("Appears on home page?"))
+    is_active = models.BooleanField(default=True, help_text=_("Is visible publicly?"))
     created_at = models.DateTimeField(auto_now_add=True)
 
     PROVIDER_CHOICES = [
-        ('email', 'Email'),
-        ('google', 'Google'),
-        ('facebook', 'Facebook'),
+        ('email', _('Email')),
+        ('google', _('Google')),
+        ('facebook', _('Facebook')),
     ]
     social_provider = models.CharField(
         max_length=20,
         choices=PROVIDER_CHOICES,
         default='email',
-        verbose_name="Sursa Review"
+        verbose_name=_("Review Source")
     )
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = "Review Client"
-        verbose_name_plural = "Reviews Clienți"
+        verbose_name = _("Customer Review")
+        verbose_name_plural = _("Customer Reviews")
 
     def __str__(self):
         return f"{self.client_name} ({self.social_provider}) - {self.rating}★"
 
 
-# === NEW: Dynamic About Section (Bilingv) ===
+# === NEW: Dynamic About Section (Bilingual) ===
 class AboutSection(models.Model):
-    # Câmpuri Română (Default)
-    title_ro = models.CharField(max_length=200, default="Creat cu Dragoste", verbose_name="Titlu (RO)")
-    description_ro = models.TextField(verbose_name="Descriere (RO)", help_text="Textul principal în Română.")
+    # English Fields (Default)
+    title_en = models.CharField(max_length=200, default=_("Crafted with Love"), verbose_name=_("Title (EN)"))
+    description_en = models.TextField(verbose_name=_("Description (EN)"), help_text=_("Main text in English."))
 
-    # Câmpuri Engleză
-    title_en = models.CharField(max_length=200, default="Crafted with Love", verbose_name="Titlu (EN)", blank=True)
-    description_en = models.TextField(verbose_name="Descriere (EN)", help_text="Textul principal în Engleză.",
+    # Romanian Fields
+    title_ro = models.CharField(max_length=200, default=_("Creat cu Dragoste"), verbose_name=_("Title (RO)"), blank=True)
+    description_ro = models.TextField(verbose_name=_("Description (RO)"), help_text=_("Main text in Romanian."),
                                       blank=True)
 
     icon_svg_path = models.TextField(
@@ -795,29 +803,28 @@ class AboutSection(models.Model):
     @property
     def title(self):
         if get_language() == 'ro':
-            return self.title_ro
-        return self.title_en or self.title_ro  # Fallback la RO dacă EN e gol
+            return self.title_ro or self.title_en
+        return self.title_en
 
     @property
     def description(self):
         if get_language() == 'ro':
-            return self.description_ro
-        return self.description_en or self.description_ro
+            return self.description_ro or self.description_en
+        return self.description_en
 
     def __str__(self):
-        return f"About Section: {self.title_ro}"
+        return f"About Section: {self.title_en}"
 
 
-# === NEW: Future Features / Roadmap (Bilingv) ===
-# === NEW: Future Features / Roadmap (Bilingv + Icon) ===
+# === NEW: Future Features / Roadmap (Bilingual) ===
 class FutureFeature(models.Model):
-    # Câmpuri Română
-    title_ro = models.CharField(max_length=200, verbose_name="Titlu Funcționalitate (RO)")
-    description_ro = models.TextField(blank=True, verbose_name="Descriere Scurtă (RO)")
+    # English Fields (Default)
+    title_en = models.CharField(max_length=200, verbose_name=_("Feature Title (EN)"))
+    description_en = models.TextField(blank=True, verbose_name=_("Short Description (EN)"))
 
-    # Câmpuri Engleză
-    title_en = models.CharField(max_length=200, verbose_name="Titlu Funcționalitate (EN)", blank=True)
-    description_en = models.TextField(blank=True, verbose_name="Descriere Scurtă (EN)")
+    # Romanian Fields
+    title_ro = models.CharField(max_length=200, verbose_name=_("Feature Title (RO)"), blank=True)
+    description_ro = models.TextField(blank=True, verbose_name=_("Short Description (RO)"))
 
     # --- UPDATED: Icon SVG & Color ---
     icon_svg_path = models.TextField(
@@ -850,33 +857,33 @@ class FutureFeature(models.Model):
     @property
     def title(self):
         if get_language() == 'ro':
-            return self.title_ro
-        return self.title_en or self.title_ro
+            return self.title_ro or self.title_en
+        return self.title_en
 
     @property
     def description(self):
         if get_language() == 'ro':
-            return self.description_ro
-        return self.description_en or self.description_ro
+            return self.description_ro or self.description_en
+        return self.description_en
 
     def __str__(self):
-        return self.title_ro
+        return self.title_en
 
 
 class GalleryImage(models.Model):
-    # Presupun că modelul tău principal se numește 'Event' sau 'Invitation'
+    # Presupposing your main model is named 'Event'
     event = models.ForeignKey(
         'Event',
         on_delete=models.CASCADE,
-        related_name='gallery_images'  # Important pentru template
+        related_name='gallery_images'  # Important for template
     )
-    image = CloudinaryField('image', folder='invapp_gallery', help_text="Format recomandat: JPG/PNG. Maxim 5MB.")
+    image = CloudinaryField('image', folder='invapp_gallery', help_text=_("Recommended format: JPG/PNG. Maximum 5MB."))
 
     def save(self, *args, **kwargs):
-        # PROTECȚIE: Dacă e instanță nouă (fără ID) și limita e atinsă
+        # PROTECTION: If new instance (no ID) and limit is reached
         if not self.pk and self.event.gallery_images.count() >= 6:
-            raise ValidationError("Limita de 6 fotografii pentru acest pachet a fost atinsă.")
+            raise ValidationError(_("The limit of 6 photos for this package has been reached."))
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Imagine pentru {self.event}"
+        return f"Image for {self.event}"
