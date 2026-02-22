@@ -1,18 +1,18 @@
 <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md">
 
-    <!-- Butonul Întrebare -->
-    <!-- Folosim ID-ul unic al întrebării (faq.id) pentru a ști care este deschisă -->
+    <!-- Question Button -->
+    <!-- Use unique question ID (faq.id) to track which one is open -->
     <button
         @click="active = (active === {{ faq.id }} ? null : {{ faq.id }})"
         class="w-full flex justify-between items-center px-6 py-5 text-left focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-700 transition duration-150 ease-in-out"
         :aria-expanded="active === {{ faq.id }}"
     >
-        <!-- Aici afișăm întrebarea (tradusă sau originală) -->
+        <!-- Display question (translated or original) -->
         <span class="text-lg font-medium text-gray-900 dark:text-gray-100 pr-8">
             {{ q_text }}
         </span>
 
-        <!-- Iconița Plus/X cu animație de rotire -->
+        <!-- Plus/X Icon with rotation animation -->
         <span class="flex-shrink-0 ml-2">
             <svg class="h-6 w-6 text-indigo-500 transform transition-transform duration-300"
                  :class="{ 'rotate-45': active === {{ faq.id }} }"
@@ -22,14 +22,14 @@
         </span>
     </button>
 
-    <!-- Container Răspuns (Slide Down Effect) -->
+    <!-- Answer Container (Slide Down Effect) -->
     <div
         x-show="active === {{ faq.id }}"
         x-collapse
         x-cloak
         class="border-t border-gray-100 dark:border-gray-700"
     >
-        <!-- Aici afișăm răspunsul (tradus sau original) -->
+        <!-- Display answer (translated or original) -->
         <div class="px-6 pb-5 pt-4 text-base text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/30 prose dark:prose-invert max-w-none">
             {{ a_text|linebreaks }}
         </div>

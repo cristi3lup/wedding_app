@@ -1,3 +1,4 @@
+from django.conf import settings
 from .models import UserProfile, SiteImage
 
 
@@ -21,12 +22,12 @@ def add_active_plan_to_context(request):
 
 def site_assets(request):
     """
-    Face imaginile din SiteImage disponibile în toate template-urile
-    sub variabila {{ site_images.cheie }}.
-    Exemplu utilizare: {{ site_images.hero_bg.url }}
+    Makes images from SiteImage available in all templates
+    under the {{ site_images.key }} variable.
+    Usage Example: {{ site_images.hero_bg.url }}
     """
     try:
-        # Încercăm să preluăm imaginile doar dacă tabelul există
+        # Try to fetch images only if the table exists
         images = SiteImage.objects.all()
         images_dict = {}
 
@@ -36,6 +37,16 @@ def site_assets(request):
 
         return {'site_images': images_dict}
     except Exception:
-        # Dacă apare o eroare (ex: încă nu s-a făcut migrarea), returnăm un dict gol
-        # pentru a nu bloca tot site-ul.
+        # If an error occurs (e.g., migration not yet applied), return an empty dict
+        # to avoid blocking the entire site.
         return {'site_images': {}}
+
+
+def seo_settings(request):
+    """
+    Exposes Google SEO and Analytics IDs to all templates.
+    """
+    return {
+        'GOOGLE_SITE_VERIFICATION': getattr(settings, 'GOOGLE_SITE_VERIFICATION', ''),
+        'GA_MEASUREMENT_ID': getattr(settings, 'GA_MEASUREMENT_ID', ''),
+    }

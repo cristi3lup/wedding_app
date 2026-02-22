@@ -99,12 +99,9 @@
 {% endblock %}
 
 {% block content %}
-<!-- x-data handles Menu and RSVP Modal -->
 <div x-data="{ menuOpen: false, rsvpOpen: false }" class="relative min-h-screen pb-20">
 
-    <!-- ========================================== -->
-    <!-- === DECORATIVE BACKGROUND ELEMENTS     === -->
-    <!-- ========================================== -->
+    <!-- Decorative Background Elements -->
     <div class="fixed inset-0 pointer-events-none z-0">
         <!-- Random Stars -->
         <div class="absolute top-[10%] left-[15%] w-1 h-1 bg-white rounded-full star-anim" style="animation-delay: 0s;"></div>
@@ -119,7 +116,7 @@
             {{ event.bride_name|first|default:'M' }} & {{ event.groom_name|first|default:'A' }}
         </div>
         <button @click="menuOpen = true" class="p-2 text-gold-accent rounded-md hover:bg-white/5 focus:outline-none">
-            <span class="sr-only">Open Menu</span>
+            <span class="sr-only">{% translate "Open Menu" %}</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16m-7 6h7" /></svg>
         </button>
     </header>
@@ -140,9 +137,9 @@
         </button>
 
         <nav class="text-center space-y-10">
-            <a @click="menuOpen = false" href="#home" class="block text-4xl font-display text-white hover:text-gold-accent transition-colors duration-300">{% translate "Acasă" %}</a>
-            <a @click="menuOpen = false" href="#details" class="block text-4xl font-display text-white hover:text-gold-accent transition-colors duration-300">{% translate "Detaii" %}</a>
-            <a @click="menuOpen = false" href="#timeline" class="block text-4xl font-display text-white hover:text-gold-accent transition-colors duration-300">{% translate "Evenimente" %}</a>
+            <a @click="menuOpen = false" href="#home" class="block text-4xl font-display text-white hover:text-gold-accent transition-colors duration-300">{% translate "Home" %}</a>
+            <a @click="menuOpen = false" href="#details" class="block text-4xl font-display text-white hover:text-gold-accent transition-colors duration-300">{% translate "Details" %}</a>
+            <a @click="menuOpen = false" href="#timeline" class="block text-4xl font-display text-white hover:text-gold-accent transition-colors duration-300">{% translate "Events" %}</a>
             {% if not is_preview %}
             <button @click="menuOpen = false; rsvpOpen = true" class="block text-4xl font-display w-full text-gold-accent hover:text-white transition-colors duration-300">{% translate "RSVP" %}</button>
             {% endif %}
@@ -164,7 +161,7 @@
                 {% endif %}
 
                 <div class="celestial-card p-8 md:p-12">
-                    <p class="text-sm uppercase tracking-[0.3em] text-gray-300 mb-4">{{ event.invitation_wording|default:"Împreună cu stelele" }}</p>
+                    <p class="text-sm uppercase tracking-[0.3em] text-gray-300 mb-4">{{ event.invitation_wording|default:_("Together with the Stars") }}</p>
 
                     <h1 class="font-display text-5xl sm:text-7xl text-gold-accent leading-tight mb-6">
                         {{ event.bride_name|default:"Maria" }}<br>
@@ -181,18 +178,18 @@
 
                     <div class="grid grid-cols-2 gap-8 text-sm text-gray-300">
                         <div>
-                            <p class="uppercase tracking-widest text-gold-accent text-xs mb-1">{% translate "Părinții miresei" %}</p>
+                            <p class="uppercase tracking-widest text-gold-accent text-xs mb-1">{% translate "Bride's Parents" %}</p>
                             <p class="font-serif text-lg">{{ event.bride_parents }}</p>
                         </div>
                         <div>
-                            <p class="uppercase tracking-widest text-gold-accent text-xs mb-1">{% translate "Părinții mirelui" %}</p>
+                            <p class="uppercase tracking-widest text-gold-accent text-xs mb-1">{% translate "Groom's Parents" %}</p>
                             <p class="font-serif text-lg">{{ event.groom_parents }}</p>
                         </div>
                     </div>
 
                     {% if event.godparents.all %}
                     <div class="mt-8 pt-8 border-t border-white/10">
-                        <p class="uppercase tracking-widest text-gold-accent text-xs mb-2">{% translate "Nașii" %}</p>
+                        <p class="uppercase tracking-widest text-gold-accent text-xs mb-2">{% translate "Godparents" %}</p>
                         {% for gp in event.godparents.all %}
                             <p class="font-serif text-lg">{{ gp.name }}</p>
                         {% endfor %}
@@ -211,23 +208,23 @@
             {% if event.event_date %}
             <section id="countdown-timer" class="reveal"
                      data-event-date="{{ event.event_date|date:'Y-m-d' }}T{% if event.party_time %}{{ event.party_time|time:'H:i:s' }}{% elif event.ceremony_time %}{{ event.ceremony_time|time:'H:i:s' }}{% else %}00:00:00{% endif %}">
-                <h2 class="font-display text-2xl text-gold-accent mb-6">{% translate "Până la alinierea stelelor" %}</h2>
+                <h2 class="font-display text-2xl text-gold-accent mb-6">{% translate "Until the alignment of the stars" %}</h2>
                 <div class="grid grid-cols-4 gap-4 max-w-md mx-auto">
                     <div class="celestial-card p-4">
                         <p id="days" class="text-3xl font-display text-white">00</p>
-                        <p class="text-[10px] uppercase tracking-widest text-gray-400">Days</p>
+                        <p class="text-[10px] uppercase tracking-widest text-gray-400">{% translate "Days" %}</p>
                     </div>
                     <div class="celestial-card p-4">
                         <p id="hours" class="text-3xl font-display text-white">00</p>
-                        <p class="text-[10px] uppercase tracking-widest text-gray-400">Hrs</p>
+                        <p class="text-[10px] uppercase tracking-widest text-gray-400">{% translate "Hours" %}</p>
                     </div>
                     <div class="celestial-card p-4">
                         <p id="minutes" class="text-3xl font-display text-white">00</p>
-                        <p class="text-[10px] uppercase tracking-widest text-gray-400">Min</p>
+                        <p class="text-[10px] uppercase tracking-widest text-gray-400">{% translate "Min" %}</p>
                     </div>
                     <div class="celestial-card p-4">
                         <p id="seconds" class="text-3xl font-display text-white">00</p>
-                        <p class="text-[10px] uppercase tracking-widest text-gray-400">Sec</p>
+                        <p class="text-[10px] uppercase tracking-widest text-gray-400">{% translate "Sec" %}</p>
                     </div>
                 </div>
             </section>
@@ -238,14 +235,14 @@
                 <div class="celestial-card p-8 relative overflow-hidden group">
                     <div class="absolute -right-10 -top-10 w-32 h-32 bg-gold-accent/10 rounded-full blur-3xl group-hover:bg-gold-accent/20 transition-colors"></div>
 
-                    <h2 class="font-display text-3xl text-gold-accent mb-6">{% translate "Cununia religioasă" %}</h2>
+                    <h2 class="font-display text-3xl text-gold-accent mb-6">{% translate "Religious Ceremony" %}</h2>
                     <div class="space-y-2">
                         <p class="text-2xl font-serif text-white">{{ event.ceremony_time|time:"H:i" }}</p>
-                        <p class="text-lg text-gray-300">{{ event.ceremony_location|default:"Locația cununiei" }}</p>
+                        <p class="text-lg text-gray-300">{{ event.ceremony_location|default:_("Ceremony Location") }}</p>
                     </div>
                     {% if event.ceremony_maps_url %}
                         <a href="{{ event.ceremony_maps_url }}" target="_blank" class="inline-block mt-6 px-6 py-2 border border-gold-accent text-gold-accent text-xs uppercase tracking-widest hover:bg-gold-accent hover:text-black transition-colors">
-                            {% translate "Spre cununie" %}
+                            {% translate "View Ceremony" %}
                         </a>
                     {% endif %}
                 </div>
@@ -253,7 +250,7 @@
                 <div class="celestial-card p-8 relative overflow-hidden group">
                     <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-gold-accent/10 rounded-full blur-3xl group-hover:bg-gold-accent/20 transition-colors"></div>
 
-                    <h2 class="font-display text-3xl text-gold-accent mb-6">{% translate "Petrecerea" %}</h2>
+                    <h2 class="font-display text-3xl text-gold-accent mb-6">{% translate "The Celebration" %}</h2>
                     <div class="space-y-2">
                         <p class="text-2xl font-serif text-white">{{ event.party_time|time:"H:i" }}</p>
                         <p class="text-lg font-bold text-white">{{ event.venue_name }}</p>
@@ -261,7 +258,7 @@
                     </div>
                     {% if event.party_maps_url %}
                         <a href="{{ event.party_maps_url }}" target="_blank" class="inline-block mt-6 px-6 py-2 border border-gold-accent text-gold-accent text-xs uppercase tracking-widest hover:bg-gold-accent hover:text-black transition-colors">
-                            {% translate "Spre petrecere" %}
+                            {% translate "View Party" %}
                         </a>
                     {% endif %}
                 </div>
@@ -270,7 +267,7 @@
             <!-- Timeline -->
             {% if event.schedule_details %}
             <section id="timeline" class="celestial-card p-8 reveal">
-                <h2 class="font-display text-3xl text-gold-accent mb-8">{% translate "Cronologia constelațiilor" %}</h2>
+                <h2 class="font-display text-3xl text-gold-accent mb-8">{% translate "Constellation Timeline" %}</h2>
                 <div class="text-left max-w-md mx-auto space-y-6 font-serif text-lg text-gray-300 border-l border-white/10 pl-6 ml-4">
                     {{ event.schedule_details|linebreaks }}
                 </div>
@@ -281,7 +278,7 @@
             {% if not is_preview %}
             <div class="fixed bottom-6 left-0 right-0 flex justify-center z-40 px-4">
                 <button @click="rsvpOpen = true" class="btn-celestial py-4 px-8 rounded-full flex items-center gap-2 w-full max-w-xs justify-center">
-                    <span>{% translate "Confirmare" %}</span>
+                    <span>{% translate "Confirmation" %}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
                 </button>
             </div>
@@ -290,19 +287,16 @@
         </div>
     </main>
 
-    <!-- ============================================== -->
-    <!-- === RSVP MODAL (Fixed Overlay)             === -->
-    <!-- ============================================== -->
+    <!-- RSVP MODAL -->
     {% if not is_preview %}
-    <div x-show="rsvpOpen"
+    <div x-show="rsvpOpen" x-cloak
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 translate-y-10"
          x-transition:enter-end="opacity-100 translate-y-0"
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 translate-y-10"
-         class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/80 backdrop-blur-sm"
-         style="display: none;">
+         class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/80 backdrop-blur-sm">
 
         <div @click.away="rsvpOpen = false" class="celestial-card w-full max-w-md p-8 relative overflow-y-auto max-h-[85vh]">
             <button @click="rsvpOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-white">
@@ -310,7 +304,7 @@
             </button>
 
             <h3 class="text-3xl font-display text-center mb-2 text-gold-accent">{% translate "RSVP" %}</h3>
-            <p class="text-center text-sm text-gray-400 mb-6">{% translate "Vă rugăm să răspundeți până la data " %} {{ event.event_date|date:"d M Y" }}</p>
+            <p class="text-center text-sm text-gray-400 mb-6">{% translate "Please respond by" %} {{ event.event_date|date:"d M Y" }}</p>
 
             <form id="rsvp-form" method="POST"
                   action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}"
@@ -319,7 +313,7 @@
                 {% csrf_token %}
 
                 <div class="text-center mb-6 pb-6 border-b border-white/10">
-                    <label class="block text-xs font-bold uppercase tracking-widest mb-4 text-gold-accent">{% translate "Veți participa?" %}</label>
+                    <label class="block text-xs font-bold uppercase tracking-widest mb-4 text-gold-accent">{% translate "Will you attend?" %}</label>
                     <div class="flex justify-center gap-6">
                         {% for radio in form.attending %}
                             <div class="flex items-center gap-2">
@@ -332,23 +326,23 @@
 
                 <div id="attending_details" style="display: none;" class="space-y-5">
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">{% translate "Invitați" %}</label>
+                        <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">{% translate "Guests" %}</label>
                         <input type="number" name="{{ form.number_attending.name }}" min="1" max="{{ guest.max_attendees }}" class="w-full p-3 rounded modal-input focus:outline-none" placeholder="1">
-                        <p class="text-[10px] text-gray-500 text-right mt-1">Max: {{ guest.max_attendees }}</p>
+                        <p class="text-[10px] text-gray-500 text-right mt-1">{% translate "Max" %}: {{ guest.max_attendees }}</p>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">{% translate "Meniu Special" %}</label>
+                        <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">{% translate "Special Menu" %}</label>
                         <textarea name="{{ form.meal_preference.name }}" rows="2" class="w-full p-3 rounded modal-input focus:outline-none"></textarea>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">{% translate "Lăsați un mesaj" %}</label>
+                    <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">{% translate "Leave a message" %}</label>
                     <textarea name="{{ form.message.name }}" rows="2" class="w-full p-3 rounded modal-input focus:outline-none" placeholder="{% translate 'Leave a note for the couple...' %}"></textarea>
                 </div>
 
                 <button type="submit" class="btn-celestial w-full py-3 rounded text-sm mt-4">
-                    {% translate "Trimite răspuns" %}
+                    {% translate "Send Response" %}
                 </button>
             </form>
         </div>

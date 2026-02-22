@@ -31,7 +31,33 @@ from .forms import TableAssignmentAdminForm
 
 
 # ==========================================
-# === 1. INLINES (Tabele Secundare)      ===
+# === 0. RESOURCES (Import/Export)       ===
+# ==========================================
+
+class GuestResource(resources.ModelResource):
+    class Meta:
+        model = Guest
+        fields = ('id', 'name', 'email', 'phone_number', 'honorific', 'max_attendees', 'event__title', 'invitation_method', 'preferred_language')
+        export_order = ('id', 'name', 'email', 'phone_number', 'honorific', 'max_attendees', 'event__title', 'invitation_method', 'preferred_language')
+
+class EventResource(resources.ModelResource):
+    class Meta:
+        model = Event
+        fields = ('id', 'title', 'owner__username', 'event_type', 'event_date', 'venue_name', 'venue_address')
+        export_order = ('id', 'title', 'owner__username', 'event_type', 'event_date', 'venue_name', 'venue_address')
+
+class PlanResource(resources.ModelResource):
+    class Meta:
+        model = Plan
+        fields = ('id', 'name', 'price', 'max_guests', 'max_events', 'stripe_price_id', 'is_public')
+
+class CardDesignResource(resources.ModelResource):
+    class Meta:
+        model = CardDesign
+        fields = ('id', 'name', 'event_type', 'template_name', 'priority', 'is_active', 'is_public')
+
+# ==========================================
+# === 1. INLINES (Secondary Tables)      ===
 # ==========================================
 
 class GodparentInline(admin.TabularInline):
@@ -62,13 +88,14 @@ class TableAssignmentInline(admin.TabularInline):
 # ==========================================
 class GalleryImageInline(admin.TabularInline):
     model = GalleryImage
-    extra = 1  # Îți arată un rând gol by default
-    max_num = 6  # Limită vizuală în admin
-    verbose_name = "Imagine Galerie"
-    verbose_name_plural = "Galerie Foto (Maxim 6 imagini)"
+    extra = 1
+    max_num = 6
+    verbose_name = "Gallery Image"
+    verbose_name_plural = "Photo Gallery (Max 6 images)"
 
 @admin.register(Event)
-class EventAdmin(admin.ModelAdmin):
+class EventAdmin(ImportExportModelAdmin):
+    resource_class = EventResource
     list_display = ('title', 'owner', 'event_date', 'venue_name', 'view_guests_link')
     search_fields = ('title', 'venue_name', 'owner__username', 'owner__email')
     list_filter = ('event_type', 'event_date')
@@ -83,10 +110,11 @@ class EventAdmin(admin.ModelAdmin):
 
 
 @admin.register(Guest)
-class GuestAdmin(admin.ModelAdmin):
-    list_display = ('honorific', 'name', 'event', 'email', 'get_rsvp_status', 'get_assigned_table')
+class GuestAdmin(ImportExportModelAdmin):
+    resource_class = GuestResource
+    list_display = ('honorific', 'name', 'event', 'preferred_language', 'get_rsvp_status', 'get_assigned_table')
     search_fields = ('name', 'email', 'event__title')
-    list_filter = ('event',)
+    list_filter = ('event', 'preferred_language')
     readonly_fields = ('unique_id',)
 
     @admin.display(description='RSVP Status')
@@ -135,7 +163,6 @@ admin.site.register(RSVP)
 # === 3. USER MANAGEMENT                 ===
 # ==========================================
 
-# Dezînregistrăm Admin-ul standard pentru a-l înlocui cu cel custom
 try:
     admin.site.unregister(User)
 except admin.sites.NotRegistered:
@@ -149,7 +176,7 @@ class CustomUserAdmin(UserAdmin):
         'email',
         'first_name',
         'last_name',
-        'is_active',  # Critic pentru a vedea userii blocați
+        'is_active',
         'is_staff',
         'date_joined'
     )
@@ -186,26 +213,21 @@ class SpecialFieldAdmin(admin.ModelAdmin):
 
 
 @admin.register(CardDesign)
-class CardDesignAdmin(admin.ModelAdmin):
-    # 1. LISTA: Am inlocuit 'preview_image' cu 'show_preview_icon' pentru a afisa poza, nu textul
+class CardDesignAdmin(ImportExportModelAdmin):
+    resource_class = CardDesignResource
     list_display = ('name', 'event_type', 'show_preview_icon', 'is_active', 'is_public', 'priority', 'display_plans')
-
-    # 2. EDITARE RAPIDA: Ramane neschimbat
     list_editable = ('priority', 'is_active', 'is_public')
-
-    # 3. FILTRE SI CAUTARE: Ramane neschimbat
     list_filter = ('event_type', 'is_active', 'is_public', 'available_on_plans')
     search_fields = ('name', 'template_name')
     filter_horizontal = ('available_on_plans', 'special_fields')
 
-    # 4. FORMULAR EDITARE: Ordinea campurilor
     fields = (
         'name',
         'description',
         'event_type',
-        'preview_image',       # Campul de upload
-        'show_large_preview',  # <--- BONUS: Vezi imaginea mare in pagina de editare
-        'preview_image_path',  # Legacy
+        'preview_image',
+        'show_large_preview',
+        'preview_image_path',
         'template_name',
         'special_fields',
         'available_on_plans',
@@ -215,30 +237,25 @@ class CardDesignAdmin(admin.ModelAdmin):
         'priority'
     )
 
-    # Definim campul custom ca fiind doar pentru citit (nu poti edita preview-ul generat)
     readonly_fields = ('show_large_preview',)
 
-    # --- METODE CUSTOM PENTRU IMAGINI ---
-
     def show_preview_icon(self, obj):
-        """Genereaza iconita mica pentru tabelul din lista."""
         if obj.preview_image:
             return format_html(
                 '<img src="{}" style="height: 50px; width: auto; border-radius: 4px; box-shadow: 0 0 2px #ccc;" />',
                 obj.preview_image.url
             )
         return "-"
-    show_preview_icon.short_description = "Preview" # Numele coloanei in tabel
+    show_preview_icon.short_description = "Preview"
 
     def show_large_preview(self, obj):
-        """Genereaza imaginea mare pentru pagina de editare."""
         if obj.preview_image:
             return format_html(
                 '<img src="{}" style="max-height: 300px; max-width: 100%; border-radius: 8px;" />',
                 obj.preview_image.url
             )
-        return "Fără imagine încărcată"
-    show_large_preview.short_description = "Vizualizare Imagine Actuală"
+        return "No image uploaded"
+    show_large_preview.short_description = "Current Image Preview"
 
     @admin.display(description='Available Plans')
     def display_plans(self, obj):
@@ -252,38 +269,30 @@ class CardDesignAdmin(admin.ModelAdmin):
 class PlanFeatureInline(admin.TabularInline):
     model = PlanFeature
     extra = 0
-    # Aici apar câmpurile tale noi
     fields = ('order', 'text_ro', 'text_en', 'is_included')
     ordering = ('order',)
 
 
-# 2. Configurare Plan (Combinat: Vechi + Nou)
 @admin.register(Plan)
-class PlanAdmin(admin.ModelAdmin):
-    # Ce coloane vezi în listă (am adăugat max_guests și max_events cum ai cerut)
+class PlanAdmin(ImportExportModelAdmin):
+    resource_class = PlanResource
     list_display = ('name', 'price','show_watermark', 'max_guests', 'max_events', 'stripe_price_id', 'is_public')
-
-    # Ce poți edita DIRECT din listă, fără să intri în detaliu
     list_editable = ('price', 'max_guests', 'max_events', 'is_public','show_watermark')
-
     search_fields = ('name',)
-
-    # Aici conectăm lista de features
     inlines = [PlanFeatureInline]
 
-    # Organizăm formularul de detaliu să arate curat
     fieldsets = (
-        ('Informații Generale', {
+        ('General Information', {
             'fields': ('name', 'price', 'description', 'stripe_price_id')
         }),
-        ('Limitări (Ceea ce ai vrut să păstrezi)', {
+        ('Limitations', {
             'fields': ('max_guests', 'max_events', 'lock_event_on_creation'),
-            'description': "Setează limitele tehnice ale planului."
+            'description': "Set technical limits for this plan."
         }),
-        ('Vizual & Public', {
+        ('Visual & Public', {
             'fields': ('featured', 'is_public', 'icon_svg_path', 'color_class')
         }),
-        ('Setări Vechi (Compatibilitate)', {
+        ('Legacy Settings', {
             'classes': ('collapse',),
             'fields': ('has_table_assignment', 'can_upload_own_design', 'show_watermark'),
         }),
@@ -303,37 +312,27 @@ class SiteImageAdmin(admin.ModelAdmin):
 class FAQResource(resources.ModelResource):
     class Meta:
         model = FAQ
-        # Suport pentru import bilingv (RO/EN)
-        fields = ('id', 'question', 'answer', 'question_en', 'answer_en', 'order', 'is_visible')
+        fields = ('id', 'question', 'answer', 'question_ro', 'answer_ro', 'order', 'is_visible')
         import_id_fields = ('id',)
 
 
 @admin.register(FAQ)
 class FAQAdmin(ImportExportModelAdmin):
     resource_class = FAQResource
-    list_display = ('question', 'question_en', 'order', 'is_visible')
+    list_display = ('question', 'question_ro', 'order', 'is_visible')
     list_editable = ('order', 'is_visible')
     list_filter = ('is_visible',)
-    search_fields = ('question', 'question_en')
+    search_fields = ('question', 'question_ro')
     ordering = ('order',)
 
 
 @admin.register(Testimonial)
 class TestimonialAdmin(admin.ModelAdmin):
-    # Ce coloane apar in tabel
-    # FIX: Adaugam 'social_provider' in list_display pentru ca este in list_editable
     list_display = ('client_name', 'social_provider', 'social_provider_badge', 'rating', 'created_at', 'is_active')
-
-    # Filtre in dreapta
     list_filter = ('social_provider', 'is_active', 'rating')
-
-    # Cautare
     search_fields = ('client_name', 'content')
-
-    # Editare rapida direct din lista
     list_editable = ('is_active', 'social_provider')
 
-    # Functie pentru a afisa un text mai frumos in Admin
     def social_provider_badge(self, obj):
         if obj.social_provider == 'facebook':
             return "🔵 Facebook"
@@ -343,13 +342,20 @@ class TestimonialAdmin(admin.ModelAdmin):
 
     social_provider_badge.short_description = 'Badge'
 
-    # La finalul fișierului, adaugă:
-    @admin.register(AboutSection)
-    class AboutSectionAdmin(admin.ModelAdmin):
-        list_display = ('title_ro', 'is_active')
 
-    @admin.register(FutureFeature)
-    class FutureFeatureAdmin(admin.ModelAdmin):
-        list_display = ('title_ro', 'target_date', 'priority', 'is_public')
-        list_editable = ('priority', 'is_public')
+@admin.register(AboutSection)
+class AboutSectionAdmin(admin.ModelAdmin):
+    list_display = ('title_en', 'title_ro', 'is_active')
 
+
+class FutureFeatureResource(resources.ModelResource):
+    class Meta:
+        model = FutureFeature
+        fields = ('id', 'title_en', 'description_en', 'title_ro', 'description_ro', 'target_date', 'priority', 'is_public', 'icon_svg_path', 'color_class')
+        export_order = ('id', 'title_en', 'description_en', 'title_ro', 'description_ro', 'target_date', 'priority', 'is_public', 'icon_svg_path', 'color_class')
+
+@admin.register(FutureFeature)
+class FutureFeatureAdmin(ImportExportModelAdmin):
+    resource_class = FutureFeatureResource
+    list_display = ('title_en', 'target_date', 'priority', 'is_public')
+    list_editable = ('priority', 'is_public')

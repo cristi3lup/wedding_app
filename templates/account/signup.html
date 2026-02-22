@@ -6,10 +6,10 @@
 
 {% block auth_content %}
 
-    <!-- 1. Butoane Sociale -->
+    <!-- 1. Social Buttons -->
     {% include "account/snippets/social_buttons.html" %}
 
-    <!-- 2. Formular Înregistrare -->
+    <!-- 2. Registration Form -->
     <form class="space-y-5 mt-6" method="POST" action="{% url 'account_signup' %}">
         {% csrf_token %}
 
@@ -21,7 +21,7 @@
             </div>
         {% endif %}
 
-        <!-- Iterăm prin câmpuri pentru a le stila frumos -->
+        <!-- Iterate through fields for nice styling -->
         {% for field in form %}
             <div>
                 <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">

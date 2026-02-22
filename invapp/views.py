@@ -6,7 +6,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.contrib.auth.models import User
-from .models import UserProfile, Event, Guest, RSVP, Table, TableAssignment, CardDesign, Plan, FAQ, AboutSection, FutureFeature
+from django.db.models import Count, Q
+from .models import (
+    UserProfile, Event, Guest, RSVP, Table, TableAssignment, 
+    CardDesign, Plan, FAQ, AboutSection, FutureFeature, Testimonial
+)
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
@@ -28,12 +32,131 @@ from datetime import datetime, timedelta
 from types import SimpleNamespace
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-from .models import Testimonial # Asigură-te că imporți modelul
 from .forms import (
     GuestForm, EventForm, GuestContactForm, AssignGuestForm,
     RSVPForm, TableForm, CustomUserCreationForm, TableAssignmentForm,
     GuestCreateForm, GodparentFormSet, ScheduleItemFormSet, ReviewForm, GalleryImageFormSet
 )
+
+
+@csrf_exempt
+@xframe_options_exempt
+def event_preview(request):
+    """
+    Preview logic with Debugging for Cloudinary URL issues.
+    """
+    if request.method == 'POST':
+        try:
+            # 1. Extract Data
+            if request.content_type == 'application/json':
+                try:
+                    data = json.loads(request.body)
+                except json.JSONDecodeError:
+                    return HttpResponse("Invalid JSON", status=400)
+            else:
+                data = request.POST.dict()
+
+            print(f"DEBUG: Preview Data Received. Keys: {list(data.keys())}")
+
+            # 2. Build Mock Event
+            event_data = {}
+            for key, value in data.items():
+                if value == "":
+                    event_data[key] = None
+                else:
+                    event_data[key] = value
+
+            # --- 2.1 Process Dates/Times ---
+            if 'event_date' in event_data and event_data['event_date']:
+                try:
+                    event_data['event_date'] = datetime.strptime(event_data['event_date'], '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+
+            if 'party_time' in event_data and event_data['party_time']:
+                try:
+                    event_data['party_time'] = datetime.strptime(event_data['party_time'], '%H:%M').time()
+                except ValueError:
+                    pass
+
+            if 'ceremony_time' in event_data and event_data['ceremony_time']:
+                try:
+                    event_data['ceremony_time'] = datetime.strptime(event_data['ceremony_time'], '%H:%M').time()
+                except ValueError:
+                    pass
+
+            # 3. FIX IMAGES (Cloudinary & Base64)
+            image_fields = ['couple_photo', 'landscape_photo', 'main_invitation_image']
+
+            for field_name in image_fields:
+                raw_val = data.get(field_name)
+
+                if raw_val and isinstance(raw_val, str):
+                    # CRITICAL: Clean whitespace
+                    raw_val = raw_val.strip()
+
+                    print(f"DEBUG: Processing {field_name}. Value starts with: '{raw_val[:10]}...'")
+
+                    # CASE 1: Absolute URL (Cloudinary/S3)
+                    if 'http://' in raw_val or 'https://' in raw_val:
+                        if not raw_val.startswith('http'):
+                            start = raw_val.find('http')
+                            if start != -1:
+                                raw_val = raw_val[start:]
+
+                        event_data[field_name] = SimpleNamespace(url=raw_val)
+                        print(f"DEBUG: {field_name} treated as Absolute URL: {raw_val}")
+
+                    # CASE 2: Base64 (New Upload)
+                    elif raw_val.startswith('data:image'):
+                        event_data[field_name] = SimpleNamespace(url=raw_val)
+                        print(f"DEBUG: {field_name} treated as Base64")
+
+                    # CASE 3: Relative Path (Local Dev or partial path)
+                    elif raw_val:
+                        clean_val = raw_val.replace('/media/', '')
+                        media_url = settings.MEDIA_URL.rstrip('/')
+                        final_url = f"{media_url}/{clean_val.lstrip('/')}"
+
+                        event_data[field_name] = SimpleNamespace(url=final_url)
+                        print(f"DEBUG: {field_name} treated as Local URL: {final_url}")
+                else:
+                    event_data[field_name] = None
+
+            # Convert dict to object
+            event_instance = SimpleNamespace(**event_data)
+
+            # 4. Design & Template
+            design_id = data.get('selected_design')
+            template_name = 'invapp/invites/default_invite.html'
+
+            if design_id:
+                try:
+                    design = CardDesign.objects.get(pk=design_id)
+                    template_name = design.template_name
+                    event_instance.selected_design = design
+                except (CardDesign.DoesNotExist, ValueError):
+                    pass
+
+            print(f"DEBUG: Rendering template {template_name}")
+
+            # 5. Context
+            context = {
+                'event': event_instance,
+                'guest': None,
+                'is_preview': True,
+                'godparents': [],
+                'schedule_items': [],
+                'gallery_images': []
+            }
+
+            return render(request, template_name, context)
+
+        except Exception as e:
+            print(f"ERROR in Preview: {e}")
+            return HttpResponse(f"Error generating preview: {str(e)}", status=500)
+
+    return HttpResponse("Method not allowed", status=405)
 
 
 # --- CSV Export View ---
@@ -135,7 +258,7 @@ def invitation_rsvp_combined_view(request, guest_uuid):
             'action': 'TEMPLATE',
             'text': event.title,
             'dates': f"{utc_start}/{utc_end}",
-            'details': event.calendar_description or f"Join us for {event.title}!",
+            'details': event.calendar_description or _("Join us for %(title)s!") % {'title': event.title},
             'location': f"{event.venue_name}, {event.venue_address}",
             'trp': 'false'
         }
@@ -173,7 +296,7 @@ def guest_invite_thank_you_view(request, guest_uuid):
             'action': 'TEMPLATE',
             'text': event.title,
             'dates': f"{utc_start}/{utc_end}",
-            'details': event.calendar_description or f"Join us for {event.title}!",
+            'details': event.calendar_description or _("Join us for %(title)s!") % {'title': event.title},
             'location': f"{event.venue_name}, {event.venue_address}",
         }
         google_calendar_link = f"https://www.google.com/calendar/render?{urllib.parse.urlencode(params)}"
@@ -217,18 +340,18 @@ def landing_page_view(request):
     recent_reviews = Testimonial.objects.filter(is_active=True).order_by('-created_at')[:10]
 
     # === NEW DATA FETCHING ===
-    # 1. About Section (Luăm prima activă)
+    # 1. About Section (Take first active)
     about_section = AboutSection.objects.filter(is_active=True).first()
 
-    # 2. Future Features (Doar cele publice)
+    # 2. Future Features (Only public ones)
     future_features = FutureFeature.objects.filter(is_public=True).order_by('-priority', 'target_date')
 
     context = {
         'reviews': recent_reviews,
         'designs': designs,
         'plans': plans,
-        'about_section': about_section,  # Adăugat în context
-        'future_features': future_features,  # Adăugat în context
+        'about_section': about_section,
+        'future_features': future_features,
     }
     return render(request, 'invapp/landing_page_tailwind.html', context)
 
@@ -241,13 +364,13 @@ def signup_view(request):
             # Email logic
             subject = _('Welcome to InvApp!')
             message = _(
-                f'Hello {user.username},\n\nThank you for creating an account on our platform. You have the possibility to login to create invitations.\n\nWith respect,\nInvApp Team')
+                'Hello %(username)s,\n\nThank you for creating an account on our platform. You can now login to create invitations.\n\nRespectfully,\nInvApp Team') % {'username': user.username}
             from_email = settings.DEFAULT_FROM_EMAIL
             recipient_list = [user.email]
             try:
                 send_mail(subject, message, from_email, recipient_list)
                 messages.success(request, _("Registration successful! A confirmation email has been sent."))
-            except Exception as e:
+            except Exception:
                 messages.warning(request, _("Registration successful, but we could not send a confirmation email."))
 
             login(request, user)
@@ -260,15 +383,11 @@ def signup_view(request):
 # --- Dashboard ---
 @login_required
 def dashboard_view(request):
-    # Preluăm evenimentele
-    events = Event.objects.filter(owner=request.user).select_related('selected_design').prefetch_related(
-        'guests').order_by('-event_date')
-
-    for event in events:
-        # Folosim hasattr/attribut access pentru a evita query-uri extra în buclă dacă e posibil,
-        # sau un simplu filter. Varianta sigură:
-        event.confirmed_count = event.guests.filter(rsvp_details__attending=True).count()
-        event.total_guests_count = event.guests.count()  # Optimizare pentru template
+    # Fetch events with annotations to avoid N+1 query
+    events = Event.objects.filter(owner=request.user).select_related('selected_design').annotate(
+        confirmed_count=Count('guests', filter=Q(guests__rsvp_details__attending=True)),
+        total_guests_count=Count('guests')
+    ).order_by('-event_date')
 
     user_guests = Guest.objects.filter(event__owner=request.user)
     guest_count = user_guests.count()
@@ -363,7 +482,7 @@ class TableDeleteView(EventOwnerRequiredMixin, DeleteView):
         table_name = self.object.name
         success_url = self.get_success_url()
         self.object.delete()
-        messages.success(self.request, _(f"Table '{table_name}' deleted successfully."))
+        messages.success(self.request, _("Table '%(name)s' deleted successfully.") % {'name': table_name})
         return redirect(success_url)
 
 
@@ -383,7 +502,7 @@ def table_assignment_view(request, event_id):
                     assignment.delete()
                     messages.success(request, _("Guest unassigned successfully."))
             except Exception as e:
-                messages.error(request, _(f"Error: {e}"))
+                messages.error(request, _("Error: %(error)s") % {'error': e})
             return redirect('invapp:table_assignment', event_id=event.id)
         else:
             form = AssignGuestForm(request.POST, event=event)
@@ -391,10 +510,10 @@ def table_assignment_view(request, event_id):
                 guest = form.cleaned_data['guest']
                 table = form.cleaned_data['table']
                 if TableAssignment.objects.filter(guest=guest).exists():
-                    messages.error(request, _(f"{guest.name} is already assigned."))
+                    messages.error(request, _("%(name)s is already assigned.") % {'name': guest.name})
                 else:
                     TableAssignment.objects.create(guest=guest, table=table)
-                    messages.success(request, _(f"Assigned {guest.name} to {table.name}."))
+                    messages.success(request, _("Assigned %(guest)s to %(table)s.") % {'guest': guest.name, 'table': table.name})
                 return redirect('invapp:table_assignment', event_id=event.id)
             else:
                 assignment_form = form
@@ -431,7 +550,7 @@ def table_assignment_ui_view(request, event_id):
             target_table = form.cleaned_data['table']
             for guest in selected_guests:
                 TableAssignment.objects.create(guest=guest, table=target_table)
-            messages.success(request, _(f"{len(selected_guests)} guest(s) assigned to {target_table.name}."))
+            messages.success(request, _("%(count)d guest(s) assigned to %(table)s.") % {'count': len(selected_guests), 'table': target_table.name})
             return redirect('invapp:table_assignment_ui', event_id=event.id)
     else:
         form = TableAssignmentForm(event=event)
@@ -474,7 +593,7 @@ class EventCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
-        # 1. Logică Design-uri
+        # 1. Design Logic
         available_designs = CardDesign.objects.none()
         if hasattr(user, 'userprofile') and user.userprofile.plan:
             available_designs = user.userprofile.plan.card_designs.all()
@@ -485,7 +604,7 @@ class EventCreateView(LoginRequiredMixin, CreateView):
             except Plan.DoesNotExist:
                 pass
 
-        # 2. Logică Câmpuri Speciale
+        # 2. Special Fields Logic
         design_fields = {}
         for design in available_designs.prefetch_related('special_fields'):
             names = [f.name for f in design.special_fields.all()]
@@ -495,36 +614,33 @@ class EventCreateView(LoginRequiredMixin, CreateView):
         context['design_specific_fields_json'] = json.dumps(design_fields)
         context['available_designs'] = available_designs
 
-        # 3. Formsets (Includem si Galeria)
+        # 3. Formsets (Include Gallery)
         if self.request.POST:
             context['godparent_formset'] = GodparentFormSet(self.request.POST, self.request.FILES)
             context['schedule_item_formset'] = ScheduleItemFormSet(self.request.POST, self.request.FILES)
-            # <--- LINIE NOUĂ: Instanțiem FormSet-ul Galeriei cu POST și FILES
             context['gallery_image_formset'] = GalleryImageFormSet(self.request.POST, self.request.FILES)
         else:
             context['godparent_formset'] = GodparentFormSet()
             context['schedule_item_formset'] = ScheduleItemFormSet()
-            # <--- LINIE NOUĂ: FormSet gol pentru GET
             context['gallery_image_formset'] = GalleryImageFormSet()
 
         return context
 
     def form_valid(self, form):
         # --- DEBUGGING START ---
-        print(f"DEBUG UPLOAD: Userul {self.request.user} incearca sa salveze un eveniment.", file=sys.stderr)
+        print(f"DEBUG UPLOAD: User {self.request.user} attempting to save an event.", file=sys.stderr)
         if self.request.FILES:
-            print(f"DEBUG UPLOAD: Am primit fisiere! Lista: {self.request.FILES.keys()}", file=sys.stderr)
+            print(f"DEBUG UPLOAD: Files received! List: {self.request.FILES.keys()}", file=sys.stderr)
         else:
-            print("DEBUG UPLOAD: ATENTIE! Nu s-au primit fisiere.", file=sys.stderr)
+            print("DEBUG UPLOAD: ATTENTION! No files received.", file=sys.stderr)
         # --- DEBUGGING END ---
 
         context = self.get_context_data()
         godparent_formset = context['godparent_formset']
         schedule_item_formset = context['schedule_item_formset']
-        # <--- LINIE NOUĂ: Extragem formset-ul din context
         gallery_image_formset = context['gallery_image_formset']
 
-        # Validare completă (inclusiv galeria)
+        # Complete validation (including gallery)
         if form.is_valid() and godparent_formset.is_valid() and schedule_item_formset.is_valid() and gallery_image_formset.is_valid():
             self.object = form.save(commit=False)
             self.object.owner = self.request.user
@@ -536,22 +652,21 @@ class EventCreateView(LoginRequiredMixin, CreateView):
             schedule_item_formset.instance = self.object
             schedule_item_formset.save()
 
-            # <--- LINIE NOUĂ: Salvăm galeria
+            # Save gallery
             gallery_image_formset.instance = self.object
             gallery_image_formset.save()
 
-            messages.success(self.request, _(f"Event '{self.object.title}' created!"))
+            messages.success(self.request, _("Event '%(title)s' created!") % {'title': self.object.title})
             return redirect(self.get_success_url())
         else:
-            print(f"DEBUG UPLOAD: Formular invalid. Errors: {form.errors}", file=sys.stderr)
-            # Verificăm și erorile din galerie pentru debug
+            print(f"DEBUG UPLOAD: Form invalid. Errors: {form.errors}", file=sys.stderr)
             if not gallery_image_formset.is_valid():
-                print(f"DEBUG GALERIE: Erori galerie: {gallery_image_formset.errors}", file=sys.stderr)
+                print(f"DEBUG GALLERY: Gallery errors: {gallery_image_formset.errors}", file=sys.stderr)
 
             return self.render_to_response(self.get_context_data(form=form))
 
     def get_success_url(self):
-        return reverse_lazy('invapp:guest_list', kwargs={'event_id': self.object.id})
+        return reverse_lazy('invapp:dashboard')
 
 
 class EventUpdateView(LoginRequiredMixin, UpdateView):
@@ -563,7 +678,7 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
-        # Logică Plan Blocat
+        # Locked Plan Logic
         is_locked = False
         if hasattr(user, 'userprofile') and user.userprofile.plan and user.userprofile.plan.lock_event_on_creation:
             is_locked = True
@@ -574,7 +689,7 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
                         form.fields[f].disabled = True
         context['is_locked_plan'] = is_locked
 
-        # Logică Design-uri
+        # Design Logic
         available_designs = CardDesign.objects.none()
         if hasattr(user, 'userprofile') and user.userprofile.plan:
             available_designs = user.userprofile.plan.card_designs.all()
@@ -606,27 +721,24 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
             context['godparent_formset'] = GodparentFormSet(self.request.POST, self.request.FILES, instance=self.object)
             context['schedule_item_formset'] = ScheduleItemFormSet(self.request.POST, self.request.FILES,
                                                                    instance=self.object)
-            # <--- LINIE NOUĂ: Formset Galerie cu instance=self.object
             context['gallery_image_formset'] = GalleryImageFormSet(self.request.POST, self.request.FILES,
                                                                    instance=self.object)
         else:
             context['godparent_formset'] = GodparentFormSet(instance=self.object)
             context['schedule_item_formset'] = ScheduleItemFormSet(instance=self.object)
-            # <--- LINIE NOUĂ: Formset Galerie populat cu imaginile existente
             context['gallery_image_formset'] = GalleryImageFormSet(instance=self.object)
 
         return context
 
     def form_valid(self, form):
-        print(f"DEBUG UPDATE: Userul {self.request.user} actualizeaza evenimentul.", file=sys.stderr)
+        print(f"DEBUG UPDATE: User {self.request.user} updating event.", file=sys.stderr)
 
         context = self.get_context_data()
         godparent_formset = context['godparent_formset']
         schedule_item_formset = context['schedule_item_formset']
-        # <--- LINIE NOUĂ
         gallery_image_formset = context['gallery_image_formset']
 
-        # Validare completă
+        # Complete validation
         if form.is_valid() and godparent_formset.is_valid() and schedule_item_formset.is_valid() and gallery_image_formset.is_valid():
             self.object = form.save()
 
@@ -636,7 +748,7 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
             schedule_item_formset.instance = self.object
             schedule_item_formset.save()
 
-            # <--- LINIE NOUĂ: Salvare galerie (adăugare/ștergere)
+            # Save gallery (add/delete)
             gallery_image_formset.instance = self.object
             gallery_image_formset.save()
 
@@ -676,13 +788,15 @@ def event_preview_view(request):
     try:
         data = json.loads(request.body)
 
-        # --- 1. Gestionare dată și oră (Date & Time) ---
+        # --- 1. Manage date and time ---
         date_str = data.get('event_date')
         if date_str:
             try:
                 data['event_date'] = datetime.strptime(date_str, "%Y-%m-%d").date()
+                data['date_time'] = data['event_date'] # Alias for older templates
             except:
                 data['event_date'] = None
+                data['date_time'] = None
 
         time_str = data.get('party_time')
         if time_str:
@@ -691,36 +805,85 @@ def event_preview_view(request):
             except:
                 data['party_time'] = None
 
+        ceremony_time_str = data.get('ceremony_time')
+        if ceremony_time_str:
+            try:
+                data['ceremony_time'] = datetime.strptime(ceremony_time_str, "%H:%M").time()
+            except:
+                data['ceremony_time'] = None
+
+        # --- 1.5. Manage Formsets (Godparents & Timeline) ---
+        # Extract data from flat format (godparents-0-name) into structured lists
+        godparents_list = []
+        schedule_list = []
+        
+        for key, value in data.items():
+            if key.startswith('godparents-') and key.endswith('-name') and value.strip():
+                if not data.get(key.replace('-name', '-DELETE')) == 'on': # Skip deleted
+                    godparents_list.append(SimpleNamespace(name=value))
+            
+            if key.startswith('schedule_items-') and key.endswith('-activity_type') and value.strip():
+                if not data.get(key.replace('-activity_type', '-DELETE')) == 'on':
+                    prefix = key.rsplit('-', 1)[0]
+                    time_val = data.get(f"{prefix}-time")
+                    try:
+                        parsed_time = datetime.strptime(time_val, "%H:%M").time() if time_val else None
+                    except:
+                        parsed_time = None
+                    schedule_list.append(SimpleNamespace(activity_type=value, time=parsed_time))
+
         mock_event = SimpleNamespace(**data)
+        
+        # Attach "Mock Managers" to support .exists() and .all() in templates
+        mock_event.godparents = SimpleNamespace(
+            exists=lambda: len(godparents_list) > 0,
+            all=lambda: godparents_list
+        )
+        mock_event.schedule_items = SimpleNamespace(
+            exists=lambda: len(schedule_list) > 0,
+            all=lambda: sorted(schedule_list, key=lambda x: x.time if x.time else time.min)
+        )
 
-        # --- 2. Gestionare Imagini (Images) ---
-        for field in ['couple_photo', 'landscape_photo', 'main_invitation_image']:
+        # --- 2. Manage Images ---
+        for field in ['couple_photo', 'landscape_photo', 'main_invitation_image', 'audio_greeting']:
             img = data.get(field)
-            if img and img.startswith('data:image'):
-                setattr(mock_event, field, SimpleNamespace(url=img))
-            elif isinstance(img, str):
-                setattr(mock_event, field, SimpleNamespace(url=f"{settings.MEDIA_URL}{img}"))
-            else:
-                setattr(mock_event, field, None)
 
-        # --- 3. Gestionare Design ---
+            if not img:
+                setattr(mock_event, field, None)
+                continue
+
+            img = img.strip()
+
+            # Case A: New Upload (Base64) or Absolute URL (Cloudinary/HTTPS)
+            if img.startswith('data:') or img.startswith('http://') or img.startswith('https://'):
+                setattr(mock_event, field, SimpleNamespace(url=img))
+
+            # Case B: Local URL (Development)
+            else:
+                clean_path = img.lstrip('/')
+                if clean_path.startswith('media/'):
+                    final_url = f"/{clean_path}"
+                else:
+                    final_url = f"{settings.MEDIA_URL}{clean_path}"
+
+                setattr(mock_event, field, SimpleNamespace(url=final_url))
+
+        # --- 3. Manage Design ---
         design_id = data.get('selected_design')
         if not design_id: return HttpResponse("No design", status=400)
         design = CardDesign.objects.get(id=design_id)
 
-        # --- 4. Mock Guest (Folosind unique_id) ---
-        # Folosim un UUID valid (0000...) pentru a nu crăpa validarea URL-urilor din template
+        # --- 4. Mock Guest (Using unique_id) ---
         mock_guest = SimpleNamespace(
             unique_id='00000000-0000-0000-0000-000000000000',
-            name='Nume Invitat',
+            name=_('Guest Name'),
             honorific='family',
             max_attendees=5,
-            manual_is_attending=None, # Necesar pentru logica din image_based_invite
-            rsvp_details=SimpleNamespace(attending=None) # Simulam lipsa unui raspuns anterior
+            manual_is_attending=None,
+            rsvp_details=SimpleNamespace(attending=None)
         )
 
-        # --- 5. Mock Form (Critic pentru afișarea RSVP) ---
-        # Instantiem formularul gol pentru a putea randa campurile in preview
+        # --- 5. Mock Form (Critical for RSVP display) ---
         from .forms import RSVPForm
         mock_form = RSVPForm(guest=mock_guest)
 
@@ -731,13 +894,12 @@ def event_preview_view(request):
             'is_preview': True
         }
 
-        # --- 6. Randare cu Request (Critic pentru CSRF Token) ---
+        # --- 6. Render with Request (Critical for CSRF Token) ---
         html = render_to_string(design.template_name, context, request=request)
         return HttpResponse(html)
 
     except Exception as e:
         print(f"Preview Error: {e}")
-        # Returnam eroarea ca text pentru a o vedea in consola browserului daca ceva nu merge
         return HttpResponse(f"Error: {e}", status=500)
 
 
@@ -746,20 +908,18 @@ def event_preview_view(request):
 def guest_list(request, event_id):
     event = get_object_or_404(Event, pk=event_id, owner=request.user)
 
-    # 1. Preluăm datele
+    # 1. Fetch data
     guests_queryset = Guest.objects.filter(event=event).select_related('rsvp_details')
-    guests_list = list(guests_queryset)  # Convertim în listă pentru sortare Python
+    guests_list = list(guests_queryset)
 
-    # 2. Preluăm parametrul din URL (asta trimite HTML-ul tău)
+    # 2. Sort by URL parameter
     sort_param = request.GET.get('sort', 'name')
 
-    # Funcție ajutătoare pentru status
     def status_priority(guest):
-        if guest.is_attending is True: return 0  # Primii
-        if guest.is_attending is None: return 1  # Mijloc
-        return 2  # Ultimii
+        if guest.is_attending is True: return 0
+        if guest.is_attending is None: return 1
+        return 2
 
-    # 3. Aplicăm sortarea pe baza parametrului primit
     if sort_param == 'name':
         guests_list.sort(key=lambda g: g.name.lower())
     elif sort_param == '-name':
@@ -769,11 +929,8 @@ def guest_list(request, event_id):
     elif sort_param == '-status':
         guests_list.sort(key=lambda g: (status_priority(g), g.name.lower()), reverse=True)
 
-    # Recalculăm totalul
     total_attending = sum(g.attending_count for g in guests_list)
 
-    # 4. Trimitem 'current_sort' înapoi la HTML
-    # Fără asta, HTML-ul nu știe să pună săgeata corectă!
     context = {
         'event': event,
         'guests': guests_list,
@@ -831,7 +988,7 @@ class GuestUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['event'] = self.object.event
-        context['form_title'] = _(f'Edit Guest: {self.object.name}')
+        context['form_title'] = _('Edit Guest: %(name)s') % {'name': self.object.name}
         return context
 
 
@@ -860,10 +1017,17 @@ def update_attendance_view(request, guest_id):
     try:
         guest = get_object_or_404(Guest, id=guest_id, owner=request.user)
         data = json.loads(request.body)
-        new_count = int(data.get('number_attending', 0))
+        
+        # 1. Handle attendance count update
+        if 'number_attending' in data:
+            new_count = int(data.get('number_attending', 0))
+            guest.manual_attending_count = new_count
+            guest.manual_is_attending = True if new_count > 0 else False
+        
+        # 2. Handle preferred language update
+        if 'preferred_language' in data:
+            guest.preferred_language = data.get('preferred_language')
 
-        guest.manual_attending_count = new_count
-        guest.manual_is_attending = True if new_count > 0 else False
         guest.save()
 
         total = sum(g.attending_count for g in Guest.objects.filter(event=guest.event))
@@ -892,10 +1056,6 @@ def create_checkout_session_view(request, plan_id):
     plan = get_object_or_404(Plan, id=plan_id)
     stripe.api_key = settings.STRIPE_SECRET_KEY
 
-    # --- LOGIC FOR SUBSCRIPTIONS ---
-    # We check if the plan is marked as recurring in the database.
-    # If you haven't added the 'is_recurring' field to models.py yet,
-    # this defaults to False (standard one-time payment).
     if getattr(plan, 'is_recurring', False):
         checkout_mode = 'subscription'
     else:
@@ -904,19 +1064,13 @@ def create_checkout_session_view(request, plan_id):
     try:
         session = stripe.checkout.Session.create(
             customer_email=request.user.email,
-
-            # Metadata is critical for the Webhook to identify the user later
             metadata={
                 'user_id': request.user.id,
                 'plan_id': plan.id
             },
-
             success_url=request.build_absolute_uri(reverse('invapp:payment_success')),
             cancel_url=request.build_absolute_uri(reverse('invapp:payment_cancel')),
-
-            # Dynamic Mode: Switches between 'payment' and 'subscription' automatically
             mode=checkout_mode,
-
             line_items=[{
                 'price': plan.stripe_price_id,
                 'quantity': 1
@@ -925,7 +1079,7 @@ def create_checkout_session_view(request, plan_id):
         return redirect(session.url, code=303)
 
     except Exception as e:
-        messages.error(request, f"Stripe Error: {e}")
+        messages.error(request, _("Stripe Error: %(error)s") % {'error': e})
         return redirect(reverse('invapp:landing_page') + '#pricing')
 
 
@@ -941,22 +1095,20 @@ def stripe_webhook(request):
         event = stripe.Webhook.construct_event(
             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
         )
-    except ValueError as e:
+    except ValueError:
         print(f"❌ Error: Invalid payload")
         return HttpResponse(status=400)
-    except stripe.SignatureVerificationError as e:
+    except stripe.SignatureVerificationError:
         print(f"❌ Error: Signature verification failed.")
         return HttpResponse(status=400)
 
-    # --- 1. PLATA FINALIZATĂ (One-Time sau Prima lună de Subscripție) ---
+    # --- 1. PAYMENT COMPLETED ---
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
         print(f"💰 Payment Succeeded for Session ID: {session.get('id')}")
 
         user_id = session.get('metadata', {}).get('user_id')
         plan_id = session.get('metadata', {}).get('plan_id')
-
-        # Verificăm dacă există subscription ID (pentru planuri recurente)
         subscription_id = session.get('subscription')
 
         print(f"👤 Metadata Found -> User ID: {user_id}, Plan ID: {plan_id}, Sub ID: {subscription_id}")
@@ -971,12 +1123,6 @@ def stripe_webhook(request):
 
                 profile = user.userprofile
                 profile.plan = new_plan
-
-                # OPTIONAL: Dacă vrei să salvezi ID-ul subscripției pentru a o gestiona mai târziu
-                # Trebuie să adaugi câmpul 'stripe_subscription_id' în modelul UserProfile mai întâi
-                # if subscription_id:
-                #     profile.stripe_subscription_id = subscription_id
-
                 profile.save()
 
                 print(f"✅ SUCCESS: Upgraded {user.username} to plan '{new_plan.name}'")
@@ -984,19 +1130,14 @@ def stripe_webhook(request):
                 print(f"❌ ERROR updating DB: {str(e)}")
                 return HttpResponse(status=200)
 
-    # --- 2. SUBSCRIERE NOUĂ CREATĂ (Specific pentru Event Planners) ---
+    # --- 2. NEW SUBSCRIPTION CREATED ---
     elif event['type'] == 'customer.subscription.created':
         subscription = event['data']['object']
         subscription_id = subscription.get('id')
         customer_id = subscription.get('customer')
         print(f"🆕 Subscription CREATED: {subscription_id} for Customer: {customer_id}")
 
-        # NOTĂ: De obicei, logica de activare a planului este deja tratată în
-        # checkout.session.completed mai sus. Aici poți adăuga logică suplimentară
-        # doar dacă ai nevoie să reacționezi strict la crearea obiectului de subscripție.
-        # Pentru moment, doar logăm evenimentul pentru a confirma că funcționează.
-
-    # --- 3. ANULARE SUBSCRIERE ---
+    # --- 3. SUBSCRIPTION CANCELLED ---
     elif event['type'] == 'customer.subscription.deleted':
         subscription = event['data']['object']
         customer_id = subscription.get('customer')
@@ -1011,9 +1152,6 @@ def stripe_webhook(request):
             if email:
                 try:
                     user = User.objects.get(email=email)
-                    # Downgrade la planul Free sau NULL
-                    # Asumăm că planul Free are un ID specific sau logică de fallback
-                    # Aici îl setăm pe None momentan
                     user.userprofile.plan = None
                     user.userprofile.save()
                     print(f"✅ SUCCESS: Downgraded user {email} (Subscription Ended)")
@@ -1031,13 +1169,13 @@ def stripe_webhook(request):
 
 @login_required
 def payment_success_view(request):
-    messages.success(request, "Payment successful! Your plan has been upgraded.")
+    messages.success(request, _("Payment successful! Your plan has been upgraded."))
     return redirect('invapp:dashboard')
 
 
 @login_required
 def payment_cancel_view(request):
-    messages.warning(request, "Payment cancelled.")
+    messages.warning(request, _("Payment cancelled."))
     return redirect(reverse('invapp:landing_page') + '#pricing')
 
 
@@ -1050,7 +1188,15 @@ def manual_upgrade_page_view(request, plan_id):
 # --- Guest Import/Export ---
 @login_required
 def download_guest_template_view(request, event_id):
-    df = pd.DataFrame(columns=['Honorific', 'Name', 'Email', 'Phone Number', 'Max Attendees'])
+    # Added Invitation Method to template
+    df = pd.DataFrame(columns=[
+        _('Honorific'), 
+        _('Name'), 
+        _('Email'), 
+        _('Phone Number'), 
+        _('Max Attendees'),
+        _('Invitation Method') # digital or physical
+    ])
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="guest_list_template.xlsx"'
     df.to_excel(response, index=False)
@@ -1063,8 +1209,7 @@ def guest_import_view(request, event_id):
     if request.method == 'POST' and request.FILES.get('guest_file'):
         try:
             df = pd.read_excel(request.FILES['guest_file'])
-            # Basic validation
-            if 'Name' not in df.columns: raise ValueError("Missing 'Name' column")
+            if 'Name' not in df.columns: raise ValueError(_("Missing 'Name' column"))
 
             current_count = event.guests.count()
             limit = request.user.userprofile.plan.max_guests
@@ -1077,15 +1222,26 @@ def guest_import_view(request, event_id):
             objs = []
             for _, row in df.iterrows():
                 if pd.isna(row['Name']): continue
+                
+                # Logic for invitation method mapping
+                raw_method = str(row.get('Invitation Method', '')).lower()
+                method = 'physical'
+                if 'digit' in raw_method:
+                    method = 'digital'
+
                 objs.append(Guest(
-                    event=event, owner=request.user, name=str(row['Name']).strip(),
+                    event=event, 
+                    owner=request.user, 
+                    name=str(row['Name']).strip(),
                     email=row.get('Email') if pd.notna(row.get('Email')) else None,
-                    max_attendees=int(row.get('Max Attendees', 1))
+                    max_attendees=int(row.get('Max Attendees', 1)),
+                    invitation_method=method,
+                    preferred_language='ro' # Default to Romanian
                 ))
             Guest.objects.bulk_create(objs)
-            messages.success(request, f"Imported {len(objs)} guests.")
+            messages.success(request, _("Imported %(count)d guests.") % {'count': len(objs)})
         except Exception as e:
-            messages.error(request, f"Import error: {e}")
+            messages.error(request, _("Import error: %(error)s") % {'error': str(e)})
     return redirect('invapp:guest_list', event_id=event.id)
 
 
@@ -1095,18 +1251,14 @@ class terms_of_service_view(TemplateView): template_name = "invapp/terms_and_con
 class privacy_policy_view(TemplateView): template_name = "invapp/privacy_policy.html"
 
 
-# --- TEMPORARY FIX VIEW (Add this at the bottom) ---
+# --- TEMPORARY FIX VIEW ---
 def fix_site_domain(request):
     """
-    Updates the Site object in the database to match the current hostname (invapp-romania.ro).
-    Useful for fixing 'Site matching query does not exist' errors after domain change.
+    Updates the Site object in the database to match the current hostname.
     """
     try:
-        current_domain = request.get_host()  # Should capture 'invapp-romania.ro'
-
-        # Get the default Site (ID=1) - create if missing
+        current_domain = request.get_host()
         site, created = Site.objects.get_or_create(id=1)
-
         old_domain = site.domain
         site.domain = current_domain
         site.name = "InvApp Romania"
@@ -1120,13 +1272,10 @@ def fix_site_domain(request):
 
 def faq_page(request):
     """
-    Afișează pagina de Întrebări Frecvente.
+    Displays the FAQ page.
     """
     faqs = FAQ.objects.filter(is_visible=True).order_by('order')
     return render(request, 'invapp/faq.html', {'faqs': faqs})
-
-
-from django.contrib.auth.decorators import login_required
 
 
 @login_required
@@ -1142,10 +1291,7 @@ def submit_feedback(request):
         if social_accounts.exists():
             for account in social_accounts:
                 provider_str = str(account.provider).lower()
-                if 'facebook' in provider_str:
-                    target_account = account
-                    break
-                elif 'google' in provider_str:
+                if 'facebook' in provider_str or 'google' in provider_str:
                     target_account = account
                     break
                 elif provider_str.isdigit() and len(provider_str) > 5:
@@ -1160,9 +1306,9 @@ def submit_feedback(request):
             extra_data = target_account.extra_data or {}
 
             if 'google' in raw_provider:
-                provider_name = 'google'  # Asta va salva 'google' in DB -> Badge Rosu in Admin
+                provider_name = 'google'
             elif 'facebook' in raw_provider or raw_provider.isdigit():
-                provider_name = 'facebook'  # Asta va salva 'facebook' in DB -> Badge Albastru
+                provider_name = 'facebook'
             else:
                 provider_name = 'email'
 
@@ -1171,11 +1317,9 @@ def submit_feedback(request):
             except Exception:
                 pass
 
-            # B. Încercare Manuală Google
             if not social_avatar_url and provider_name == 'google':
                 social_avatar_url = extra_data.get('picture')
 
-            # C. Încercare Manuală Facebook
             if not social_avatar_url and provider_name == 'facebook':
                 picture_data = extra_data.get('picture', {})
                 if isinstance(picture_data, dict):
@@ -1183,7 +1327,6 @@ def submit_feedback(request):
                 elif isinstance(picture_data, str):
                     social_avatar_url = picture_data
 
-                # D. Fallback Suprem Facebook
                 if not social_avatar_url and uid:
                     social_avatar_url = f"https://graph.facebook.com/{uid}/picture?type=large"
 
@@ -1200,7 +1343,7 @@ def submit_feedback(request):
             review = form.save(commit=False)
             review.user = request.user
 
-            # Nume
+            # Name
             full_name = request.user.get_full_name()
             if not full_name:
                 full_name = request.user.username.split('@')[0]
@@ -1210,13 +1353,12 @@ def submit_feedback(request):
             if social_avatar_url:
                 review.avatar_url = social_avatar_url
 
-            # Provider - AICI SE SALVEAZA IN BAZA DE DATE
-            # Daca provider_name este 'google', in Admin va aparea 'Google'
+            # Provider
             review.social_provider = provider_name
 
             review.save()
-            messages.success(request, "Îți mulțumim pentru feedback!")
-            return redirect('invapp:dashboard')  # Sau unde doresti sa redirectionezi
+            messages.success(request, _("Thank you for your feedback!"))
+            return redirect('invapp:dashboard')
     else:
         form = ReviewForm(instance=existing_review)
 
@@ -1231,32 +1373,29 @@ def submit_feedback(request):
 @xframe_options_exempt
 def event_preview_demo(request, event_id):
     """
-    View special pentru dashboard când nu există niciun invitat real.
-    Generează un invitat fictiv în memorie.
+    Special dashboard view when no real guests exist.
     """
     event = get_object_or_404(Event, pk=event_id)
 
-    # Securitate: Doar proprietarul poate vedea demo-ul
     if event.owner != request.user:
-        return HttpResponseForbidden("Nu ai permisiunea să vizualizezi acest eveniment.")
+        return HttpResponseForbidden(_("You do not have permission to view this event."))
 
-    # Dacă evenimentul nu are design selectat
     if not event.selected_design:
-        messages.warning(request, "Selectează un design pentru a vedea previzualizarea.")
+        messages.warning(request, _("Select a design to see the preview."))
         return redirect('invapp:event_update', pk=event.id)
 
-    # 1. Creăm un Guest Fictiv (Nu se salvează în DB)
+    # 1. Create a dummy guest (in-memory only)
     dummy_guest = SimpleNamespace(
-        unique_id='00000000-0000-0000-0000-000000000000',  # UUID Valid ca format
-        name='Nume Invitat Exemplu',  # Dummy Name cerut
+        unique_id='00000000-0000-0000-0000-000000000000',
+        name=_('Sample Guest Name'),
         honorific='family',
         max_attendees=2,
         manual_is_attending=None,
-        rsvp_details=SimpleNamespace(attending=None),  # Simulăm lipsa RSVP
+        rsvp_details=SimpleNamespace(attending=None),
         event=event
     )
 
-    # 2. Creăm un Formular gol legat de acest guest fictiv
+    # 2. Create an empty form linked to dummy guest
     form = RSVPForm(guest=dummy_guest)
 
     # 3. Context
@@ -1264,66 +1403,58 @@ def event_preview_demo(request, event_id):
         'event': event,
         'guest': dummy_guest,
         'form': form,
-        'is_preview': True,  # Activăm modul preview (ascunde butoanele de submit)
+        'is_preview': True,
         'google_calendar_link': None
     }
 
     return render(request, event.selected_design.template_name, context)
 
 def upgrade_plan(request):
-    """Pagina unde utilizatorii pot vedea planurile si face upgrade."""
+    """Page where users can view plans and upgrade."""
     return render(request, 'invapp/upgrade_page.html')
 
 
 class EventLivePreviewView(LoginRequiredMixin, View):
     """
-    View special pentru a randa preview-ul fără a salva datele în DB.
-    Primește datele din formular via POST.
+    Special view to render preview without saving to DB.
     """
 
     def post(self, request, *args, **kwargs):
-        # 1. Extragem datele din request.POST fără a salva
+        # 1. Extract data from request.POST without saving
         form = EventForm(request.POST, request.FILES)
 
-        # Chiar dacă formularul nu e 100% valid (ex: lipsesc câmpuri opționale),
-        # încercăm să randăm ce avem pentru preview.
         event_instance = form.save(commit=False)
         event_instance.owner = request.user
 
-        # 2. Gestionare Design (Critic pentru randare)
+        # 2. Manage Design
         design_id = request.POST.get('selected_design')
         if design_id:
             try:
                 design = CardDesign.objects.get(pk=design_id)
                 event_instance.selected_design = design
             except CardDesign.DoesNotExist:
-                return HttpResponse("Design invalid selectat.", status=400)
+                return HttpResponse(_("Invalid design selected."), status=400)
         else:
-            return HttpResponse("Te rugăm să selectezi un design pentru preview.", status=400)
+            return HttpResponse(_("Please select a design for preview."), status=400)
 
-        # 3. Gestionare Imagini (Live Upload - Hack pentru Preview)
-        # Citim imaginea direct din memorie și o convertim în Base64 pentru a o afișa
-        # fără a o salva pe disk/Cloudinary.
+        # 3. Manage Images (Live Upload - Hack for Preview)
         if 'couple_photo' in request.FILES:
             f = request.FILES['couple_photo']
             try:
                 img_data = base64.b64encode(f.read()).decode('utf-8')
-                # Aici "păcălim" template-ul să folosească string-ul base64 în loc de URL
-                # Trebuie să modificăm template-ul invitației să accepte asta sau să suprascriem atributul.
-                # O metodă robustă e să setăm un atribut temporar pe obiect.
                 event_instance.preview_couple_photo_b64 = f"data:{f.content_type};base64,{img_data}"
             except Exception:
-                pass  # Dacă eșuează conversia, nu afișăm poza nouă
+                pass
 
-        # 4. Context pentru Template
+        # 4. Context for Template
         context = {
             'event': event_instance,
-            'guest': None,  # Preview-ul nu are un invitat specific
-            'is_preview': True,  # Flag util în template pentru a ascunde butoane de RSVP etc.
+            'guest': None,
+            'is_preview': True,
         }
 
-        # 5. Randare
+        # 5. Render
         try:
             return render(request, design.template_name, context)
         except Exception as e:
-            return HttpResponse(f"Eroare la generare preview: {str(e)}", status=500)
+            return HttpResponse(_("Error generating preview: %(error)s") % {'error': str(e)}, status=500)

@@ -1,390 +1,373 @@
 {% extends "invapp/base.html" %}
 {% load i18n %}
 
-{% block title %}{% translate "Guest List for" %} {{ event.title }}{% endblock %}
+{% block title %}{% translate "Guest List" %} - {{ event.title }}{% endblock %}
 
-<!-- Custom Navigation for This Page -->
+{% block head_extra %}
+<style>
+    .glass-header {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .dark .glass-header {
+        background: rgba(31, 41, 55, 0.8);
+    }
+    [x-cloak] { display: none !important; }
+</style>
+{% endblock %}
+
+<!-- Custom Navigation -->
 {% block nav_links %}
-    <a href="{% url 'invapp:dashboard' %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Dashboard" %}</a>
+    <a href="{% url 'invapp:dashboard' %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">{% translate "Dashboard" %}</a>
     <a href="{% url 'invapp:guest_list' event_id=event.id %}" class="border-indigo-500 text-gray-900 dark:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Guest List" %}</a>
-    <a href="{% url 'invapp:guest_create' event_id=event.id %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Add Guest" %}</a>
-    <a href="{% url 'invapp:table_list' event_id=event.id %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Table List" %}</a>
-    <a href="{% url 'invapp:table_assignment_ui' event_id=event.id %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">{% translate "Assign Guests" %}</a>
+    <a href="{% url 'invapp:table_list' event_id=event.id %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">{% translate "Tables" %}</a>
+    <a href="{% url 'invapp:table_assignment_ui' event_id=event.id %}" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">{% translate "Seating Chart" %}</a>
 {% endblock nav_links %}
 
-{% block mobile_nav_links %}
-    <a href="{% url 'invapp:dashboard' %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Dashboard" %}</a>
-    <a href="{% url 'invapp:guest_list' event_id=event.id %}" class="block pl-3 pr-4 py-2 border-l-4 bg-indigo-50 border-indigo-500 text-base font-medium text-indigo-700 dark:text-indigo-300 dark:bg-indigo-900/50">{% translate "Guest List" %}</a>
-    <a href="{% url 'invapp:guest_create' event_id=event.id %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Add Guest" %}</a>
-    <a href="{% url 'invapp:table_list' event_id=event.id %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Table List" %}</a>
-    <a href="{% url 'invapp:table_assignment_ui' event_id=event.id %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{% translate "Assign Guests" %}</a>
-{% endblock mobile_nav_links %}
-
-
 {% block page_header %}
-    <div x-data="{
-          importOpen: false,
-          showUpgradeModal: false,
-          guestCount: {{ guests.count|default:0 }},
-          maxGuests: {{ active_plan.max_guests|default:0 }}
-        }"
-        class="sm:flex sm:justify-between sm:items-start relative"> <!-- Added relative here -->
-
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{% translate "Guest List" %}</h1>
-            <p class="mt-1 text-md text-gray-600 dark:text-gray-400">{% translate "Managing guests for:" %} <span class="font-semibold">{{ event.title }}</span></p>
-
-            <!-- Plan Status Badge -->
-            {% if active_plan %}
-            <div class="mt-4 flex items-center space-x-4">
-                <span class="inline-flex items-center rounded-full bg-indigo-100 dark:bg-indigo-900/50 px-3 py-0.5 text-sm font-medium text-indigo-800 dark:text-indigo-300">
-                    {{ active_plan.name }}
-                </span>
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    {% blocktranslate with count=guests.count|default:0 max=active_plan.max_guests|default:0 %}
-                    {{ count }} / {{ max }} guests used
-                    {% endblocktranslate %}
-                </span>
+    <div x-data="{ 
+          importOpen: false, 
+          showUpgradeModal: false, 
+          guestCount: {{ guests|length }}, 
+          maxGuests: {{ active_plan.max_guests|default:0 }} 
+        }" 
+        class="relative">
+        
+        <div class="md:flex md:items-center md:justify-between">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">
+                    {% translate "Guest List" %}
+                </h2>
+                <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
+                    <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
+                        <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        {{ event.title }}
+                    </div>
+                    {% if active_plan %}
+                    <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300 mr-2">
+                            {{ active_plan.name }}
+                        </span>
+                        {% blocktranslate with count=guests|length max=active_plan.max_guests|default:0 %}
+                        {{ count }} / {{ max }} guests
+                        {% endblocktranslate %}
+                    </div>
+                    {% endif %}
+                </div>
             </div>
-            {% endif %}
-        </div>
+            
+            <div class="mt-5 flex lg:mt-0 lg:ml-4 space-x-2">
+                <button @click="importOpen = true" type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none transition-all">
+                    <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    {% translate "Import" %}
+                </button>
 
-        <div class="mt-4 sm:mt-0 sm:ml-4 sm:text-right">
-            <div class="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
-                 <button
-                    type="button"
-                    @click.prevent="if (guestCount >= maxGuests) { showUpgradeModal = true } else { importOpen = true }"
-                    class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                    {% translate "Import Guests" %}
-                 </button>
-                 <a href="{% url 'invapp:download_guest_template' event_id=event.id %}" class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                    {% translate "Download Template" %}
-                 </a>
-
-                 <!--
-                   THE FIX: Hidden on mobile ('hidden sm:inline-flex') to avoid duplication
-                 -->
-                 <button
-                    type="button"
-                    @click.prevent="if (guestCount >= maxGuests) { showUpgradeModal = true } else { window.location.href = '{% url 'invapp:guest_create' event_id=event.id %}' }"
-                    class="hidden sm:inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                    {% translate "Add New Guest" %}
+                <button type="button" 
+                        @click.prevent="if (guestCount >= maxGuests) { showUpgradeModal = true } else { window.location.href = '{% url 'invapp:guest_create' event_id=event.id %}' }"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                    {% translate "Add Guest" %}
                 </button>
             </div>
-
-            <!--
-              ==============================================
-              === NEW: Mobile Floating Action Button (FAB) ===
-              ==============================================
-              - Visible only on mobile ('sm:hidden')
-              - Fixed position at bottom right
-              - Semi-transparent ('bg-indigo-600/90', 'backdrop-blur-sm')
-            -->
-            <button
-                type="button"
-                @click.prevent="if (guestCount >= maxGuests) { showUpgradeModal = true } else { window.location.href = '{% url 'invapp:guest_create' event_id=event.id %}' }"
-                class="fixed bottom-6 right-6 z-40 sm:hidden inline-flex justify-center items-center p-4 border border-transparent shadow-lg text-white bg-indigo-600/90 backdrop-blur-sm hover:bg-indigo-700 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform hover:scale-105 active:scale-95"
-                aria-label="{% translate 'Add Guest' %}">
-                <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-            </button>
-
-            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{% translate "Tip: Download the template, fill it with your guests, and import the file." %}</p>
-
-            <!-- Import Modal -->
-            <div x-show="importOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style="display: none;">
-                <div @click.away="importOpen = false" class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md text-left">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{% translate "Import Guest List" %}</h3>
-                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{% blocktranslate %}Upload an Excel file (.xlsx) with your guests. Make sure it has columns for 'Honorific', 'Name', 'Email', 'Phone Number', and 'Max Attendees'.{% endblocktranslate %}</p>
-                    <form action="{% url 'invapp:guest_import' event_id=event.id %}" method="post" enctype="multipart/form-data" class="mt-4 space-y-4">
-                        {% csrf_token %}
-                        <div>
-                            <input type="file" name="guest_file" accept=".xlsx" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/50 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900"/>
-                        </div>
-                        <div class="flex justify-end space-x-3">
-                            <button type="button" @click="importOpen = false" class="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200">{% translate "Cancel" %}</button>
-                            <button type="submit" class="px-4 py-2 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">{% translate "Upload and Import" %}</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Upgrade Limit Modal -->
-            <div x-show="showUpgradeModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style="display: none;">
-                <div @click.away="showUpgradeModal = false" class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md text-left">
-                    <div class="flex items-center justify-center h-12 w-12 mx-auto rounded-full bg-yellow-100 dark:bg-yellow-900/50">
-                        <svg class="h-6 w-6 text-yellow-600 dark:text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" /></svg>
-                    </div>
-                    <div class="mt-3 text-center sm:mt-5">
-                        <h3 class="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100">{% translate "Guest Limit Reached" %}</h3>
-                        <div class="mt-2">
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{% blocktranslate with plan_name=active_plan.name %}You have reached the maximum number of guests for your <strong>{{ plan_name }}</strong>. To add more guests, please upgrade your plan.{% endblocktranslate %}</p>
-                        </div>
-                    </div>
-                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                        <a href="{% url 'invapp:landing_page' %}#pricing" class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 sm:col-start-2">
-                            {% translate "Upgrade Now" %}
-                        </a>
-                        <button @click="showUpgradeModal = false" type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-700 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 sm:col-start-1 sm:mt-0">
-                            {% translate "Cancel" %}
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
+
+        <!-- Floating Action Button (Mobile Only) -->
+        <button type="button" 
+                @click.prevent="if (guestCount >= maxGuests) { showUpgradeModal = true } else { window.location.href = '{% url 'invapp:guest_create' event_id=event.id %}' }"
+                class="fixed bottom-6 right-6 z-50 md:hidden flex items-center justify-center w-14 h-14 rounded-full bg-indigo-600 text-white shadow-2xl hover:scale-110 active:scale-95 transition-transform">
+            <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        </button>
+
+        <!-- Modals -->
+        {% include "invapp/includes/guest_import_modal.html" %}
+        {% include "invapp/includes/upgrade_modal.html" %}
     </div>
 {% endblock %}
 
 {% block content %}
-    <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
-        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-            <div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-                    {% translate "Invited Guests" %} ({{ guests.count }})
-                </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    {% translate "Total Attending:" %} <strong id="total-attending-count" class="text-indigo-600 dark:text-indigo-400">{{ total_attending }}</strong>
-                </p>
+<div x-data="{ sortOpen: false }" class="space-y-6">
+    
+    <!-- Stats & Filters Bar -->
+    <div class="glass-header sticky top-16 z-30 -mx-4 px-4 py-4 sm:mx-0 sm:px-6 sm:rounded-xl shadow-sm border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {% translate "Total Attending:" %} 
+                <span id="total-attending-count" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 ml-1">{{ total_attending }}</span>
+            </div>
+            <div class="h-8 w-px bg-gray-200 dark:border-gray-700"></div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+                <span class="font-semibold text-gray-900 dark:text-white">{{ guests|length }}</span> {% translate "Total Invited" %}
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-[40%] cursor-pointer group">
-                            <a href="?sort={% if current_sort == 'name' %}-name{% else %}name{% endif %}" class="flex items-center text-gray-500 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                                {% translate "Guest Details" %}
-                                <span class="ml-1 flex flex-col">
-                                    {% if current_sort == 'name' %}
-                                        <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" transform="rotate(180 10 10)"/></svg>
-                                    {% elif current_sort == '-name' %}
-                                        <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
-                                    {% else %}
-                                        <svg class="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-50" fill="currentColor" viewBox="0 0 20 20"><path d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z"/></svg>
-                                    {% endif %}
-                                </span>
-                            </a>
-                        </th>
-                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-[20%] cursor-pointer group">
-                                <a href="?sort={% if current_sort == 'status' %}-status{% else %}status{% endif %}" class="flex items-center text-gray-500 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                                    {% translate "Status & Count" %}
-                                    <span class="ml-1">
-                                        {% if current_sort == 'status' %}
-                                             <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                                        {% elif current_sort == '-status' %}
-                                            <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
-                                        {% else %}
-                                            <svg class="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-50" fill="currentColor" viewBox="0 0 20 20"><path d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z"/></svg>
-                                        {% endif %}
-                                    </span>
-                                </a>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-[25%]">{% translate "Details" %}</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-[15%]">{% translate "Actions" %}</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    {% for guest in guests %}
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                            <!-- Column 1: Guest Details -->
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col space-y-1">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                            {{ guest.get_full_display_name }}
-                                        </span>
-                                        <!-- Visual "Manual" Checkmark -->
-                                        {% if guest.manual_is_attending is not None %}
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" title="{% translate 'Manually updated by host' %}">
-                                                {% translate "Manual" %}
-                                            </span>
-                                        <!-- NEW: Visual "Digital RSVP" Checkmark -->
-                                        {% elif guest.rsvp_details.attending is not None %}
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" title="{% translate 'Responded online' %}">
-                                                <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                {% translate "Online" %}
-                                            </span>
-                                        {% endif %}
-                                    </div>
-                                    <!-- Contact Info Stack -->
-                                    <div class="flex flex-col text-xs space-y-0.5">
-                                        {% if guest.email %}
-                                            <div class="flex items-center text-gray-500 dark:text-gray-400">
-                                                <svg class="h-3 w-3 mr-1.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                                <a href="mailto:{{ guest.email }}" class="hover:text-indigo-600 truncate max-w-[200px]" title="{{ guest.email }}">{{ guest.email }}</a>
-                                            </div>
-                                        {% endif %}
-                                        {% if guest.phone_number %}
-                                            <div class="flex items-center text-gray-500 dark:text-gray-400">
-                                                <svg class="h-3 w-3 mr-1.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                                <a href="tel:{{ guest.phone_number }}" class="hover:text-indigo-600">{{ guest.phone_number }}</a>
-                                            </div>
-                                        {% endif %}
-                                        <!-- Invitation Method -->
-                                        <div class="flex items-center text-gray-400 dark:text-gray-500 mt-1">
-                                            <span id="method-badge-{{ guest.id }}" class="text-[10px] uppercase tracking-wide border border-gray-200 dark:border-gray-600 rounded px-1.5 bg-gray-50 dark:bg-gray-700">
-                                                {{ guest.get_invitation_method_display|default:"Physical" }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-
-                            <!-- Column 2: Status & Count -->
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col items-center space-y-2">
-                                    <!-- Status Badge -->
-                                    {% if guest.is_attending %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">{% translate "Attending" %}</span>
-                                    {% elif guest.is_attending is False %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200">{% translate "Not Coming" %}</span>
-                                    {% else %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200">{% translate "Pending" %}</span>
-                                    {% endif %}
-
-                                    <!-- Count Input Form -->
-                                    <form class="attendance-form flex items-center space-x-1" data-guest-id="{{ guest.id }}" data-rsvp-submitted="{% if guest.rsvp_details and guest.rsvp_details.attending is not None %}true{% else %}false{% endif %}">
-                                        <input type="number" name="number_attending"
-                                               class="block w-14 text-center text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-1"
-                                               value="{{ guest.attending_count }}" min="0">
-                                        <button type="submit" class="p-1 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" title="{% translate 'Save' %}">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-
-                            <!-- Column 3: Details (Meal & Message) -->
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col space-y-2 text-xs text-gray-500 dark:text-gray-400">
-                                    {% if guest.rsvp_details.meal_preference %}
-                                        <div class="flex items-start" title="{{ guest.rsvp_details.meal_preference }}">
-                                            <svg class="h-4 w-4 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                                            <span class="truncate max-w-[150px]">{{ guest.rsvp_details.meal_preference }}</span>
-                                        </div>
-                                    {% endif %}
-                                    {% if guest.rsvp_details.message %}
-                                        <div class="flex items-start" title="{{ guest.rsvp_details.message }}">
-                                            <svg class="h-4 w-4 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-                                            <span class="truncate max-w-[150px]">{{ guest.rsvp_details.message }}</span>
-                                        </div>
-                                    {% endif %}
-                                    {% if not guest.rsvp_details.meal_preference and not guest.rsvp_details.message %}
-                                        <span class="text-gray-300 dark:text-gray-600">-</span>
-                                    {% endif %}
-                                </div>
-                            </td>
-
-                            <!-- Column 4: Actions -->
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                <div class="flex items-center justify-center space-x-3">
-                                    <button onclick="copyAndMarkSent(this, '{{ request.scheme }}://{{ request.get_host }}{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}', {{ guest.id }})"
-                                            class="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                                            title="{% translate 'Copy Link' %}">
-                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                                    </button>
-                                    <a href="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" target="_blank" class="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="{% translate 'View Invitation' %}">
-                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                    </a>
-                                    <a href="{% url 'invapp:guest_edit' pk=guest.pk %}" class="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="{% translate 'Edit Guest' %}">
-                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536l12.232-12.232z" /></svg>
-                                    </a>
-                                    <form action="{% url 'invapp:guest_delete' pk=guest.pk %}" method="post" class="inline">
-                                        {% csrf_token %}
-                                        <button type="submit" onclick="return confirm('{% translate "Are you sure you want to permanently delete this guest?" %}')"
-                                                class="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                                                title="{% translate 'Delete Guest' %}">
-                                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="flex items-center space-x-2">
+            <div class="relative" @click.away="sortOpen = false">
+                <button @click="sortOpen = !sortOpen" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50">
+                    <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>
+                    {% translate "Sort By" %}
+                </button>
+                <div x-show="sortOpen" x-cloak class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-40">
+                    <div class="py-1">
+                        <a href="?sort=name" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100">{% translate "Name (A-Z)" %}</a>
+                        <a href="?sort=-name" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100">{% translate "Name (Z-A)" %}</a>
+                        <a href="?sort=status" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100">{% translate "RSVP Status" %}</a>
+                    </div>
+                </div>
+            </div>
+            <a href="{% url 'invapp:download_guest_template' event_id=event.id %}" class="p-2 text-gray-400 hover:text-indigo-600 transition-colors" title="{% translate 'Download Template' %}">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            </a>
         </div>
     </div>
 
-    <!-- JavaScript -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const forms = document.querySelectorAll('.attendance-form');
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const langCode = document.documentElement.lang || 'en';
+    <!-- MOBILE VIEW (Card Grid) -->
+    <div class="grid grid-cols-1 gap-4 md:hidden">
+        {% for guest in guests %}
+        <div x-data="{ expanded: false }" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-all" :class="expanded ? 'ring-2 ring-indigo-500' : ''">
+            <div class="p-4 flex items-center justify-between" @click="expanded = !expanded">
+                <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold">
+                        {{ guest.name|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h4 class="text-sm font-bold text-gray-900 dark:text-white">{{ guest.get_full_display_name }}</h4>
+                            
+                            {# RSVP SOURCE TICK #}
+                            {% if guest.manual_is_attending is not None %}
+                                <svg class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20" title="{% translate 'Manual Confirmation' %}"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            {% elif guest.rsvp_details.attending is not None %}
+                                <svg class="h-4 w-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20" title="{% translate 'Digital Confirmation' %}"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            {% if guest.is_attending %}
+                                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                                <span class="text-[10px] font-medium text-green-600 uppercase">{% translate "Attending" %} ({{ guest.attending_count }})</span>
+                            {% elif guest.is_attending is False %}
+                                <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                <span class="text-[10px] font-medium text-red-600 uppercase">{% translate "Declined" %}</span>
+                            {% else %}
+                                <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                                <span class="text-[10px] font-medium text-yellow-600 uppercase">{% translate "Pending" %}</span>
+                            {% endif %}
+                            
+                            <span class="text-gray-300">•</span>
+                            
+                            {# INVITATION METHOD ICON #}
+                            {% if guest.invitation_method == 'digital' %}
+                                <svg class="h-3 w-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                            {% else %}
+                                <svg class="h-3 w-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <svg class="h-5 w-5 text-gray-400 transition-transform duration-200" :class="expanded ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
 
-            // Attendance Update
-            forms.forEach(form => {
-                form.addEventListener('submit', function(event) {
-                    event.preventDefault();
+            <!-- Expandable Mobile Details -->
+            <div x-show="expanded" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-50 dark:border-gray-700 pt-4 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{% translate "Language" %}</label>
+                        <select onchange="updateGuestLanguage({{ guest.id }}, this.value)" class="mt-1 block w-full text-sm rounded-lg border-gray-200 dark:bg-gray-700 dark:text-white">
+                            <option value="ro" {% if guest.preferred_language == 'ro' %}selected{% endif %}>Română</option>
+                            <option value="en" {% if guest.preferred_language == 'en' %}selected{% endif %}>English</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{% translate "Attendees" %}</label>
+                        <form class="attendance-form flex items-center mt-1" data-guest-id="{{ guest.id }}">
+                            <input type="number" name="number_attending" value="{{ guest.attending_count }}" class="w-full text-sm rounded-lg border-gray-200 dark:bg-gray-700 dark:text-white mr-2">
+                            <button type="submit" class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg></button>
+                        </form>
+                    </div>
+                </div>
 
-                    if (form.dataset.rsvpSubmitted === 'true') {
-                        if (!confirm("{% translate 'Override RSVP?' %}")) return;
-                    }
+                {% if guest.rsvp_details.meal_preference or guest.rsvp_details.message %}
+                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 text-xs">
+                    {% if guest.rsvp_details.meal_preference %}
+                        <p class="mb-2"><span class="font-bold">{% translate "Meal:" %}</span> {{ guest.rsvp_details.meal_preference }}</p>
+                    {% endif %}
+                    {% if guest.rsvp_details.message %}
+                        <p><span class="font-bold">{% translate "Message:" %}</span> {{ guest.rsvp_details.message }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
 
-                    const guestId = form.dataset.guestId;
-                    const numberAttending = form.querySelector('input[name="number_attending"]').value;
-                    const button = form.querySelector('button');
-                    const originalIcon = button.innerHTML;
+                <div class="flex justify-between items-center pt-2">
+                    <div class="flex space-x-2">
+                        <button onclick="copyAndMarkSent(this, '{{ request.scheme }}://{{ request.get_host }}{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}', {{ guest.id }})" class="p-2 text-gray-500 bg-gray-100 rounded-full transition-colors active:bg-green-100 active:text-green-600"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
+                        <a href="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" target="_blank" class="p-2 text-gray-500 bg-gray-100 rounded-full"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></a>
+                    </div>
+                    <div class="flex space-x-2">
+                        <a href="{% url 'invapp:guest_edit' pk=guest.pk %}" class="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg">{% translate "Edit" %}</a>
+                        <form action="{% url 'invapp:guest_delete' pk=guest.pk %}" method="post" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" onclick="return confirm('{% translate "Permanently delete?" %}')" class="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg">{% translate "Delete" %}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 
-                    button.disabled = true;
-                    button.innerHTML = `<svg class="animate-spin h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+    <!-- DESKTOP VIEW (Refined Table) -->
+    <div class="hidden md:block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900/50 text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400">
+                <tr>
+                    <th class="px-6 py-4 text-left">{% translate "Guest" %}</th>
+                    <th class="px-6 py-4 text-center">{% translate "Sent Via" %}</th>
+                    <th class="px-6 py-4 text-center">{% translate "RSVP" %}</th>
+                    <th class="px-6 py-4 text-center">{% translate "Attending" %}</th>
+                    <th class="px-6 py-4 text-center">{% translate "Language" %}</th>
+                    <th class="px-6 py-4 text-left">{% translate "Details" %}</th>
+                    <th class="px-6 py-4 text-right">{% translate "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                {% for guest in guests %}
+                <tr class="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="h-9 w-9 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold mr-3">
+                                {{ guest.name|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-gray-900 dark:text-white">{{ guest.get_full_display_name }}</div>
+                                <div class="text-[10px] text-gray-500 dark:text-gray-400">{{ guest.email|default:guest.phone_number|default:"-" }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        {% if guest.invitation_method == 'digital' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
+                                <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                {% translate "Digital" %}
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border border-amber-100 dark:border-amber-800">
+                                <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                {% translate "Paper" %}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex flex-col items-center gap-1">
+                            {% if guest.is_attending %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 uppercase">{% translate "Attending" %}</span>
+                            {% elif guest.is_attending is False %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 uppercase">{% translate "Declined" %}</span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 uppercase">{% translate "Pending" %}</span>
+                            {% endif %}
+                            
+                            {# RSVP SOURCE TICK #}
+                            {% if guest.manual_is_attending is not None %}
+                                <span class="text-[9px] text-blue-500 font-bold flex items-center"><svg class="h-3 w-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>{% translate "MANUAL" %}</span>
+                            {% elif guest.rsvp_details.attending is not None %}
+                                <span class="text-[9px] text-purple-500 font-bold flex items-center"><svg class="h-3 w-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>{% translate "DIGITAL" %}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <form class="attendance-form flex items-center justify-center" data-guest-id="{{ guest.id }}">
+                            <input type="number" name="number_attending" value="{{ guest.attending_count }}" class="w-16 text-center text-sm rounded-lg border-gray-200 dark:bg-gray-700 dark:border-gray-600 focus:ring-indigo-500 shadow-sm">
+                            <button type="submit" class="ml-2 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 transition-transform active:scale-90"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg></button>
+                        </form>
+                    </td>
+                    <td class="px-6 py-4">
+                        <select onchange="updateGuestLanguage({{ guest.id }}, this.value)" class="w-28 text-xs rounded-lg border-gray-200 dark:bg-gray-700 dark:border-gray-600 shadow-sm">
+                            <option value="ro" {% if guest.preferred_language == 'ro' %}selected{% endif %}>Română</option>
+                            <option value="en" {% if guest.preferred_language == 'en' %}selected{% endif %}>English</option>
+                        </select>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-[11px] text-gray-500 dark:text-gray-400 max-w-[150px] truncate" title="{{ guest.rsvp_details.meal_preference|default:guest.rsvp_details.message }}">
+                            {{ guest.rsvp_details.meal_preference|default:guest.rsvp_details.message|default:"-" }}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                        <div class="flex justify-end space-x-1">
+                            <button onclick="copyAndMarkSent(this, '{{ request.scheme }}://{{ request.get_host }}{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}', {{ guest.id }})" class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all" title="{% translate 'Copy Link' %}">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                            </button>
+                            <a href="{% url 'invapp:guest_edit' pk=guest.pk %}" class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all" title="{% translate 'Edit' %}">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536l12.232-12.232z" /></svg>
+                            </a>
+                            <form action="{% url 'invapp:guest_delete' pk=guest.pk %}" method="post" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" onclick="return confirm('{% translate "Permanently delete?" %}')" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all" title="{% translate 'Delete' %}">
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-                    fetch(`/${langCode}/guests/${guestId}/update_attendance/`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-                        body: JSON.stringify({ number_attending: numberAttending })
-                    })
-                    .then(r => r.ok ? r.json() : Promise.reject('Network error'))
-                    .then(data => {
-                        document.getElementById('total-attending-count').textContent = data.new_total_attending;
-                        button.classList.add('text-green-600');
-                        button.innerHTML = `<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
-                    })
-                    .catch(e => {
-                        alert('{% translate "Update failed." %}');
-                        button.classList.add('text-red-600');
-                    })
-                    .finally(() => {
-                        setTimeout(() => {
-                            button.disabled = false;
-                            button.classList.remove('text-green-600', 'text-red-600');
-                            button.innerHTML = originalIcon;
-                            location.reload(); // To update badges
-                        }, 1000);
-                    });
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const langCode = document.documentElement.lang || 'en';
+
+        // Shared Attendance Update logic
+        document.querySelectorAll('.attendance-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const guestId = this.dataset.guestId;
+                const count = this.querySelector('input[name="number_attending"]').value;
+                const btn = this.querySelector('button');
+                const orig = btn.innerHTML;
+
+                btn.disabled = true;
+                btn.innerHTML = '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+                fetch(`/${langCode}/guests/${guestId}/update_attendance/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                    body: JSON.stringify({ number_attending: count })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('total-attending-count').textContent = data.new_total_attending;
+                    btn.innerHTML = '<svg class="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                    setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 1000);
                 });
             });
         });
+    });
 
-        // Copy & Mark Sent Logic
-        function copyAndMarkSent(button, url, guestId) {
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const langCode = document.documentElement.lang || 'en';
+    function updateGuestLanguage(guestId, lang) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const langCode = document.documentElement.lang || 'en';
+        fetch(`/${langCode}/guests/${guestId}/update_attendance/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify({ preferred_language: lang })
+        }).then(r => { if(!r.ok) alert('Update failed'); });
+    }
 
-            navigator.clipboard.writeText(url).then(() => {
-                const originalContent = button.innerHTML;
-                button.innerHTML = `<svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
-
-                fetch(`/${langCode}/guests/${guestId}/mark_sent/`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }
-                }).then(r => r.json()).then(data => {
-                    if(data.status === 'success') {
-                        const badge = document.getElementById(`method-badge-${guestId}`);
-                        if(badge) badge.innerText = "Digital";
-                    }
-                });
-
-                setTimeout(() => {
-                    button.innerHTML = originalContent;
-                }, 2000);
+    function copyAndMarkSent(btn, url, guestId) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const langCode = document.documentElement.lang || 'en';
+        const orig = btn.innerHTML;
+        navigator.clipboard.writeText(url).then(() => {
+            btn.innerHTML = '<svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+            fetch(`/${langCode}/guests/${guestId}/mark_sent/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }
             });
-        }
-    </script>
+            setTimeout(() => { btn.innerHTML = orig; }, 2000);
+        });
+    }
+</script>
 {% endblock %}

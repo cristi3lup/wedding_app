@@ -1,11 +1,12 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
 <!-- THE FIX: The 'dark' class here forces dark mode for any template that extends this file. -->
 <html lang="{{ LANGUAGE_CODE }}" class="h-full dark scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}You're Invited{% endblock %}</title>
+    <title>{% block title %}{% translate "You're Invited" %}{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'invapp/images/favicon.png' %}">
     <link rel="apple-touch-icon" href="{% static 'invapp/images/favicon.png' %}">
 
@@ -29,8 +30,8 @@
 
     {% endwith %}
 
-    <meta property="og:title" content="{{ event.title }} - Invitație Online" />
-    <meta property="og:description" content="Te invităm cu drag la evenimentul nostru! Click pentru detalii și confirmare." />
+    <meta property="og:title" content="{{ event.title }} - {% translate 'Online Invitation' %}" />
+    <meta property="og:description" content="{% translate 'We cordially invite you to our event! Click for details and confirmation.' %}" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="{{ request.build_absolute_uri }}" />
 
@@ -41,7 +42,7 @@
     <!-- Block for page-specific fonts -->
     {% block page_specific_fonts %}{% endblock %}
 
-    <!-- 2. Tailwind CSS via CDN (The Easy Way) -->
+    <!-- 2. Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- 3. Custom Config for Tailwind Colors/Fonts -->
@@ -92,14 +93,14 @@
         </div>
 
         <div class="absolute bottom-0 w-full bg-red-600/90 text-white text-center py-2 text-sm font-bold pointer-events-auto shadow-lg backdrop-blur-sm">
-            Aceasta este o previzualizare gratuită.
+            {% translate "This is a free preview." %}
             <a href="/upgrade/" class="underline hover:text-yellow-200 ml-2">
-                Activează Planul Premium pentru a elimina watermark-ul.
+                {% translate "Activate Premium Plan to remove the watermark." %}
             </a>
         </div>
 
     </div>
-{% endif %}
+    {% endif %}
     <!-- This is the main content block that your invitation designs will fill. -->
     {% block content %}{% endblock %}
 
@@ -107,4 +108,3 @@
     {% block extra_js %}{% endblock %}
 </body>
 </html>
-

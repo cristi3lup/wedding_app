@@ -3,11 +3,33 @@
 
 {% block title %}{% translate "Frequently Asked Questions" %} - InvApp{% endblock %}
 
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% get_current_language as LANGUAGE_CODE %}
+    {% for faq in faqs %}
+    {
+      "@type": "Question",
+      "name": "{% if LANGUAGE_CODE == 'en' and faq.question_en %}{{ faq.question_en|escapejs }}{% else %}{{ faq.question|escapejs }}{% endif %}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{% if LANGUAGE_CODE == 'en' and faq.answer_en %}{{ faq.answer_en|striptags|escapejs }}{% else %}{{ faq.answer|striptags|escapejs }}{% endif %}"
+      }
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="bg-gray-50 dark:bg-gray-900 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl mx-auto">
 
-        <!-- Header Secțiune -->
+        <!-- Section Header -->
         <div class="text-center mb-12">
             <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
                 {% translate "Frequently Asked Questions" %}
@@ -17,20 +39,20 @@
             </p>
         </div>
 
-        <!-- Lista FAQ (Acordeon) -->
+        <!-- FAQ List (Accordion) -->
         <div class="space-y-4" x-data="{ active: null }">
 
             {% get_current_language as LANGUAGE_CODE %}
 
             {% for faq in faqs %}
-                <!-- LOGICĂ BILINGVĂ: Alegem textul în funcție de limba curentă -->
-                <!-- Dacă suntem pe EN și există traducere în baza de date, o folosim -->
+                <!-- BILINGUAL LOGIC: Select text based on current language -->
+                <!-- If on EN and translation exists in DB, use it -->
                 {% if LANGUAGE_CODE == 'en' and faq.question_en %}
                     {% with q_text=faq.question_en a_text=faq.answer_en %}
                         {% include "invapp/includes/faq_item.html" %}
                     {% endwith %}
                 {% else %}
-                    <!-- Fallback: Folosim textul default (Română) -->
+                    <!-- Fallback: Use default text (Romanian source in DB) -->
                     {% with q_text=faq.question a_text=faq.answer %}
                         {% include "invapp/includes/faq_item.html" %}
                     {% endwith %}
@@ -49,7 +71,7 @@
 
         </div>
 
-        <!-- Call to Action Suplimentar -->
+        <!-- Additional CTA -->
         <div class="mt-12 text-center">
             <p class="text-base text-gray-500 dark:text-gray-400">
                 {% translate "Didn't find the answer you were looking for?" %}
@@ -62,7 +84,7 @@
     </div>
 </div>
 
-<!-- Stiluri CSS necesare doar pentru această pagină -->
+<!-- CSS styles required only for this page -->
 <style>
     [x-cloak] { display: none !important; }
 </style>
