@@ -197,6 +197,20 @@ USE_I18N = True
 USE_TZ = True
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
+DATE_INPUT_FORMATS = [
+    '%d/%m/%Y', '%d.%m.%Y', '%Y-%m-%d',
+]
+
+DATETIME_INPUT_FORMATS = [
+    '%d/%m/%Y %H:%M:%S',
+    '%d/%m/%Y %H:%M',
+    '%d/%m/%Y',
+    '%Y-%m-%d %H:%M:%S',
+    '%Y-%m-%d %H:%M',
+    '%Y-%m-%d',
+]
+
+
 # ==========================================================
 # === AUTH & EMAIL                                       ===
 # ==========================================================

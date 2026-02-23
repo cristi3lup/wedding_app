@@ -152,10 +152,10 @@
 
             <!-- Hero Section -->
             <section id="home" class="reveal">
-                 {% if event.couple_photo %}
+                 {% if event.get_couple_photo_url %}
                     <div class="w-64 h-64 mx-auto rounded-full p-1 border border-gold-accent/30 shadow-[0_0_30px_rgba(242,214,164,0.1)] mb-10">
                         <div class="w-full h-full rounded-full overflow-hidden">
-                            <img src="{{ event.couple_photo.url }}" alt="Couple Photo" class="w-full h-full object-cover">
+                            <img src="{{ event.get_couple_photo_url }}" alt="Couple Photo" class="w-full h-full object-cover">
                         </div>
                     </div>
                 {% endif %}

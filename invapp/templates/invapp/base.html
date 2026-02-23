@@ -97,7 +97,13 @@
     {% block head_extra %}{% endblock %}
     {% block extra_head %}{% endblock %}
 </head>
-<body class="h-full bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+<body class="h-full bg-gray-100 dark:bg-gray-900 transition-colors duration-300 relative">
+    {% if site_images.global_bg %}
+        <div class="fixed inset-0 z-[-1] pointer-events-none">
+            <img src="{{ site_images.global_bg.url }}" class="w-full h-full object-cover opacity-20 dark:opacity-10" alt="Background">
+            <div class="absolute inset-0 bg-gradient-to-b from-white/40 to-white/80 dark:from-gray-900/40 dark:to-gray-900/80"></div>
+        </div>
+    {% endif %}
     <div class="min-h-full">
         <!-- Main Navigation -->
         <nav x-data="{ open: false }" class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm sticky top-0 z-50">

@@ -114,7 +114,7 @@
                  style="display: none;">
                 <form action="{% url 'set_language' %}" method="post">
                     {% csrf_token %}
-                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                    <input name="next" type="hidden" value="{% if is_preview %}/{% else %}{{ request.get_full_path }}{% endif %}">
                     <button type="submit" name="language" value="ro" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex justify-between border-b border-gray-50">
                         <span class="{% if LANGUAGE_CODE == 'ro' %}font-bold text-[#b9909b]{% endif %}">Română</span>
                         {% if LANGUAGE_CODE == 'ro' %}<i class="fas fa-check text-xs text-[#b9909b]"></i>{% endif %}
@@ -151,9 +151,9 @@
 
             <!-- Hero / Cover -->
             <div class="relative">
-                {% if event.couple_photo %}
+                {% if event.get_couple_photo_url %}
                     <div class="h-96 md:h-[30rem] overflow-hidden relative">
-                         <img src="{{ event.couple_photo.url }}" alt="Couple" class="w-full h-full object-cover">
+                         <img src="{{ event.get_couple_photo_url }}" alt="Couple" class="w-full h-full object-cover">
                          <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-90"></div>
                     </div>
                 {% else %}

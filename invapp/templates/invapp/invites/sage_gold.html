@@ -101,7 +101,7 @@
                      style="display: none;">
                     <form action="{% url 'set_language' %}" method="post">
                         {% csrf_token %}
-                        <input name="next" type="hidden" value="{{ redirect_to }}">
+                        <input name="next" type="hidden" value="{% if is_preview %}/{% else %}{{ redirect_to }}{% endif %}">
                         <button type="submit" name="language" value="ro" class="w-full text-left px-4 py-2 text-[10px] text-stone-700 hover:bg-stone-50 {% if LANGUAGE_CODE == 'ro' %}font-bold text-eucalyptus{% endif %}">Română</button>
                         <button type="submit" name="language" value="en" class="w-full text-left px-4 py-2 text-[10px] text-stone-700 hover:bg-stone-50 {% if LANGUAGE_CODE == 'en' %}font-bold text-eucalyptus{% endif %}">English</button>
                     </form>
@@ -218,6 +218,7 @@
                         {% translate "Religious Ceremony" %} - {{ event.ceremony_time|time:"H:i" }}
                     </div>
                     <p class="font-serif text-sm text-stone-600 italic">{{ event.ceremony_location|default:'Church' }}</p>
+                    <p class="font-sans text-[10px] text-stone-400">{{ event.ceremony_address }}</p>
                     {% if event.ceremony_maps_url %}
                         <a href="{{ event.ceremony_maps_url }}" target="_blank" class="text-[10px] text-stone-400 hover:text-eucalyptus underline mt-1 uppercase tracking-wide">{% translate "View Map" %}</a>
                     {% endif %}

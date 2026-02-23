@@ -47,8 +47,7 @@
                   Upload your main couple photo (portrait orientation) to your static files
                   and replace this 'https://placehold.co/...' URL.
                 -->
-                <img src="{% if event.couple_photo %}{{ event.couple_photo.url }}{% else %}https://placehold.co/800x1000/ccc/999?text=Your+Photo+Here{% endif %}" 
-                     alt="{% translate 'Couple Photo' %}" class="w-full h-full object-cover">
+                                 <img src="{% if event.get_couple_photo_url %}{{ event.get_couple_photo_url }}{% else %}https://placehold.co/800x1000/ccc/999?text=Your+Photo+Here{% endif %}"                     alt="{% translate 'Couple Photo' %}" class="w-full h-full object-cover">
             </div>
 
             <p class="mt-8 text-sm uppercase tracking-widest text-gray-500">{% translate "Together With Their Families" %}</p>
