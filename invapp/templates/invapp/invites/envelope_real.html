@@ -230,8 +230,7 @@
                  style="display: none;">
                 <form action="{% url 'set_language' %}" method="post">
                     {% csrf_token %}
-                    <input name="next" type="hidden" value="{{ redirect_to }}">
-                    <button type="submit" name="language" value="ro" class="w-full text-left px-4 py-2 text-[10px] text-stone-700 hover:bg-stone-50">Română</button>
+                                            <input name="next" type="hidden" value="{% if is_preview %}/{% else %}{{ redirect_to }}{% endif %}">                    <button type="submit" name="language" value="ro" class="w-full text-left px-4 py-2 text-[10px] text-stone-700 hover:bg-stone-50">Română</button>
                     <button type="submit" name="language" value="en" class="w-full text-left px-4 py-2 text-[10px] text-stone-700 hover:bg-stone-50">English</button>
                 </form>
             </div>
@@ -282,9 +281,9 @@
             <p class="font-serif text-lg text-stone-500 italic mb-6">{% translate "You are cordially invited to the wedding of" %}</p>
             
             <div class="mb-8 relative">
-                 {% if event.couple_photo %}
+                 {% if event.get_couple_photo_url %}
                     <div class="w-64 h-80 rounded-t-[10rem] overflow-hidden border-4 border-white shadow-xl mx-auto mb-6">
-                         <img src="{{ event.couple_photo.url }}" class="w-full h-full object-cover">
+                         <img src="{{ event.get_couple_photo_url }}" class="w-full h-full object-cover">
                     </div>
                 {% endif %}
                 <h1 class="font-serif text-5xl text-stone-900 leading-none mb-2">{{ event.bride_name }}</h1>

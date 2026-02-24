@@ -27,6 +27,15 @@
 - **RSVP Source Verification:** Distinguishing between digital RSVPs (via the platform) and manual updates (phone/physical) using visual "ticks" (e.g., Purple for Digital, Blue for Manual) significantly reduces host confusion.
 - **Invitation Lifecycle Tracking:** Tracking the delivery method (Digital vs. Paper) allows hosts to manage their physical stationery budget while leveraging the speed of digital links.
 - **Bulk Import Flexibility:** Customizing the Excel import logic to map human-readable strings (like "digital" or "paper") to model constants ensures data consistency during high-volume guest list setup.
+- **Invitation Method Terminology:** Using "Digital" and "On Paper" instead of "Physical Invitation" resonates better with users. Consistently updating model labels, form fields, and help texts ensures a seamless UX across the guest creation and management workflow.
+- **Field vs. Property Conflicts:** Avoid defining a database field with the same name as a model property (e.g., `attending_count`). This can lead to unpredictable behavior in forms and QuerySets. Always prefer the property for calculated logic and rename the underlying field if persistence is required.
+- **English-First Strategy (Mandatory):** Always use English as the primary source language in code, model labels, and templates. Mark strings for translation using `_()` or `{% translate %}`. This ensures a clean base for `makemessages` and prevents character encoding issues. Even if the user requests specific non-English text, implement it as a translation of an English original.
+
+## 📱 Mobile-First UX & Foldable Optimization
+- **Fold-Aware Design:** For devices like the Galaxy Fold 5, using flex-based adaptive containers rather than fixed widths ensures the UI remains professional on both narrow cover screens and wide tablet-like displays.
+- **Tactile Inputs:** High-density tactile wrappers for system pickers (like Time/Date) increase usability by providing larger tap targets without losing the native OS accessibility benefits.
+- **Background Autosave UX:** Implementing debounced AJAX saves during complex multi-step wizards prevents data loss and builds user confidence via visual "Last Saved" indicators.
+- **User Redirection & Proactive Feedback:** After multi-step form completion (like Event Publishing), redirecting to a central hub (Dashboard) instead of the same form prevents confusion. Supplementing this with "Attention" messages (`messages.warning`) about non-critical missing data (e.g., missing photos or logistics) encourages completion without blocking the primary workflow.
 
 ## 💾 Database Migrations (SQLite Specific)
 - **Table Recreation Issues:** SQLite does not support robust `ALTER COLUMN` operations. Adding a `NOT NULL` constraint to an existing column during a complex refactor can trigger `IntegrityError` if the migration fails to handle default values correctly during table recreation.
@@ -34,3 +43,12 @@
     1. Manually sync the schema using `cursor.execute('ALTER TABLE ... ADD COLUMN ...')`.
     2. Reset the migration history for that app in `django_migrations`.
     3. Run `makemigrations` and `migrate --fake-initial` to let Django take over the current state.
+
+## 🎨 Premium Live Builder & Split-Screen UX
+- **Split-Screen Strategy:** For desktop-class SaaS builders, moving from a stacked grid to a `flex-row` split-screen layout (70/30 or 60/40) provides immediate visual feedback. The form stays on the left (scrollable), while the preview stays sticky on the right.
+- **Smartphone Mockup Realism:** Using realistic aspect ratios (9:19) and "hardware" details like thick bezels and a top notch significantly improves the perceived value of the product during the creation phase.
+- **Contextual Headers:** Moving the wizard's progress and status indicators *inside* the scrollable form column (instead of spanning the whole width) maintains a better visual connection with the fields being edited.
+- **Responsive Layout:** Always use `lg:flex-row flex-col` to ensure the split-screen automatically stacks back into a mobile-friendly layout without duplicating code or complex media queries.
+
+## 🛠 Template System & Path Resolution
+- **Standard Paths:** Always use forward slashes `/` in `{% extends %}` and `{% include %}` tags (e.g., `"invapp/base.html"`). Using colons `:` or other delimiters will trigger a `TemplateDoesNotExist` error, as Django's standard loader expects filesystem-style paths relative to the `templates` directories.

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-22 14:57+0200\n"
+"POT-Creation-Date: 2026-02-23 19:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,36 +19,38 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?"
 "2:1));\n"
 
-#: .\invapp\forms.py:41
+#: .\invapp\forms.py:42
 #, python-format
 msgid "Value must be less than or equal to %(max)s, please contact event host."
-msgstr "Valoarea trebuie să fie mai mică sau egală cu %(max)s. Te rugăm să contactezi organizatorul."
+msgstr ""
+"Valoarea trebuie să fie mai mică sau egală cu %(max)s. Te rugăm să "
+"contactezi organizatorul."
 
-#: .\invapp\forms.py:55
+#: .\invapp\forms.py:56
 msgid "Invalid choice: This guest has not RSVP'd Yes."
 msgstr "Alegere invalidă: Acest invitat nu a confirmat prezența."
 
-#: .\invapp\forms.py:57
+#: .\invapp\forms.py:58
 msgid "Invalid choice: This guest has not RSVP'd."
 msgstr "Alegere invalidă: Acest invitat nu a răspuns la invitație încă."
 
-#: .\invapp\forms.py:65
+#: .\invapp\forms.py:66
 msgid "Table Name or Number"
 msgstr "Numele sau Numărul Mesei"
 
-#: .\invapp\forms.py:66
+#: .\invapp\forms.py:67
 msgid "Capacity (Number of Seats)"
 msgstr "Capacitate (Număr de locuri)"
 
-#: .\invapp\forms.py:74
+#: .\invapp\forms.py:75
 msgid "Assign Guest"
 msgstr "Așează Invitatul"
 
-#: .\invapp\forms.py:75
+#: .\invapp\forms.py:76
 msgid "To Table"
 msgstr "La Masa"
 
-#: .\invapp\forms.py:100
+#: .\invapp\forms.py:101
 #, python-brace-format
 msgid ""
 "Not enough capacity at {table_name}. Needs {needed_seats} seat for "
@@ -56,127 +58,148 @@ msgid ""
 msgid_plural ""
 "Not enough capacity at {table_name}. Needs {needed_seats} seats for "
 "{guest_name}, but only {available_seats} seat(s) are available."
-msgstr[0] "Capacitate insuficientă la {table_name}. E nevoie de {needed_seats} loc pentru {guest_name}, dar mai este disponibil doar {available_seats} loc."
-msgstr[1] "Capacitate insuficientă la {table_name}. Sunt necesare {needed_seats} locuri pentru {guest_name}, dar mai sunt disponibile doar {available_seats} locuri."
-msgstr[2] "Capacitate insuficientă la {table_name}. Sunt necesare {needed_seats} de locuri pentru {guest_name}, dar mai sunt disponibile doar {available_seats} de locuri."
+msgstr[0] ""
+"Capacitate insuficientă la {table_name}. E nevoie de {needed_seats} loc "
+"pentru {guest_name}, dar mai este disponibil doar {available_seats} loc."
+msgstr[1] ""
+"Capacitate insuficientă la {table_name}. Sunt necesare {needed_seats} locuri "
+"pentru {guest_name}, dar mai sunt disponibile doar {available_seats} locuri."
+msgstr[2] ""
+"Capacitate insuficientă la {table_name}. Sunt necesare {needed_seats} de "
+"locuri pentru {guest_name}, dar mai sunt disponibile doar {available_seats} "
+"de locuri."
 
-#: .\invapp\forms.py:199
+#: .\invapp\forms.py:201
 msgid "Courtesy Title"
 msgstr "Formulă de adresare"
 
-#: .\invapp\forms.py:200
+#: .\invapp\forms.py:202
 msgid "Guest/Group Name (e.g., 'The Smith Family', 'John Doe')"
 msgstr "Nume Invitat/Grup (ex: 'Familia Popescu', 'Ion Popescu')"
 
-#: .\invapp\forms.py:201
+#: .\invapp\forms.py:203
+#, fuzzy
+#| msgid "Invitation Text"
+msgid "Invitation Language"
+msgstr "Textul Invitației"
+
+#: .\invapp\forms.py:204
 msgid "Phone Number (Optional)"
 msgstr "Număr de Telefon (Opțional)"
 
-#: .\invapp\forms.py:202
+#: .\invapp\forms.py:205
 msgid "Email Address (Optional)"
 msgstr "Adresă de Email (Opțional)"
 
-#: .\invapp\forms.py:203
+#: .\invapp\forms.py:206
 msgid "Max Number of People Invited (including guest)"
 msgstr "Numărul maxim de persoane invitate"
 
-#: .\invapp\forms.py:204 .\invapp\views.py:186
+#: .\invapp\forms.py:207 .\invapp\views.py:186 .\invapp\views.py:1240
 msgid "Invitation Method"
 msgstr "Metoda de trimitere a invitației"
 
-#: .\invapp\forms.py:205
+#: .\invapp\forms.py:208
 msgid "Manually Confirmed Attending?"
 msgstr "A confirmat prezența manual (ex. telefonic)?"
 
-#: .\invapp\forms.py:206
+#: .\invapp\forms.py:209
 msgid "Number Confirmed Attending (Manual)"
 msgstr "Număr de persoane confirmate (Manual)"
 
-#: .\invapp\forms.py:209
+#: .\invapp\forms.py:212
 msgid ""
 "Enter the total number of people this invitation covers (e.g., 2 for a "
 "couple)."
-msgstr "Introdu numărul total de persoane acoperit de această invitație (ex: 2 pentru un cuplu)."
+msgstr ""
+"Introdu numărul total de persoane acoperit de această invitație (ex: 2 "
+"pentru un cuplu)."
 
-#: .\invapp\forms.py:210
+#: .\invapp\forms.py:213
 msgid "Full name of the primary guest or couple/family name."
 msgstr "Numele complet al invitatului principal sau numele familiei/cuplului."
 
-#: .\invapp\forms.py:211
+#: .\invapp\forms.py:214
 msgid "Primary email for the invitation."
 msgstr "Adresa de email principală pentru invitație."
 
-#: .\invapp\forms.py:212
+#: .\invapp\forms.py:215
 msgid "Set this if guest confirmed verbally or via physical RSVP card."
 msgstr "Bifează dacă invitatul a confirmat verbal sau prin invitație fizică."
 
-#: .\invapp\forms.py:213
+#: .\invapp\forms.py:216
 msgid "If attending, how many? Overrides digital RSVP if set."
 msgstr "Dacă participă, câți vin? (Suprascrie confirmarea digitală RSVP)."
 
-#: .\invapp\forms.py:222
+#: .\invapp\forms.py:226
 msgid "Unknown"
 msgstr "Necunoscut"
 
-#: .\invapp\forms.py:222 .\invapp\models.py:540
+#: .\invapp\forms.py:226 .\invapp\models.py:548
 #: .\invapp\templates\invapp\dashboard.html:184
 msgid "Yes"
 msgstr "Da"
 
-#: .\invapp\forms.py:222 .\invapp\models.py:540
+#: .\invapp\forms.py:226 .\invapp\models.py:548
 #: .\invapp\templates\invapp\dashboard.html:180
 msgid "No"
 msgstr "Nu"
 
-#: .\invapp\forms.py:240
+#: .\invapp\forms.py:245
 msgid "A valid email address is required for account confirmation."
 msgstr "Este necesară o adresă de email validă pentru confirmarea contului."
 
-#: .\invapp\forms.py:251
+#: .\invapp\forms.py:256
 msgid "An account with this email address already exists."
 msgstr "Există deja un cont înregistrat cu acest email."
 
-#: .\invapp\forms.py:256
+#: .\invapp\forms.py:261
 msgid "Not specified"
 msgstr "Nespecificat"
 
-#: .\invapp\forms.py:275
+#: .\invapp\forms.py:280
 msgid "Select guests to assign"
 msgstr "Selectează invitații pentru a-i așeza la masă"
 
-#: .\invapp\forms.py:280
+#: .\invapp\forms.py:285
 msgid "Assign selected guests to"
 msgstr "Așează invitații selectați la"
 
-#: .\invapp\forms.py:313
+#: .\invapp\forms.py:318
 #, python-format
 msgid ""
 "Not enough capacity at %(table)s. Assigning these guests requires %(needed)d "
 "seat(s), but only %(available)d seat(s) are available."
-msgstr "Capacitate insuficientă la %(table)s. Acești invitați au nevoie de %(needed)d locuri, dar sunt disponibile doar %(available)d."
+msgstr ""
+"Capacitate insuficientă la %(table)s. Acești invitați au nevoie de "
+"%(needed)d locuri, dar sunt disponibile doar %(available)d."
 
-#: .\invapp\forms.py:344
+#: .\invapp\forms.py:349
 #, python-brace-format
 msgid ""
 "I agree to the <a href=\"{}\" target=\"_blank\" class=\"text-indigo-600 "
 "hover:underline\">Terms and Conditions</a> and <a href=\"{}\" "
 "target=\"_blank\" class=\"text-indigo-600 hover:underline\">Privacy Policy</"
 "a>."
-msgstr "Sunt de acord cu <a href=\"{}\" target=\"_blank\" class=\"text-indigo-600 hover:underline\">Termenii și Condițiile</a> și <a href=\"{}\" target=\"_blank\" class=\"text-indigo-600 hover:underline\">Politica de Confidențialitate</a>."
+msgstr ""
+"Sunt de acord cu <a href=\"{}\" target=\"_blank\" class=\"text-indigo-600 "
+"hover:underline\">Termenii și Condițiile</a> și <a href=\"{}\" "
+"target=\"_blank\" class=\"text-indigo-600 hover:underline\">Politica de "
+"Confidențialitate</a>."
 
-#: .\invapp\forms.py:365
+#: .\invapp\forms.py:370
 msgid "Godparent's name"
 msgstr "Numele nașilor"
 
-#: .\invapp\forms.py:384
+#: .\invapp\forms.py:389
 msgid "e.g. Town Hall, Main Church"
 msgstr "ex: Primărie, Biserica Sf. Maria"
 
-#: .\invapp\forms.py:385
+#: .\invapp\forms.py:390
 msgid "Optional details..."
 msgstr "Detalii opționale..."
 
-#: .\invapp\forms.py:404
+#: .\invapp\forms.py:409
 msgid "Tell us what you think (optional)..."
 msgstr "Spune-ne părerea ta (opțional)..."
 
@@ -223,7 +246,9 @@ msgstr "Descriere pentru Alt Text (Optimizare SEO)"
 #: .\invapp\models.py:52
 msgid ""
 "Maximum number of guests allowed. Use a very large number for unlimited."
-msgstr "Numărul maxim de invitați permis. Folosește un număr foarte mare pentru nelimitat."
+msgstr ""
+"Numărul maxim de invitați permis. Folosește un număr foarte mare pentru "
+"nelimitat."
 
 #: .\invapp\models.py:56
 msgid "Maximum number of events this plan allows."
@@ -233,7 +258,9 @@ msgstr "Numărul maxim de evenimente permise de acest abonament."
 msgid ""
 "Uncheck this to hide the plan from the landing page (useful for Admin-only "
 "testing plans)."
-msgstr "Debifează pentru a ascunde abonamentul de pe prima pagină (util pentru testare internă)."
+msgstr ""
+"Debifează pentru a ascunde abonamentul de pe prima pagină (util pentru "
+"testare internă)."
 
 #: .\invapp\models.py:64
 msgid "Does this plan include the table assignment feature?"
@@ -241,7 +268,9 @@ msgstr "Acest abonament include funcționalitatea de așezare la mese?"
 
 #: .\invapp\models.py:68
 msgid "Does this plan allow uploading a custom design image?"
-msgstr "Acest abonament permite încărcarea unui design personalizat (ex. imagine din Canva)?"
+msgstr ""
+"Acest abonament permite încărcarea unui design personalizat (ex. imagine din "
+"Canva)?"
 
 #: .\invapp\models.py:74
 msgid "Show Watermark"
@@ -249,7 +278,9 @@ msgstr "Afișează Watermark (Logo InvApp)"
 
 #: .\invapp\models.py:75
 msgid "If checked, invites from this plan will have a watermark."
-msgstr "Dacă este bifat, invitațiile create cu acest abonament vor avea watermark-ul platformei."
+msgstr ""
+"Dacă este bifat, invitațiile create cu acest abonament vor avea watermark-ul "
+"platformei."
 
 #: .\invapp\models.py:80
 msgid "Paste the SVG <path> data for an icon here. e.g., <path d='...'/>"
@@ -261,11 +292,14 @@ msgstr "Culoarea principală de accent Tailwind CSS. ex: 'text-indigo-500'"
 
 #: .\invapp\models.py:89
 msgid "Check this to make the plan stand out visually."
-msgstr "Bifează pentru a evidenția vizual acest abonament (ex. Cel mai popular)."
+msgstr ""
+"Bifează pentru a evidenția vizual acest abonament (ex. Cel mai popular)."
 
 #: .\invapp\models.py:93
 msgid "If True, events created under this plan cannot be edited or deleted."
-msgstr "Dacă este bifat, evenimentele create sub acest plan nu mai pot fi editate sau șterse."
+msgstr ""
+"Dacă este bifat, evenimentele create sub acest plan nu mai pot fi editate "
+"sau șterse."
 
 #: .\invapp\models.py:98
 msgid "The Price ID from Stripe for this plan (e.g., price_1J...)."
@@ -283,7 +317,9 @@ msgstr "Text Funcționalitate (EN)"
 msgid ""
 "If checked, it appears in green (included). If not, it appears struck "
 "through or gray."
-msgstr "Dacă este bifat, va apărea cu verde (inclus). Dacă nu, va apărea tăiat sau cu gri."
+msgstr ""
+"Dacă este bifat, va apărea cu verde (inclus). Dacă nu, va apărea tăiat sau "
+"cu gri."
 
 #: .\invapp\models.py:118
 msgid "Display order in the list."
@@ -351,13 +387,14 @@ msgstr "Dacă este debifat, design-ul va fi ascuns din galeria publică."
 
 #: .\invapp\models.py:215
 msgid "Admin control: Uncheck to soft-delete/hide this design everywhere."
-msgstr "Control Admin: Debifează pentru a ascunde complet acest design de peste tot."
+msgstr ""
+"Control Admin: Debifează pentru a ascunde complet acest design de peste tot."
 
 #: .\invapp\models.py:222
 msgid "Select any special form fields this design requires."
 msgstr "Selectează orice câmpuri speciale de care are nevoie acest design."
 
-#: .\invapp\models.py:241 .\invapp\templates\invapp\event_form_tailwind.html:75
+#: .\invapp\models.py:241
 msgid "Event Type"
 msgstr "Tipul Evenimentului"
 
@@ -366,7 +403,7 @@ msgid "The type of event being planned."
 msgstr "Tipul evenimentului planificat."
 
 #: .\invapp\models.py:249
-#: .\invapp\templates\invapp\event_form_tailwind.html:141
+#: .\invapp\templates\invapp\event_form_tailwind.html:209
 msgid "Child Name"
 msgstr "Nume Copil"
 
@@ -375,7 +412,6 @@ msgid "Name of the child (for baptism)."
 msgstr "Numele copilului (pentru botez)."
 
 #: .\invapp\models.py:255
-#: .\invapp\templates\invapp\event_form_tailwind.html:145
 msgid "Parents' Names"
 msgstr "Numele Părinților"
 
@@ -400,7 +436,7 @@ msgid "Name of the groom."
 msgstr "Numele mirelui."
 
 #: .\invapp\models.py:275
-#: .\invapp\templates\invapp\event_form_tailwind.html:133
+#: .\invapp\templates\invapp\event_form_tailwind.html:197
 #: .\invapp\templates\invapp\invites\botanical_tailwind.html:179
 #: .\invapp\templates\invapp\invites\celestial_theme.html:181
 #: .\invapp\templates\invapp\invites\travel_ticket.html:137
@@ -412,7 +448,7 @@ msgid "Names of the bride's parents (e.g., 'John & Jane Doe')."
 msgstr "Numele părinților miresei (ex: 'Ion & Maria Popescu')."
 
 #: .\invapp\models.py:281
-#: .\invapp\templates\invapp\event_form_tailwind.html:134
+#: .\invapp\templates\invapp\event_form_tailwind.html:201
 #: .\invapp\templates\invapp\invites\botanical_tailwind.html:183
 #: .\invapp\templates\invapp\invites\celestial_theme.html:185
 #: .\invapp\templates\invapp\invites\travel_ticket.html:140
@@ -449,6 +485,7 @@ msgid "Time when party starts."
 msgstr "Ora la care începe petrecerea."
 
 #: .\invapp\models.py:309
+#: .\invapp\templates\invapp\event_form_tailwind.html:265
 #: .\invapp\templates\invapp\invites\baptism\baloon_bear.html:332
 msgid "Venue Name"
 msgstr "Numele Locației / Restaurant"
@@ -500,9 +537,12 @@ msgstr "Descriere pentru Calendar"
 
 #: .\invapp\models.py:349
 msgid "Optional: Short description for calendar event"
-msgstr "Opțional: O scurtă descriere care va apărea când invitatul salvează evenimentul în calendar."
+msgstr ""
+"Opțional: O scurtă descriere care va apărea când invitatul salvează "
+"evenimentul în calendar."
 
 #: .\invapp\models.py:355
+#: .\invapp\templates\invapp\event_form_tailwind.html:219
 msgid "Invitation Wording"
 msgstr "Textul Invitației"
 
@@ -546,6 +586,7 @@ msgstr "Opțional: Încarcă o melodie de fundal sau un mesaj audio (MP3, WAV)."
 #: .\invapp\models.py:392
 #: .\invapp\templates\invapp\invites\photographic_story.html:51
 #: .\invapp\templates\invapp\invites\photographic_story.html:107
+#: .\invapp\views.py:661 .\invapp\views.py:767
 msgid "Couple Photo"
 msgstr "Fotografie Cuplu"
 
@@ -561,11 +602,15 @@ msgstr "Fotografie Panoramică (Landscape)"
 msgid ""
 "Optional: A landscape-oriented photo to display after the greeting (e.g., a "
 "photo of the venue or couple)."
-msgstr "Opțional: O poză orizontală de afișat în design (ex: o poză cu locația sau cuplul)."
+msgstr ""
+"Opțional: O poză orizontală de afișat în design (ex: o poză cu locația sau "
+"cuplul)."
 
 #: .\invapp\models.py:415
 msgid "Primary name for the invitation (e.g., 'The Smith Family', 'John Doe')"
-msgstr "Numele principal de pe plicul/link-ul invitației (ex: 'Familia Popescu', 'Andrei')"
+msgstr ""
+"Numele principal de pe plicul/link-ul invitației (ex: 'Familia Popescu', "
+"'Andrei')"
 
 #: .\invapp\models.py:420
 msgid "Optional: Used for sending updates"
@@ -646,314 +691,340 @@ msgstr "Setează manual numărul de participanți dacă îl știi."
 msgid "Unique identifier for the guest's invitation link"
 msgstr "Link unic de invitație (ID securizat) pentru acest invitat"
 
-#: .\invapp\models.py:541
+#: .\invapp\models.py:509
+msgid "Preferred Language"
+msgstr ""
+
+#: .\invapp\models.py:510
+msgid "The language in which the guest will see the digital invitation."
+msgstr ""
+
+#: .\invapp\models.py:549
 msgid "Will they attend?"
 msgstr "Vor participa?"
 
-#: .\invapp\models.py:546
+#: .\invapp\models.py:554
 msgid "How many are actually coming?"
 msgstr "Câte persoane vin efectiv?"
 
-#: .\invapp\models.py:552
+#: .\invapp\models.py:560
 msgid "e.g., Vegetarian, Allergies"
 msgstr "ex: Meniu Vegetarian, Alergii la nuci"
 
-#: .\invapp\models.py:557
+#: .\invapp\models.py:565
 msgid "Optional message from the guest"
 msgstr "Mesaj opțional de la invitat pentru miri/părinți"
 
-#: .\invapp\models.py:563
+#: .\invapp\models.py:571
 msgid "Undecided"
 msgstr "Nehotărât"
 
-#: .\invapp\models.py:565
-#: .\invapp\templates\invapp\guest_list_tailwind.html:243
+#: .\invapp\models.py:573
+#: .\invapp\templates\invapp\guest_list_tailwind.html:147
+#: .\invapp\templates\invapp\guest_list_tailwind.html:226
+#: .\invapp\templates\invapp\guest_list_tailwind.html:262
 msgid "Attending"
 msgstr "Participă"
 
-#: .\invapp\models.py:567
+#: .\invapp\models.py:575
 msgid "Not Attending"
 msgstr "Nu participă"
 
-#: .\invapp\models.py:568
+#: .\invapp\models.py:576
 #, python-brace-format
 msgid "RSVP for {name} - {status}"
 msgstr "Confirmare (RSVP) pentru {name} - {status}"
 
-#: .\invapp\models.py:604
+#: .\invapp\models.py:612
 msgid "Unknown Guest"
 msgstr "Invitat Necunoscut"
 
-#: .\invapp\models.py:605
+#: .\invapp\models.py:613
 msgid "Unknown Table"
 msgstr "Masă Necunoscută"
 
-#: .\invapp\models.py:607
+#: .\invapp\models.py:615
 #, python-brace-format
 msgid "{guest} -> {table} for {event}"
 msgstr "{guest} este așezat la {table} pentru {event}"
 
-#: .\invapp\models.py:609
+#: .\invapp\models.py:617
 #, python-brace-format
 msgid "{guest} -> {table} (No Event Assigned)"
 msgstr "{guest} -> {table} (Fără eveniment)"
 
-#: .\invapp\models.py:651
+#: .\invapp\models.py:659
 msgid ""
 "Full name of the godparent or godparent couple (e.g., 'John & Jane Smith')."
-msgstr "Numele complet al nașului sau cuplului de nași (ex: 'Ion & Ioana Popescu')."
+msgstr ""
+"Numele complet al nașului sau cuplului de nași (ex: 'Ion & Ioana Popescu')."
 
-#: .\invapp\models.py:660
+#: .\invapp\models.py:668
+#: .\invapp\templates\invapp\event_form_tailwind.html:711
 msgid "Civil Ceremony"
 msgstr "Cununia Civilă"
 
-#: .\invapp\models.py:661
+#: .\invapp\models.py:669
+#: .\invapp\templates\invapp\event_form_tailwind.html:712
 #: .\invapp\templates\invapp\invites\celestial_theme.html:238
 #: .\invapp\templates\invapp\invites\sage_gold.html:218
 #: .\invapp\templates\invapp\invites\wedding_lemon.html:223
 msgid "Religious Ceremony"
 msgstr "Cununia Religioasă / Slujba de Botez"
 
-#: .\invapp\models.py:662
+#: .\invapp\models.py:670
+#: .\invapp\templates\invapp\event_form_tailwind.html:261
+#: .\invapp\templates\invapp\event_form_tailwind.html:713
 #: .\invapp\templates\invapp\invites\centered_photo_story.html:98
 #: .\invapp\templates\invapp\invites\envelope_real.html:318
 #: .\invapp\templates\invapp\invites\photographic_story.html:87
 msgid "Reception"
 msgstr "Primirea Invitaților"
 
-#: .\invapp\models.py:663
-#: .\invapp\templates\invapp\event_form_tailwind.html:191
+#: .\invapp\models.py:671
+#: .\invapp\templates\invapp\event_form_tailwind.html:714
 #: .\invapp\templates\invapp\invites\minimalist_peonies.html:236
 #: .\invapp\templates\invapp\invites\travel_ticket.html:233
 msgid "Party"
 msgstr "Petrecerea"
 
-#: .\invapp\models.py:664
+#: .\invapp\models.py:672
+#: .\invapp\templates\invapp\event_form_tailwind.html:715
 msgid "Photoshoot"
 msgstr "Ședință Foto"
 
-#: .\invapp\models.py:665
+#: .\invapp\models.py:673
+#: .\invapp\templates\invapp\event_form_tailwind.html:716
 msgid "Other"
 msgstr "Altceva"
 
-#: .\invapp\models.py:669
+#: .\invapp\models.py:677
+#: .\invapp\templates\invapp\event_form_tailwind.html:246
+#: .\invapp\templates\invapp\event_form_tailwind.html:273
+#: .\invapp\templates\invapp\event_form_tailwind.html:310
+#: .\invapp\templates\invapp\event_form_tailwind.html:700
 msgid "Time"
 msgstr "Ora"
 
-#: .\invapp\models.py:675
+#: .\invapp\models.py:683
 msgid "Activity Type"
 msgstr "Tipul Activității"
 
-#: .\invapp\models.py:681
+#: .\invapp\models.py:689
+#: .\invapp\templates\invapp\event_form_tailwind.html:238
 msgid "Location"
 msgstr "Locația"
 
-#: .\invapp\models.py:686
-#: .\invapp\templates\invapp\guest_list_tailwind.html:185
+#: .\invapp\models.py:694
+#: .\invapp\templates\invapp\guest_list_tailwind.html:228
 #: .\invapp\templates\invapp\invites\celestial_theme.html:141
 #: .\invapp\templates\invapp\invites\modern_animation.html:342
 msgid "Details"
 msgstr "Detalii"
 
-#: .\invapp\models.py:687
+#: .\invapp\models.py:695
 msgid "Optional details about this part of the event."
 msgstr "Detalii opționale despre acest moment al evenimentului."
 
-#: .\invapp\models.py:692
+#: .\invapp\models.py:700
 msgid "Schedule Item"
 msgstr "Element de Program"
 
-#: .\invapp\models.py:693
+#: .\invapp\models.py:701
 msgid "Schedule Items"
 msgstr "Elemente Program"
 
-#: .\invapp\models.py:701
+#: .\invapp\models.py:709
 msgid "Question (EN)"
 msgstr "Întrebare (EN)"
 
-#: .\invapp\models.py:702
+#: .\invapp\models.py:710
 msgid "Answer (EN)"
 msgstr "Răspuns (EN)"
 
-#: .\invapp\models.py:705
+#: .\invapp\models.py:713
 msgid "Question (RO)"
 msgstr "Întrebare (RO)"
 
-#: .\invapp\models.py:706
+#: .\invapp\models.py:714
 msgid "Answer (RO)"
 msgstr "Răspuns (RO)"
 
-#: .\invapp\models.py:708
+#: .\invapp\models.py:716
 msgid "Display order"
 msgstr "Ordinea afișării"
 
-#: .\invapp\models.py:713
+#: .\invapp\models.py:721
 msgid "FAQ Item"
 msgstr "Întrebare Frecventă"
 
-#: .\invapp\models.py:731
+#: .\invapp\models.py:739
 msgid "Client Name"
 msgstr "Nume Client"
 
-#: .\invapp\models.py:736 .\invapp\templates\invapp\feedback_form.html:71
+#: .\invapp\models.py:744 .\invapp\templates\invapp\feedback_form.html:71
 msgid "Message (Optional)"
 msgstr "Mesaj (Opțional)"
 
-#: .\invapp\models.py:741
+#: .\invapp\models.py:749
 msgid "Star rating (1-5)"
 msgstr "Recenzie în stele (1-5)"
 
-#: .\invapp\models.py:744
+#: .\invapp\models.py:752
 msgid "Appears on home page?"
 msgstr "Apare pe prima pagină?"
 
-#: .\invapp\models.py:745
+#: .\invapp\models.py:753
 msgid "Is visible publicly?"
 msgstr "Este vizibil public?"
 
-#: .\invapp\models.py:749 .\invapp\views.py:183 .\invapp\views.py:1184
+#: .\invapp\models.py:757 .\invapp\views.py:183 .\invapp\views.py:1237
 msgid "Email"
 msgstr "Email"
 
-#: .\invapp\models.py:750
+#: .\invapp\models.py:758
 msgid "Google"
 msgstr "Google"
 
-#: .\invapp\models.py:751
+#: .\invapp\models.py:759
 msgid "Facebook"
 msgstr "Facebook"
 
-#: .\invapp\models.py:757
+#: .\invapp\models.py:765
 msgid "Review Source"
 msgstr "Sursă Recenzie"
 
-#: .\invapp\models.py:762
+#: .\invapp\models.py:770
 msgid "Customer Review"
 msgstr "Recenzie Client"
 
-#: .\invapp\models.py:763
+#: .\invapp\models.py:771
 msgid "Customer Reviews"
 msgstr "Recenzii Clienți"
 
-#: .\invapp\models.py:772
+#: .\invapp\models.py:780
 #: .\invapp\templates\invapp\landing_page_tailwind.html:256
 msgid "Crafted with Love"
 msgstr "Creat cu Dragoste"
 
-#: .\invapp\models.py:772
+#: .\invapp\models.py:780
 msgid "Title (EN)"
 msgstr "Titlu (EN)"
 
-#: .\invapp\models.py:773
+#: .\invapp\models.py:781
 msgid "Description (EN)"
 msgstr "Descriere (EN)"
 
-#: .\invapp\models.py:773
+#: .\invapp\models.py:781
 msgid "Main text in English."
 msgstr "Textul principal în Engleză."
 
-#: .\invapp\models.py:776
+#: .\invapp\models.py:784
 msgid "Creat cu Dragoste"
 msgstr "Creat cu Dragoste"
 
-#: .\invapp\models.py:776
+#: .\invapp\models.py:784
 msgid "Title (RO)"
 msgstr "Titlu (RO)"
 
-#: .\invapp\models.py:777
+#: .\invapp\models.py:785
 msgid "Description (RO)"
 msgstr "Descriere (RO)"
 
-#: .\invapp\models.py:777
+#: .\invapp\models.py:785
 msgid "Main text in Romanian."
 msgstr "Textul principal în Română."
 
-#: .\invapp\models.py:782
+#: .\invapp\models.py:790
 msgid "Paste the SVG <path> data here."
 msgstr "Lipește codul SVG <path> aici."
 
-#: .\invapp\models.py:787
+#: .\invapp\models.py:795
 msgid ""
 "Tailwind color class for the icon (e.g., text-indigo-600, text-pink-500)."
 msgstr "Clasa de culoare Tailwind (ex: text-indigo-600, text-pink-500)."
 
-#: .\invapp\models.py:792
+#: .\invapp\models.py:800
 msgid "About Section Configuration"
 msgstr "Configurare Secțiune 'Despre'"
 
-#: .\invapp\models.py:793
+#: .\invapp\models.py:801
 msgid "About Section Configurations"
 msgstr "Configurări Secțiune 'Despre'"
 
-#: .\invapp\models.py:814
+#: .\invapp\models.py:822
 msgid "Feature Title (EN)"
 msgstr "Titlu Funcționalitate (EN)"
 
-#: .\invapp\models.py:815
+#: .\invapp\models.py:823
 msgid "Short Description (EN)"
 msgstr "Scurtă Descriere (EN)"
 
-#: .\invapp\models.py:818
+#: .\invapp\models.py:826
 msgid "Feature Title (RO)"
 msgstr "Titlu Funcționalitate (RO)"
 
-#: .\invapp\models.py:819
+#: .\invapp\models.py:827
 msgid "Short Description (RO)"
 msgstr "Scurtă Descriere (RO)"
 
-#: .\invapp\models.py:824
+#: .\invapp\models.py:832
 msgid "Paste the SVG <path> data here (e.g., <path d='...'/>)."
 msgstr "Lipește datele SVG <path> aici (ex: <path d='...'/>)."
 
-#: .\invapp\models.py:829
+#: .\invapp\models.py:837
 msgid "Tailwind color class for the icon wrapper (e.g., text-indigo-600)."
 msgstr "Clasa de culoare Tailwind pentru iconiță (ex: text-indigo-600)."
 
-#: .\invapp\models.py:836
+#: .\invapp\models.py:844
 msgid ""
 "Internal target date for completion (Month/Year). Not necessarily shown "
 "publicly."
 msgstr "Data limită internă (Lună/An). Nu este afișată neapărat public."
 
-#: .\invapp\models.py:841
+#: .\invapp\models.py:849
 msgid "Show this in the 'Coming Soon' section on the landing page?"
 msgstr "Arată asta în secțiunea 'În curând' de pe prima pagină?"
 
-#: .\invapp\models.py:846
+#: .\invapp\models.py:854
 msgid "Higher numbers appear first."
 msgstr "Numerele mai mari vor fi afișate primele."
 
-#: .\invapp\models.py:872
+#: .\invapp\models.py:880
 msgid "Recommended format: JPG/PNG. Maximum 5MB."
 msgstr "Format recomandat: JPG/PNG. Maxim 5MB."
 
-#: .\invapp\models.py:877
+#: .\invapp\models.py:885
 msgid "The limit of 6 photos for this package has been reached."
 msgstr "Ai atins limita maximă de 6 poze pentru acest pachet."
 
-#: .\invapp\templates\invapp\base.html:12
-#: .\invapp\templates\invapp\base.html:38
+#: .\invapp\templates\invapp\base.html:27
+#: .\invapp\templates\invapp\base.html:53
 msgid "Digital Wedding Invitations & Online RSVP Platform | InvApp"
 msgstr "Invitații Digitale Nuntă și Botez | Platformă RSVP Online | InvApp"
 
-#: .\invapp\templates\invapp\base.html:13
+#: .\invapp\templates\invapp\base.html:28
 msgid ""
 "Create premium digital wedding invitations with real-time RSVP "
 "confirmations. Manage your guests intelligently and stress-free. Try for "
 "free!"
-msgstr "Creează invitații digitale premium cu confirmare RSVP în timp real. Gestionează lista de invitați la nuntă sau botez inteligent și fără stres. Încearcă gratuit!"
+msgstr ""
+"Creează invitații digitale premium cu confirmare RSVP în timp real. "
+"Gestionează lista de invitați la nuntă sau botez inteligent și fără stres. "
+"Încearcă gratuit!"
 
-#: .\invapp\templates\invapp\base.html:39
+#: .\invapp\templates\invapp\base.html:54
 msgid ""
 "Create premium digital wedding invitations with real-time RSVP confirmations."
-msgstr "Creează invitații digitale de excepție pentru nunta ta, cu confirmări RSVP."
+msgstr ""
+"Creează invitații digitale de excepție pentru nunta ta, cu confirmări RSVP."
 
-#: .\invapp\templates\invapp\base.html:46
+#: .\invapp\templates\invapp\base.html:61
 msgid "Premium digital invitations for special events."
 msgstr "Invitații digitale premium pentru evenimentele tale de suflet."
 
-#: .\invapp\templates\invapp\base.html:177
-#: .\invapp\templates\invapp\base.html:254
+#: .\invapp\templates\invapp\base.html:192
+#: .\invapp\templates\invapp\base.html:269
 msgid "Rate Us"
 msgstr "Oferă-ne o recenzie"
 
@@ -968,7 +1039,9 @@ msgstr "Invitație Online"
 #: .\invapp\templates\invapp\base_invite.html:34
 msgid ""
 "We cordially invite you to our event! Click for details and confirmation."
-msgstr "Te invităm cu drag la evenimentul nostru! Deschide pentru detalii și confirmare."
+msgstr ""
+"Te invităm cu drag la evenimentul nostru! Deschide pentru detalii și "
+"confirmare."
 
 #: .\invapp\templates\invapp\base_invite.html:96
 msgid "This is a free preview."
@@ -980,9 +1053,9 @@ msgstr "Activează un plan Premium pentru a elimina logoul nostru."
 
 #: .\invapp\templates\invapp\dashboard.html:5
 #: .\invapp\templates\invapp\dashboard.html:17
-#: .\invapp\templates\invapp\guest_list_tailwind.html:8
-#: .\invapp\templates\invapp\guest_list_tailwind.html:16
+#: .\invapp\templates\invapp\guest_list_tailwind.html:22
 #: .\invapp\templates\invapp\landing_page_tailwind.html:69
+#: .\invapp\templates\invapp\landing_page_tailwind.html:82
 #: .\invapp\templates\invapp\table_assignment_ui.html:9
 #: .\invapp\templates\invapp\table_assignment_ui.html:16
 #: .\invapp\templates\invapp\table_list_tailwind.html:10
@@ -1019,13 +1092,14 @@ msgstr "Limită Abonament Atinsă"
 msgid ""
 "You have reached the maximum number of events allowed on your current plan. "
 "Please upgrade to create more events."
-msgstr "Ai atins numărul maxim de evenimente permise de planul tău gratuit. Treci la un plan superior pentru a crea mai multe."
+msgstr ""
+"Ai atins numărul maxim de evenimente permise de planul tău gratuit. Treci la "
+"un plan superior pentru a crea mai multe."
 
 #: .\invapp\templates\invapp\dashboard.html:65
 #: .\invapp\templates\invapp\guest_confirm_delete.html:14
 #: .\invapp\templates\invapp\guest_form_tailwind.html:192
-#: .\invapp\templates\invapp\guest_list_tailwind.html:107
-#: .\invapp\templates\invapp\guest_list_tailwind.html:131
+#: .\invapp\templates\invapp\includes\guest_import_modal.html:26
 #: .\invapp\templates\invapp\table_confirm_delete.html:13
 #: .\templates\account\login_code_entry.html:60
 msgid "Cancel"
@@ -1050,6 +1124,8 @@ msgstr "Editează Detaliile"
 
 #: .\invapp\templates\invapp\dashboard.html:146
 #: .\invapp\templates\invapp\event_form_tailwind.html:5
+#: .\invapp\templates\invapp\guest_list_tailwind.html:206
+#: .\invapp\templates\invapp\guest_list_tailwind.html:299
 msgid "Edit"
 msgstr "Editează"
 
@@ -1067,6 +1143,8 @@ msgid "Open in new tab"
 msgstr "Deschide într-un tab nou"
 
 #: .\invapp\templates\invapp\dashboard.html:176
+#: .\invapp\templates\invapp\guest_list_tailwind.html:209
+#: .\invapp\templates\invapp\guest_list_tailwind.html:304
 msgid "Delete"
 msgstr "Șterge"
 
@@ -1078,7 +1156,9 @@ msgstr "Nu ai creat niciun eveniment încă"
 msgid ""
 "Get started by creating your first event. It's simple and the results will "
 "be amazing."
-msgstr "Începe prin a crea primul tău eveniment. E simplu, iar rezultatele vor fi exact cum ai visat."
+msgstr ""
+"Începe prin a crea primul tău eveniment. E simplu, iar rezultatele vor fi "
+"exact cum ai visat."
 
 #: .\invapp\templates\invapp\dashboard.html:203
 msgid "+ Create New Event"
@@ -1104,54 +1184,76 @@ msgstr "Generăm Previzualizarea..."
 msgid "Create Event"
 msgstr "Creare Eveniment"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:54
-msgid "Saving..."
+#: .\invapp\templates\invapp\event_form_tailwind.html:93
+msgid "Refine Your Event"
+msgstr ""
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:93
+#, fuzzy
+#| msgid "Start for free"
+msgid "Start Your Journey"
+msgstr "Începe Gratuit"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:96
+#, fuzzy
+#| msgid "Next Step"
+msgid "Step"
+msgstr "Pasul Următor"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:106
+#, fuzzy
+#| msgid "Saving..."
+msgid "Saving"
 msgstr "Se salvează..."
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:80
-msgid "Available Designs"
-msgstr "Design-uri Disponibile"
+#: .\invapp\templates\invapp\event_form_tailwind.html:110
+msgid "Synced"
+msgstr ""
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:115
-msgid "Primary Details"
-msgstr "Detalii Principale"
+#: .\invapp\templates\invapp\event_form_tailwind.html:133
+msgid "Occasion"
+msgstr ""
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:119
+#: .\invapp\templates\invapp\event_form_tailwind.html:141
+#, fuzzy
+#| msgid "Download Template"
+msgid "2. Choose a Template"
+msgstr "Descarcă Model Excel"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:169
 msgid "Internal Title"
 msgstr "Titlu Intern (doar pentru tine)"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:122
+#: .\invapp\templates\invapp\event_form_tailwind.html:175
 msgid "Event Date"
 msgstr "Data Evenimentului"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:129
+#: .\invapp\templates\invapp\event_form_tailwind.html:184
+#, fuzzy
+#| msgid "Couple"
+msgid "The Couple"
+msgstr "Cuplul"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:186
 msgid "Bride"
 msgstr "Mireasa"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:130
+#: .\invapp\templates\invapp\event_form_tailwind.html:190
 msgid "Groom"
 msgstr "Mirele"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:151
-msgid "Invitation Text"
-msgstr "Textul Invitației"
+#: .\invapp\templates\invapp\event_form_tailwind.html:195
+#, fuzzy
+#| msgid "The {name} Family"
+msgid "The Families"
+msgstr "Familia {name}"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:159
-#: .\invapp\templates\invapp\invites\celestial_theme.html:192
-#: .\invapp\templates\invapp\invites\minimalist_peonies.html:209
-#: .\invapp\templates\invapp\invites\travel_ticket.html:146
-msgid "Godparents"
-msgstr "Nașii"
+#: .\invapp\templates\invapp\event_form_tailwind.html:213
+#: .\invapp\templates\invapp\invites\minimalist_peonies.html:203
+msgid "Parents"
+msgstr "Părinți"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:172
-msgid "+ Add Godparent"
-msgstr "+ Adaugă o pereche de nași"
-
-#: .\invapp\templates\invapp\event_form_tailwind.html:179
-msgid "Locations"
-msgstr "Locații"
-
-#: .\invapp\templates\invapp\event_form_tailwind.html:182
+#: .\invapp\templates\invapp\event_form_tailwind.html:234
 #: .\invapp\templates\invapp\invites\botanical_tailwind.html:261
 #: .\invapp\templates\invapp\invites\centered_photo_story.html:85
 #: .\invapp\templates\invapp\invites\envelope_real.html:310
@@ -1161,49 +1263,142 @@ msgstr "Locații"
 msgid "Ceremony"
 msgstr "Cununia / Botezul"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:203
-msgid "Event Timeline"
-msgstr "Programul Evenimentului"
+#: .\invapp\templates\invapp\event_form_tailwind.html:242
+#: .\invapp\templates\invapp\event_form_tailwind.html:269
+#, fuzzy
+#| msgid "Address:"
+msgid "Address"
+msgstr "Adresa:"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:219
-msgid "+ Add Timeline Item"
-msgstr "+ Adaugă moment în program"
-
-#: .\invapp\templates\invapp\event_form_tailwind.html:230
-msgid "Main Cover Image"
-msgstr "Poza Principală (Copertă)"
-
-#: .\invapp\templates\invapp\event_form_tailwind.html:247
-msgid "Full Invitation Image"
-msgstr "Imaginea completă a invitației (Dacă folosești Canva)"
-
-#: .\invapp\templates\invapp\event_form_tailwind.html:263
-msgid "Background Music"
-msgstr "Muzică de Fundal"
+#: .\invapp\templates\invapp\event_form_tailwind.html:250
+#: .\invapp\templates\invapp\event_form_tailwind.html:277
+#, fuzzy
+#| msgid "Party Map Link"
+msgid "Maps Link"
+msgstr "Link Hartă Petrecere"
 
 #: .\invapp\templates\invapp\event_form_tailwind.html:288
-msgid "Refresh Preview"
-msgstr "Reîncarcă Previzualizarea"
+#, fuzzy
+#| msgid "Event Timeline"
+msgid "Event Schedule"
+msgstr "Programul Evenimentului"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:310
-msgid "Final Step"
-msgstr "Pasul Final"
+#: .\invapp\templates\invapp\event_form_tailwind.html:290
+#, fuzzy
+#| msgid "+ Add Godparent"
+msgid "+ Add moment"
+msgstr "+ Adaugă o pereche de nași"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:310
-msgid "Next Step"
+#: .\invapp\templates\invapp\event_form_tailwind.html:318
+#: .\invapp\templates\invapp\event_form_tailwind.html:708
+#, fuzzy
+#| msgid "Activity Type"
+msgid "Activity"
+msgstr "Tipul Activității"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:333
+#: .\invapp\templates\invapp\invites\celestial_theme.html:192
+#: .\invapp\templates\invapp\invites\minimalist_peonies.html:209
+#: .\invapp\templates\invapp\invites\travel_ticket.html:146
+msgid "Godparents"
+msgstr "Nașii"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:335
+#, fuzzy
+#| msgid "+ Add Godparent"
+msgid "+ Add pair"
+msgstr "+ Adaugă o pereche de nași"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:352
+#: .\invapp\templates\invapp\event_form_tailwind.html:682
+#, fuzzy
+#| msgid "Child Name"
+msgid "Full Names"
+msgstr "Nume Copil"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:369
+#, fuzzy
+#| msgid "Main Cover Image"
+msgid "Cover Image"
+msgstr "Poza Principală (Copertă)"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:381
+#, fuzzy
+#| msgid "Upload and Import"
+msgid "Upload photo"
+msgstr "Încarcă și Importă"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:389
+#, fuzzy
+#| msgid "Main Cover Image"
+msgid "Change Image"
+msgstr "Poza Principală (Copertă)"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:400
+#, fuzzy
+#| msgid "Background Music"
+msgid "Background Atmosphere"
+msgstr "Muzică de Fundal"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:406
+#, fuzzy
+#| msgid "Audio Greeting"
+msgid "Audio Greeting (MP3/WAV)"
+msgstr "Mesaj Audio (Muzică de fundal)"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:431
+msgid "Refresh Sync"
+msgstr ""
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:452
+#, fuzzy
+#| msgid "Preview"
+msgid "Review"
+msgstr "Previzualizare"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:452
+#, fuzzy
+#| msgid "Next Step"
+msgid "Next"
 msgstr "Pasul Următor"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:315
-msgid "Ready to Save"
-msgstr "Gata de Salvare"
+#: .\invapp\templates\invapp\event_form_tailwind.html:457
+msgid "Publish Invite"
+msgstr ""
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:322
-msgid "Go to Upload"
+#: .\invapp\templates\invapp\event_form_tailwind.html:464
+#, fuzzy
+#| msgid "Go to Upload"
+msgid "Go to Media"
 msgstr "Mergi la Încărcare Poze"
 
-#: .\invapp\templates\invapp\event_form_tailwind.html:341
+#: .\invapp\templates\invapp\event_form_tailwind.html:484
 msgid "Live View"
 msgstr "Vezi Live"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:534
+msgid "Theme Style"
+msgstr ""
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:535
+msgid "Core Narrative"
+msgstr ""
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:536
+msgid "Where and When"
+msgstr ""
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:537
+#, fuzzy
+#| msgid "Venue Details"
+msgid "Timeline Details"
+msgstr "Detalii Locație"
+
+#: .\invapp\templates\invapp\event_form_tailwind.html:538
+#, fuzzy
+#| msgid "Table Assignments"
+msgid "Visual Assets"
+msgstr "Așezare la Mese / Seating"
 
 #: .\invapp\templates\invapp\faq.html:4 .\invapp\templates\invapp\faq.html:35
 msgid "Frequently Asked Questions"
@@ -1213,7 +1408,9 @@ msgstr "Întrebări Frecvente"
 msgid ""
 "Have questions? Find answers to the most common questions about the InvApp "
 "platform."
-msgstr "Ai întrebări? Găsește răspunsuri la cele mai comune curiozități despre platforma InvApp."
+msgstr ""
+"Ai întrebări? Găsește răspunsuri la cele mai comune curiozități despre "
+"platforma InvApp."
 
 #: .\invapp\templates\invapp\faq.html:67
 msgid "No frequently asked questions added yet."
@@ -1249,7 +1446,6 @@ msgstr "Confirmare Ștergere Invitat"
 
 #: .\invapp\templates\invapp\guest_confirm_delete.html:4
 #: .\invapp\templates\invapp\guest_form_tailwind.html:187
-#: .\invapp\templates\invapp\guest_list_tailwind.html:301
 msgid "Delete Guest"
 msgstr "Șterge Invitatul"
 
@@ -1261,7 +1457,9 @@ msgstr "Sigur vrei să ștergi invitatul "
 msgid ""
 "This action cannot be undone and will also delete their RSVP response and "
 "any table assignment."
-msgstr "Această acțiune este ireversibilă și va șterge automat confirmarea RSVP și așezarea la masă."
+msgstr ""
+"Această acțiune este ireversibilă și va șterge automat confirmarea RSVP și "
+"așezarea la masă."
 
 #: .\invapp\templates\invapp\guest_confirm_delete.html:12
 msgid "Yes, Delete Guest"
@@ -1269,13 +1467,11 @@ msgstr "Da, șterge invitatul"
 
 #: .\invapp\templates\invapp\guest_form_tailwind.html:5
 #: .\invapp\templates\invapp\guest_form_tailwind.html:12
-#: .\invapp\templates\invapp\guest_list_tailwind.html:294
 msgid "Edit Guest"
 msgstr "Editează Invitat"
 
 #: .\invapp\templates\invapp\guest_form_tailwind.html:5
-#: .\invapp\templates\invapp\guest_form_tailwind.html:12
-#: .\invapp\templates\invapp\guest_list_tailwind.html:72 .\invapp\views.py:972
+#: .\invapp\templates\invapp\guest_form_tailwind.html:12 .\invapp\views.py:1014
 msgid "Add New Guest"
 msgstr "Adaugă Invitat Nou"
 
@@ -1300,7 +1496,9 @@ msgstr "Identitate Invitat"
 msgid ""
 "Basic information about who you are inviting. Use 'Family' or 'Couple' "
 "titles to group people together."
-msgstr "Informații de bază. Folosește 'Familia' sau 'Cuplul' pentru a invita mai multe persoane pe același link."
+msgstr ""
+"Informații de bază. Folosește 'Familia' sau 'Cuplul' pentru a invita mai "
+"multe persoane pe același link."
 
 #: .\invapp\templates\invapp\guest_form_tailwind.html:104
 msgid "Contact Details"
@@ -1310,7 +1508,9 @@ msgstr "Detalii de Contact"
 msgid ""
 "How will you send the invitation? We use these details for digital sending "
 "features."
-msgstr "Cum vei trimite invitația? Folosim aceste date (ex. WhatsApp, Email) pentru a te ajuta să o trimiți digital."
+msgstr ""
+"Cum vei trimite invitația? Folosim aceste date (ex. WhatsApp, Email) pentru "
+"a te ajuta să o trimiți digital."
 
 #: .\invapp\templates\invapp\guest_form_tailwind.html:154
 msgid "Manual Override"
@@ -1320,10 +1520,11 @@ msgstr "Confirmare Manuală (Peste Digital)"
 msgid ""
 "Use this section if you receive a verbal or phone confirmation. Data entered "
 "here overrides the digital RSVP."
-msgstr "Folosește secțiunea asta dacă unchiul te-a sunat să zică că vine. Datele de aici anulează RSVP-ul online."
+msgstr ""
+"Folosește secțiunea asta dacă unchiul te-a sunat să zică că vine. Datele de "
+"aici anulează RSVP-ul online."
 
 #: .\invapp\templates\invapp\guest_form_tailwind.html:186
-#: .\invapp\templates\invapp\guest_list_tailwind.html:299
 msgid "Are you sure you want to permanently delete this guest?"
 msgstr "Ești sigur că vrei să ștergi permanent acest invitat?"
 
@@ -1333,9 +1534,7 @@ msgid "Save Changes"
 msgstr "Salvează Modificările"
 
 #: .\invapp\templates\invapp\guest_form_tailwind.html:195
-#: .\invapp\templates\invapp\guest_list_tailwind.html:10
-#: .\invapp\templates\invapp\guest_list_tailwind.html:18
-#: .\invapp\templates\invapp\guest_list_tailwind.html:88
+#: .\invapp\templates\invapp\guest_list_tailwind.html:70
 msgid "Add Guest"
 msgstr "Adaugă Invitat"
 
@@ -1389,12 +1588,8 @@ msgid "Submit RSVP"
 msgstr "Trimite Confirmarea"
 
 #: .\invapp\templates\invapp\guest_list_tailwind.html:4
-msgid "Guest List for"
-msgstr "Lista de Invitați pentru"
-
-#: .\invapp\templates\invapp\guest_list_tailwind.html:9
-#: .\invapp\templates\invapp\guest_list_tailwind.html:17
-#: .\invapp\templates\invapp\guest_list_tailwind.html:34
+#: .\invapp\templates\invapp\guest_list_tailwind.html:23
+#: .\invapp\templates\invapp\guest_list_tailwind.html:40
 #: .\invapp\templates\invapp\table_assignment_ui.html:10
 #: .\invapp\templates\invapp\table_assignment_ui.html:17
 #: .\invapp\templates\invapp\table_list_tailwind.html:11
@@ -1402,143 +1597,192 @@ msgstr "Lista de Invitați pentru"
 msgid "Guest List"
 msgstr "Lista de Invitați"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:11
-#: .\invapp\templates\invapp\guest_list_tailwind.html:19
-#: .\invapp\templates\invapp\table_assignment_ui.html:11
-#: .\invapp\templates\invapp\table_assignment_ui.html:18
-#: .\invapp\templates\invapp\table_list_tailwind.html:12
-#: .\invapp\templates\invapp\table_list_tailwind.html:19
-#: .\invapp\templates\invapp\table_list_tailwind.html:27
-msgid "Table List"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:24
+#, fuzzy
+#| msgid "Table List"
+msgid "Tables"
 msgstr "Așezare Mese"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:12
-#: .\invapp\templates\invapp\guest_list_tailwind.html:20
-#: .\invapp\templates\invapp\table_assignment_ui.html:12
-#: .\invapp\templates\invapp\table_assignment_ui.html:19
-#: .\invapp\templates\invapp\table_list_tailwind.html:13
-#: .\invapp\templates\invapp\table_list_tailwind.html:20
-#: .\invapp\templates\invapp\table_list_tailwind.html:35
-msgid "Assign Guests"
-msgstr "Asignează Invitați la Mese"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:25
+#, fuzzy
+#| msgid "Seating Plan"
+msgid "Seating Chart"
+msgstr "Planul Mesei"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:35
-msgid "Managing guests for:"
-msgstr "Gestionează lista de invitați pentru:"
-
-#: .\invapp\templates\invapp\guest_list_tailwind.html:44
-#, python-format
+#: .\invapp\templates\invapp\guest_list_tailwind.html:52
+#, fuzzy, python-format
+#| msgid ""
+#| "\n"
+#| "                    %(count)s / %(max)s guests used\n"
+#| "                    "
 msgid ""
 "\n"
-"                    %(count)s / %(max)s guests used\n"
+"                        %(count)s / %(max)s guests\n"
+"                        "
+msgstr ""
+"\n"
+"                    %(count)s din %(max)s invitați adăugați\n"
 "                    "
-msgstr "\n                    %(count)s din %(max)s invitați adăugați\n                    "
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:58
-msgid "Import Guests"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:63
+#, fuzzy
+#| msgid "Import Guests"
+msgid "Import"
 msgstr "Importă Invitați (Excel)"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:61
-msgid "Download Template"
-msgstr "Descarcă Model Excel"
-
-#: .\invapp\templates\invapp\guest_list_tailwind.html:94
-msgid ""
-"Tip: Download the template, fill it with your guests, and import the file."
-msgstr "Sfat: Descarcă modelul Excel, completează cu familiile invitate și încarcă fișierul aici (Economisești ore întregi!)."
-
-#: .\invapp\templates\invapp\guest_list_tailwind.html:99
-msgid "Import Guest List"
-msgstr "Importă Lista din Excel"
-
-#: .\invapp\templates\invapp\guest_list_tailwind.html:100
-msgid ""
-"Upload an Excel file (.xlsx) with your guests. Make sure it has columns for "
-"'Honorific', 'Name', 'Email', 'Phone Number', and 'Max Attendees'."
-msgstr "Încarcă un fișier Excel (.xlsx). Asigură-te că păstrezi capul de tabel: 'Honorific' (Dl/Familia), 'Name' (Nume), 'Email', 'Phone Number' (Telefon), și 'Max Attendees' (Nr maxim de locuri alocate)."
-
-#: .\invapp\templates\invapp\guest_list_tailwind.html:108
-msgid "Upload and Import"
-msgstr "Încarcă și Importă"
-
-#: .\invapp\templates\invapp\guest_list_tailwind.html:121
-msgid "Guest Limit Reached"
-msgstr "Limită Invitați Atinsă"
-
-#: .\invapp\templates\invapp\guest_list_tailwind.html:123
-#, python-format
-msgid ""
-"You have reached the maximum number of guests for your "
-"<strong>%(plan_name)s</strong>. To add more guests, please upgrade your plan."
-msgstr "Ai atins numărul maxim de invitați permis pentru abonamentul <strong>%(plan_name)s</strong>. Pentru o listă mai mare, treci la un plan superior."
-
-#: .\invapp\templates\invapp\guest_list_tailwind.html:128
-msgid "Upgrade Now"
-msgstr "Upgradează Acum"
-
-#: .\invapp\templates\invapp\guest_list_tailwind.html:145
-msgid "Invited Guests"
-msgstr "Total Invitați"
-
-#: .\invapp\templates\invapp\guest_list_tailwind.html:148
+#: .\invapp\templates\invapp\guest_list_tailwind.html:95
 msgid "Total Attending:"
 msgstr "Total Confirmări (Persoane):"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:159
-msgid "Guest Details"
-msgstr "Detalii Invitat (Nume, Link)"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:100
+#, fuzzy
+#| msgid "You're Invited"
+msgid "Total Invited"
+msgstr "Ești Invitat"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:173
-msgid "Status & Count"
-msgstr "Status & Locuri"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:108
+msgid "Sort By"
+msgstr ""
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:186
-msgid "Actions"
-msgstr "Acțiuni"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:112
+msgid "Name (A-Z)"
+msgstr ""
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:201
-msgid "Manually updated by host"
-msgstr "Actualizat manual de tine"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:113
+msgid "Name (Z-A)"
+msgstr ""
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:202
-msgid "Manual"
-msgstr "Manual"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:114
+msgid "RSVP Status"
+msgstr ""
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:206
-msgid "Responded online"
-msgstr "A confirmat online prin link"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:118
+msgid "Download Template"
+msgstr "Descarcă Model Excel"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:210
-msgid "Online"
-msgstr "Online"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:139
+#, fuzzy
+#| msgid "Send Confirmation"
+msgid "Manual Confirmation"
+msgstr "Trimite Confirmarea"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:245
-msgid "Not Coming"
-msgstr "Nu vine"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:141
+#, fuzzy
+#| msgid "Digital Invitation"
+msgid "Digital Confirmation"
+msgstr "Invitație Digitală (Web)"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:247
+#: .\invapp\templates\invapp\guest_list_tailwind.html:150
+#: .\invapp\templates\invapp\guest_list_tailwind.html:264
+#, fuzzy
+#| msgid "Timeline"
+msgid "Declined"
+msgstr "Program Ziua Nunții"
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:153
+#: .\invapp\templates\invapp\guest_list_tailwind.html:266
 msgid "Pending"
 msgstr "În așteptare"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:255
-msgid "Save"
-msgstr "Salvează"
+#: .\invapp\templates\invapp\guest_list_tailwind.html:174
+#: .\invapp\templates\invapp\guest_list_tailwind.html:227
+#, fuzzy
+#| msgid "Multi-Language"
+msgid "Language"
+msgstr "Invitații Multi-Lingve"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:288
+#: .\invapp\templates\invapp\guest_list_tailwind.html:181
+#, fuzzy
+#| msgid "Max Attendees"
+msgid "Attendees"
+msgstr "Nr Maxim Locuri (Bilete)"
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:192
+msgid "Meal:"
+msgstr ""
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:195
+#, fuzzy
+#| msgid "Message"
+msgid "Message:"
+msgstr "Mesaj"
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:209
+#: .\invapp\templates\invapp\guest_list_tailwind.html:304
+#, fuzzy
+#| msgid "Event deleted."
+msgid "Permanently delete?"
+msgstr "Evenimentul și datele asociate au fost șterse permanent."
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:223
+#, fuzzy
+#| msgid "Guests"
+msgid "Guest"
+msgstr "Invitați"
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:224
+msgid "Sent Via"
+msgstr ""
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:225
+#: .\invapp\templates\invapp\invites\botanical_tailwind.html:318
+#: .\invapp\templates\invapp\invites\celestial_theme.html:144
+#: .\invapp\templates\invapp\invites\celestial_theme.html:306
+#: .\invapp\templates\invapp\invites\envelope_real.html:386
+#: .\invapp\templates\invapp\invites\sage_gold.html:286
+#: .\invapp\templates\invapp\invites\travel_ticket.html:290
+#: .\invapp\templates\invapp\invites\wedding_lemon.html:286
+msgid "RSVP"
+msgstr "Confirmă Prezența"
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:229
+msgid "Actions"
+msgstr "Acțiuni"
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:250
+#, fuzzy
+#| msgid "Digital RSVP"
+msgid "Digital"
+msgstr "Confirmări (RSVP) Inteligente"
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:255
+msgid "Paper"
+msgstr ""
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:271
+msgid "MANUAL"
+msgstr ""
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:273
+msgid "DIGITAL"
+msgstr ""
+
+#: .\invapp\templates\invapp\guest_list_tailwind.html:296
 msgid "Copy Link"
 msgstr "Copiază Linkul pe WhatsApp"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:291
-msgid "View Invitation"
-msgstr "Vezi Invitația"
+#: .\invapp\templates\invapp\includes\guest_import_modal.html:13
+msgid "Import Guests"
+msgstr "Importă Invitați (Excel)"
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:327
-msgid "Override RSVP?"
-msgstr "Suprascrii confirmarea?"
+#: .\invapp\templates\invapp\includes\guest_import_modal.html:17
+#, fuzzy
+#| msgid ""
+#| "Upload an Excel file (.xlsx) with your guests. Make sure it has columns "
+#| "for 'Honorific', 'Name', 'Email', 'Phone Number', and 'Max Attendees'."
+msgid ""
+"Upload an Excel file (.xlsx) with columns: 'Honorific', 'Name', 'Email', "
+"'Phone Number', 'Max Attendees'."
+msgstr ""
+"Încarcă un fișier Excel (.xlsx). Asigură-te că păstrezi capul de tabel: "
+"'Honorific' (Dl/Familia), 'Name' (Nume), 'Email', 'Phone Number' (Telefon), "
+"și 'Max Attendees' (Nr maxim de locuri alocate)."
 
-#: .\invapp\templates\invapp\guest_list_tailwind.html:350
-msgid "Update failed."
-msgstr "Actualizarea a eșuat."
+#: .\invapp\templates\invapp\includes\guest_import_modal.html:27
+#, fuzzy
+#| msgid "Go to Upload"
+msgid "Upload"
+msgstr "Mergi la Încărcare Poze"
 
 #: .\invapp\templates\invapp\includes\reviews_carousel_3d.html:10
 msgid "Our latest reviews"
@@ -1551,6 +1795,36 @@ msgstr "Recomandat de sute de cupluri fericite"
 #: .\invapp\templates\invapp\includes\reviews_carousel_3d.html:105
 msgid "An excellent experience!"
 msgstr "O experiență de nota 10!"
+
+#: .\invapp\templates\invapp\includes\upgrade_modal.html:15
+#, fuzzy
+#| msgid "Plan Limit Reached"
+msgid "Limit Reached"
+msgstr "Limită Abonament Atinsă"
+
+#: .\invapp\templates\invapp\includes\upgrade_modal.html:17
+#, fuzzy, python-format
+#| msgid ""
+#| "You have reached the maximum number of guests for your "
+#| "<strong>%(plan_name)s</strong>. To add more guests, please upgrade your "
+#| "plan."
+msgid ""
+"You've reached the maximum capacity for your <strong>%(plan_name)s</strong>. "
+"Upgrade now to invite more friends and family!"
+msgstr ""
+"Ai atins numărul maxim de invitați permis pentru abonamentul "
+"<strong>%(plan_name)s</strong>. Pentru o listă mai mare, treci la un plan "
+"superior."
+
+#: .\invapp\templates\invapp\includes\upgrade_modal.html:21
+#, fuzzy
+#| msgid "Seating Plan"
+msgid "See Plans"
+msgstr "Planul Mesei"
+
+#: .\invapp\templates\invapp\includes\upgrade_modal.html:24
+msgid "Maybe Later"
+msgstr ""
 
 #: .\invapp\templates\invapp\invites\baptism\baloon_bear.html:288
 msgid "Baby Name"
@@ -1618,7 +1892,8 @@ msgstr "Confirmare"
 
 #: .\invapp\templates\invapp\invites\baptism\baloon_bear.html:367
 msgid "Please complete the form below."
-msgstr "Te rugăm să completezi formularul de mai jos pentru a ne anunța dacă vii."
+msgstr ""
+"Te rugăm să completezi formularul de mai jos pentru a ne anunța dacă vii."
 
 #: .\invapp\templates\invapp\invites\baptism\baloon_bear.html:373
 #: .\invapp\templates\invapp\invites\celestial_theme.html:316
@@ -1684,7 +1959,9 @@ msgstr "Vă invităm cu căldură să ne fiți alături în ziua nunții noastre
 msgid ""
 "We've chosen to walk life's path together and would be honored to have you "
 "by our side as we exchange our vows."
-msgstr "Am ales să pășim pe același drum și am fi onorați să ne fiți alături la cel mai frumos 'Da' din viața noastră."
+msgstr ""
+"Am ales să pășim pe același drum și am fi onorați să ne fiți alături la cel "
+"mai frumos 'Da' din viața noastră."
 
 #: .\invapp\templates\invapp\invites\botanical_tailwind.html:212
 msgid "Thank you"
@@ -1743,16 +2020,6 @@ msgstr "Sărbătoarea"
 #: .\invapp\templates\invapp\invites\modern_animation.html:346
 msgid "Program"
 msgstr "Program"
-
-#: .\invapp\templates\invapp\invites\botanical_tailwind.html:318
-#: .\invapp\templates\invapp\invites\celestial_theme.html:144
-#: .\invapp\templates\invapp\invites\celestial_theme.html:306
-#: .\invapp\templates\invapp\invites\envelope_real.html:386
-#: .\invapp\templates\invapp\invites\sage_gold.html:286
-#: .\invapp\templates\invapp\invites\travel_ticket.html:290
-#: .\invapp\templates\invapp\invites\wedding_lemon.html:286
-msgid "RSVP"
-msgstr "Confirmă Prezența"
 
 #: .\invapp\templates\invapp\invites\botanical_tailwind.html:319
 #: .\invapp\templates\invapp\invites\minimalist_peonies.html:297
@@ -1975,15 +2242,13 @@ msgstr "Trimite Confirmarea RSVP"
 msgid ""
 "The event host has manually updated your attendance. Submitting this form "
 "will override that update. Do you want to continue?"
-msgstr "Mirii ți-au actualizat deja prezența manual. Dacă trimiți formularul acum, vei suprascrie datele lor. Continui?"
+msgstr ""
+"Mirii ți-au actualizat deja prezența manual. Dacă trimiți formularul acum, "
+"vei suprascrie datele lor. Continui?"
 
 #: .\invapp\templates\invapp\invites\minimalist_peonies.html:188
 msgid "Hrs"
 msgstr "Ore"
-
-#: .\invapp\templates\invapp\invites\minimalist_peonies.html:203
-msgid "Parents"
-msgstr "Părinți"
 
 #: .\invapp\templates\invapp\invites\minimalist_peonies.html:228
 #: .\invapp\templates\invapp\invites\minimalist_peonies.html:242
@@ -2104,7 +2369,8 @@ msgstr "Vă rugăm să confirmați prezența"
 
 #: .\invapp\templates\invapp\invites\photographic_story.html:152
 msgid "Please let us know if you can join our celebration by November 1st."
-msgstr "Pentru o mai bună organizare, te rugăm să confirmi prezența cât mai curând."
+msgstr ""
+"Pentru o mai bună organizare, te rugăm să confirmi prezența cât mai curând."
 
 #: .\invapp\templates\invapp\invites\sage_gold.html:150
 #: .\invapp\templates\invapp\invites\wedding_lemon.html:157
@@ -2259,13 +2525,17 @@ msgid ""
 "Create elegant digital invitations, manage guest lists, and receive real-"
 "time RSVP confirmations. Premium designs for weddings and baptisms with "
 "InvApp."
-msgstr "Platformă modernă pentru invitații digitale: Gestionează lista de invitați, așează mesele și primește confirmări RSVP automatizate. Alege InvApp!"
+msgstr ""
+"Platformă modernă pentru invitații digitale: Gestionează lista de invitați, "
+"așează mesele și primește confirmări RSVP automatizate. Alege InvApp!"
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:12
 msgid ""
 "The modern way to invite your guests. Elegant designs, RSVP tracking, and "
 "guest management in one place."
-msgstr "Cel mai modern mod de a-ți chema invitații. Design-uri elegante, sistem inteligent de RSVP și organizarea meselor, totul într-o singură aplicație."
+msgstr ""
+"Cel mai modern mod de a-ți chema invitații. Design-uri elegante, sistem "
+"inteligent de RSVP și organizarea meselor, totul într-o singură aplicație."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:48
 #: .\invapp\templates\invapp\landing_page_tailwind.html:76
@@ -2297,10 +2567,6 @@ msgstr "Aranjamente Florale"
 msgid "Styling Partner"
 msgstr "Partener Florărie"
 
-#: .\invapp\templates\invapp\landing_page_tailwind.html:82
-msgid "Go to Dashboard"
-msgstr "Intră în Cont"
-
 #: .\invapp\templates\invapp\landing_page_tailwind.html:106
 msgid "Premium Digital Invitations for Weddings & Baptisms"
 msgstr "Creează Invitația Perfectă, Digital și Fără Stres"
@@ -2309,7 +2575,9 @@ msgstr "Creează Invitația Perfectă, Digital și Fără Stres"
 msgid ""
 "Easy create and organize guest list. Share story with a beautiful, elegant "
 "and digital invitation."
-msgstr "Uită de agende pierdute și confirmări la telefon. Gestionează totul dintr-un singur loc cu platforma InvApp."
+msgstr ""
+"Uită de agende pierdute și confirmări la telefon. Gestionează totul dintr-un "
+"singur loc cu platforma InvApp."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:113
 msgid "Start now! For free!"
@@ -2327,7 +2595,9 @@ msgstr "Organizatorul digital din buzunarul tău"
 msgid ""
 "We provide powerful tools to make your wedding planning stress-free and "
 "enjoyable."
-msgstr "Platforma noastră automatizează munca obositoare, ca tu să te bucuri de partea frumoasă a organizării."
+msgstr ""
+"Platforma noastră automatizează munca obositoare, ca tu să te bucuri de "
+"partea frumoasă a organizării."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:140
 msgid "Guest Management"
@@ -2337,7 +2607,9 @@ msgstr "Management Invitați"
 msgid ""
 "Easily manage your guest list, track RSVPs, and organize details in one "
 "place."
-msgstr "Adaugi invitații din Excel sau manual, îi grupezi pe familii și știi mereu cine vine și cine nu."
+msgstr ""
+"Adaugi invitații din Excel sau manual, îi grupezi pe familii și știi mereu "
+"cine vine și cine nu."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:149
 msgid "Digital RSVP"
@@ -2345,7 +2617,9 @@ msgstr "Confirmări (RSVP) Inteligente"
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:150
 msgid "Receive instant confirmations, meal preferences, and more."
-msgstr "Trimiți link-ul pe WhatsApp, iar invitații confirmă direct de pe telefon preferințele de meniu."
+msgstr ""
+"Trimiți link-ul pe WhatsApp, iar invitații confirmă direct de pe telefon "
+"preferințele de meniu."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:158
 msgid "Table Planning"
@@ -2355,7 +2629,9 @@ msgstr "Așezare Mese Drag&Drop"
 msgid ""
 "Organize seating charts effortlessly with our intuitive table assignment "
 "tool."
-msgstr "Organizează așezarea la mese intuitiv, alocă invitații confirmați și exportă tabelul pentru restaurant."
+msgstr ""
+"Organizează așezarea la mese intuitiv, alocă invitații confirmați și exportă "
+"tabelul pentru restaurant."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:167
 msgid "Multi-Language"
@@ -2363,7 +2639,9 @@ msgstr "Invitații Multi-Lingve"
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:168
 msgid "Create invitations in multiple languages for your international guests."
-msgstr "Aveți invitați din străinătate? Nimic mai simplu. Invitațiile se pot adapta limbii invitatului tău."
+msgstr ""
+"Aveți invitați din străinătate? Nimic mai simplu. Invitațiile se pot adapta "
+"limbii invitatului tău."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:178
 msgid "Collection"
@@ -2400,7 +2678,12 @@ msgid ""
 "invitations that spark excitement and connection. We're here to ensure every "
 "part of your journey, especially managing your guest list, is as joyful and "
 "effortless as the celebration itself."
-msgstr "Credem că magia oricărui eveniment reusit începe încă de la invitație. Misiunea platformei noastre, creată special pentru piața din România, este să îți ofere un tool intuitiv, fără erori tehnice, cu care să economisești timp, bani și nervi. Scapă de tabele încurcate, agende pierdute și răspunsuri incerte."
+msgstr ""
+"Credem că magia oricărui eveniment reusit începe încă de la invitație. "
+"Misiunea platformei noastre, creată special pentru piața din România, este "
+"să îți ofere un tool intuitiv, fără erori tehnice, cu care să economisești "
+"timp, bani și nervi. Scapă de tabele încurcate, agende pierdute și "
+"răspunsuri incerte."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:274
 msgid "Choose a Plan That's Right For You"
@@ -2438,7 +2721,9 @@ msgstr "În Curând"
 #: .\invapp\templates\invapp\landing_page_tailwind.html:397
 msgid ""
 "We are working on exciting new features. Click on any feature to learn more."
-msgstr "Dezvoltăm constant funcționalități noi pentru a vă ușura viața. Iată la ce lucrăm acum:"
+msgstr ""
+"Dezvoltăm constant funcționalități noi pentru a vă ușura viața. Iată la ce "
+"lucrăm acum:"
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:487
 msgid "IN PROGRESS"
@@ -2456,7 +2741,9 @@ msgstr "Mai ai curiozități?"
 msgid ""
 "Browse our Frequently Asked Questions to find out more about how to create "
 "the perfect invitation."
-msgstr "Răsfoiește secțiunea noastră de Întrebări Frecvente pentru a afla cum să obții maximum de la InvApp."
+msgstr ""
+"Răsfoiește secțiunea noastră de Întrebări Frecvente pentru a afla cum să "
+"obții maximum de la InvApp."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:518
 msgid "Visit FAQ Page"
@@ -2478,14 +2765,18 @@ msgstr "Cu experiență vastă"
 msgid ""
 "in transforming fairytale locations, our exclusive partner brings your "
 "vision to reality."
-msgstr "în transformarea locațiilor în povești de neuitat, partenerul nostru exclusiv îți aduce viziunea la realitate."
+msgstr ""
+"în transformarea locațiilor în povești de neuitat, partenerul nostru "
+"exclusiv îți aduce viziunea la realitate."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:558
 msgid ""
 "We believe that a perfect digital invitation deserves a matching decor. "
 "Every floral detail is created to reflect the elegance and unique "
 "personality of the couple."
-msgstr "Credem cu tărie că o invitație digitală premium merită un decor floral pe măsură. Orice detaliu spune o poveste."
+msgstr ""
+"Credem cu tărie că o invitație digitală premium merită un decor floral pe "
+"măsură. Orice detaliu spune o poveste."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:566
 msgid "Follow us on Instagram"
@@ -2499,7 +2790,10 @@ msgstr "Portofoliu Facebook"
 msgid ""
 "Crafting elegant digital experiences for life's most beautiful moments. "
 "Simple, digital, and stress-free event planning for modern couples."
-msgstr "Construim experiențe digitale elegante pentru momentele voastre speciale. Planificare digitală, simplă și eficientă pentru cuplurile moderne din România."
+msgstr ""
+"Construim experiențe digitale elegante pentru momentele voastre speciale. "
+"Planificare digitală, simplă și eficientă pentru cuplurile moderne din "
+"România."
 
 #: .\invapp\templates\invapp\landing_page_tailwind.html:606
 msgid "Platform"
@@ -2555,7 +2849,9 @@ msgstr "Dezvoltat cu pasiune în România, pentru români."
 msgid ""
 "The wedding event details haven't been added to the system yet. Please check "
 "back later or contact the hosts."
-msgstr "Sistemul nu afișează încă detaliile acestui eveniment. Te rugăm să verifici mai târziu sau să iei legătura cu mirii/părinții."
+msgstr ""
+"Sistemul nu afișează încă detaliile acestui eveniment. Te rugăm să verifici "
+"mai târziu sau să iei legătura cu mirii/părinții."
 
 #: .\invapp\templates\invapp\privacy_policy.html:8
 #: .\invapp\templates\invapp\terms_and_conditions.html:8
@@ -2571,7 +2867,9 @@ msgid ""
 "This Privacy Policy describes how [Your Company Name] (\"we\", \"us\", or "
 "\"our\") collects, uses, and discloses your information in connection with "
 "your use of our website and services (collectively, the \"Service\")."
-msgstr "Această Politică de Confidențialitate descrie cum colectăm, folosim și protejăm informațiile tale în legătură cu platforma InvApp."
+msgstr ""
+"Această Politică de Confidențialitate descrie cum colectăm, folosim și "
+"protejăm informațiile tale în legătură cu platforma InvApp."
 
 #: .\invapp\templates\invapp\privacy_policy.html:16
 msgid "Information We Collect"
@@ -2585,7 +2883,9 @@ msgstr "Datele Utilizatorului:"
 msgid ""
 "We collect personal information you provide when you register for an "
 "account, such as your name, email address, and payment information."
-msgstr "Colectăm informații la înregistrare: nume, adresă de email, setări ale evenimentului și date de facturare."
+msgstr ""
+"Colectăm informații la înregistrare: nume, adresă de email, setări ale "
+"evenimentului și date de facturare."
 
 #: .\invapp\templates\invapp\privacy_policy.html:18
 msgid "Guest Data:"
@@ -2596,7 +2896,10 @@ msgid ""
 "We process personal information about your guests that you provide to us, "
 "including their names, email addresses, and phone numbers. We process this "
 "data on your behalf to provide the Service's core functionalities."
-msgstr "Pentru buna funcționare, tu ca Utilizator introduci datele invitaților (nume, uneori email/telefon). Le procesăm strict în numele tău pentru trimiterea invitațiilor digitale și funcționalitatea platformei."
+msgstr ""
+"Pentru buna funcționare, tu ca Utilizator introduci datele invitaților "
+"(nume, uneori email/telefon). Le procesăm strict în numele tău pentru "
+"trimiterea invitațiilor digitale și funcționalitatea platformei."
 
 #: .\invapp\templates\invapp\privacy_policy.html:20
 msgid "How We Use Your Information"
@@ -2608,7 +2911,10 @@ msgid ""
 "Service, process transactions, and communicate with you. We use the Guest "
 "Data you provide solely to send invitations, track RSVPs, and provide other "
 "event management features on your behalf."
-msgstr "Folosim aceste date strict pentru a opera platforma InvApp, a securiza plățile Stripe și a facilita fluxul de confirmări RSVP. Datele invitaților tăi nu sunt și nu vor fi niciodată vândute sau folosite pentru marketing!"
+msgstr ""
+"Folosim aceste date strict pentru a opera platforma InvApp, a securiza "
+"plățile Stripe și a facilita fluxul de confirmări RSVP. Datele invitaților "
+"tăi nu sunt și nu vor fi niciodată vândute sau folosite pentru marketing!"
 
 #: .\invapp\templates\invapp\privacy_policy.html:23
 msgid "Data Processing and GDPR"
@@ -2621,7 +2927,10 @@ msgid ""
 "\"Data Controller,\" and we act as the \"Data Processor.\" It is your "
 "responsibility as the Data Controller to ensure you have a legal basis (such "
 "as consent) for processing your guests' data."
-msgstr "Operând din România, respectăm GDPR. Atunci când încarci lista ta, tu ești 'Operatorul de date', iar noi suntem 'Procesatorul'. Îți asumi că persoanele pe care le inviți îți sunt cunoscute."
+msgstr ""
+"Operând din România, respectăm GDPR. Atunci când încarci lista ta, tu ești "
+"'Operatorul de date', iar noi suntem 'Procesatorul'. Îți asumi că persoanele "
+"pe care le inviți îți sunt cunoscute."
 
 #: .\invapp\templates\invapp\privacy_policy.html:26
 msgid "Your Rights"
@@ -2632,7 +2941,9 @@ msgid ""
 "You have the right to access, update, or delete your personal information at "
 "any time by logging into your account or contacting us. You also have the "
 "right to manage and delete the personal data of your guests."
-msgstr "Poți solicita oricând ștergerea completă a contului, a evenimentului și a tuturor datelor despre invitați direct din Panoul de Control."
+msgstr ""
+"Poți solicita oricând ștergerea completă a contului, a evenimentului și a "
+"tuturor datelor despre invitați direct din Panoul de Control."
 
 #: .\invapp\templates\invapp\privacy_policy.html:29
 #: .\invapp\templates\invapp\terms_and_conditions.html:32
@@ -2654,7 +2965,8 @@ msgstr "Îți mulțumim,"
 
 #: .\invapp\templates\invapp\rsvp_thank_you.html:38
 msgid "We look forward to celebrating with you at the wedding of"
-msgstr "Așteptăm cu nerăbdare să ne bucurăm împreună la evenimentul organizat de"
+msgstr ""
+"Așteptăm cu nerăbdare să ne bucurăm împreună la evenimentul organizat de"
 
 #: .\invapp\templates\invapp\rsvp_thank_you.html:62
 msgid "Stay Updated"
@@ -2664,7 +2976,9 @@ msgstr "Rămâi la Curent"
 msgid ""
 "Optionally, provide your contact details below to receive important updates "
 "about the event."
-msgstr "Opțional: Dacă vrei, lasă-ți datele mai jos. Mirii vor putea astfel să-ți trimită un mesaj rapid dacă intervin modificări legate de locație/oră."
+msgstr ""
+"Opțional: Dacă vrei, lasă-ți datele mai jos. Mirii vor putea astfel să-ți "
+"trimită un mesaj rapid dacă intervin modificări legate de locație/oră."
 
 #: .\invapp\templates\invapp\rsvp_thank_you.html:73
 #: .\templates\account\password_reset.html:46
@@ -2673,7 +2987,7 @@ msgid "Email Address"
 msgstr "Adresa de Email"
 
 #: .\invapp\templates\invapp\rsvp_thank_you.html:95 .\invapp\views.py:182
-#: .\invapp\views.py:1184
+#: .\invapp\views.py:1238
 msgid "Phone Number"
 msgstr "Număr de Telefon"
 
@@ -2692,6 +3006,22 @@ msgstr "Întoarce-te la Invitația Digitală"
 #: .\invapp\templates\invapp\rsvp_thank_you.html:134
 msgid "Powered by InvApp"
 msgstr "Generat prin tehnologia InvApp România"
+
+#: .\invapp\templates\invapp\table_assignment_ui.html:11
+#: .\invapp\templates\invapp\table_assignment_ui.html:18
+#: .\invapp\templates\invapp\table_list_tailwind.html:12
+#: .\invapp\templates\invapp\table_list_tailwind.html:19
+#: .\invapp\templates\invapp\table_list_tailwind.html:27
+msgid "Table List"
+msgstr "Așezare Mese"
+
+#: .\invapp\templates\invapp\table_assignment_ui.html:12
+#: .\invapp\templates\invapp\table_assignment_ui.html:19
+#: .\invapp\templates\invapp\table_list_tailwind.html:13
+#: .\invapp\templates\invapp\table_list_tailwind.html:20
+#: .\invapp\templates\invapp\table_list_tailwind.html:35
+msgid "Assign Guests"
+msgstr "Asignează Invitați la Mese"
 
 #: .\invapp\templates\invapp\table_assignment_ui.html:25
 msgid "Table Assignments"
@@ -2753,7 +3083,9 @@ msgstr "Ești sigur că dorești să ștergi masa: "
 msgid ""
 "This action cannot be undone. Any guests assigned to this table will become "
 "unassigned."
-msgstr "Odată ștearsă, invitații de la această masă se vor întoarce în lista de persoane neașezate."
+msgstr ""
+"Odată ștearsă, invitații de la această masă se vor întoarce în lista de "
+"persoane neașezate."
 
 #: .\invapp\templates\invapp\table_confirm_delete.html:12
 msgid "Yes, Delete"
@@ -2796,7 +3128,8 @@ msgstr "Gestionezi mesele pentru:"
 
 #: .\invapp\templates\invapp\table_list_tailwind.html:73
 msgid "You haven't created any tables for this event yet."
-msgstr "Meniul de Seating: Creează prima masă pentru a începe organizarea sălii."
+msgstr ""
+"Meniul de Seating: Creează prima masă pentru a începe organizarea sălii."
 
 #: .\invapp\templates\invapp\table_list_tailwind.html:75
 msgid "Create Your First Table"
@@ -2816,7 +3149,9 @@ msgid ""
 "By creating an account and using the InvApp service (\"Service\"), you agree "
 "to be bound by these Terms and Conditions. If you disagree with any part of "
 "the terms, then you may not access the Service."
-msgstr "Prin crearea contului InvApp, ești de acord cu regulile și termenii noștri de bun-simț pentru utilizarea soft-ului."
+msgstr ""
+"Prin crearea contului InvApp, ești de acord cu regulile și termenii noștri "
+"de bun-simț pentru utilizarea soft-ului."
 
 #: .\invapp\templates\invapp\terms_and_conditions.html:16
 msgid "User Accounts"
@@ -2828,7 +3163,9 @@ msgid ""
 "that is accurate, complete, and current at all times. Failure to do so "
 "constitutes a breach of the Terms, which may result in immediate termination "
 "of your account on our Service."
-msgstr "Te rugăm să oferi date valide, în special adresa ta de email, deoarece acolo vei primi notificările importante despre evenimentul tău."
+msgstr ""
+"Te rugăm să oferi date valide, în special adresa ta de email, deoarece acolo "
+"vei primi notificările importante despre evenimentul tău."
 
 #: .\invapp\templates\invapp\terms_and_conditions.html:19
 msgid "User and Guest Data"
@@ -2838,7 +3175,9 @@ msgstr "Datele Utilizatorului și Invitaților"
 msgid ""
 "You are solely responsible for the personal data of your guests that you "
 "upload to our Service."
-msgstr "Tu ești responsabil pentru corectitudinea datelor personale încărcate (lista ta de invitați)."
+msgstr ""
+"Tu ești responsabil pentru corectitudinea datelor personale încărcate (lista "
+"ta de invitați)."
 
 #: .\invapp\templates\invapp\terms_and_conditions.html:20
 msgid ""
@@ -2846,14 +3185,18 @@ msgid ""
 "warrant that you have obtained all necessary consents from your guests to "
 "collect, use, and share their data within our Service for the purpose of "
 "sending invitations and managing your event."
-msgstr "Garantezi că ai acceptul invitaților pentru a le procesa temporar numele/telefonul în vederea trimiterii invitațiilor și a organizării evenimentului."
+msgstr ""
+"Garantezi că ai acceptul invitaților pentru a le procesa temporar numele/"
+"telefonul în vederea trimiterii invitațiilor și a organizării evenimentului."
 
 #: .\invapp\templates\invapp\terms_and_conditions.html:21
 msgid ""
 "Our Service will only use this guest data to provide the functionalities of "
 "the app, such as sending invitation links and managing RSVP responses. We "
 "will not use guest data for any other purpose."
-msgstr "REPETĂM: Noi NU preluăm, NU vindem și NU stocăm abuziv datele invitaților tăi. Le folosim doar algoritmic pentru confirmările RSVP din aplicație."
+msgstr ""
+"REPETĂM: Noi NU preluăm, NU vindem și NU stocăm abuziv datele invitaților "
+"tăi. Le folosim doar algoritmic pentru confirmările RSVP din aplicație."
 
 #: .\invapp\templates\invapp\terms_and_conditions.html:23
 msgid "Payments and Plans"
@@ -2864,7 +3207,10 @@ msgid ""
 "Some parts of the Service are billed on a one-time or subscription basis "
 "(\"Paid Plans\"). You will be billed in advance for the Paid Plans. All "
 "payments are handled by our third-party payment processor, Stripe."
-msgstr "Utilizarea Premium a platformei presupune plata unui pachet (one-time sau abonament). Tranzacțiile sunt 100% securizate și procesate exclusiv de Stripe."
+msgstr ""
+"Utilizarea Premium a platformei presupune plata unui pachet (one-time sau "
+"abonament). Tranzacțiile sunt 100% securizate și procesate exclusiv de "
+"Stripe."
 
 #: .\invapp\templates\invapp\terms_and_conditions.html:26
 msgid "Limitation of Liability"
@@ -2878,7 +3224,10 @@ msgid ""
 "limitation, loss of profits, data, use, goodwill, or other intangible "
 "losses, resulting from your access to or use of or inability to access or "
 "use the Service."
-msgstr "Platforma este furnizată 'așa cum este' (as is). Ne străduim să avem uptime de 99.9%, însă nu suntem răspunzători pentru eventuale erori de terță parte sau întreruperi scurte ale serviciilor de internet."
+msgstr ""
+"Platforma este furnizată 'așa cum este' (as is). Ne străduim să avem uptime "
+"de 99.9%, însă nu suntem răspunzători pentru eventuale erori de terță parte "
+"sau întreruperi scurte ale serviciilor de internet."
 
 #: .\invapp\templates\invapp\terms_and_conditions.html:29
 msgid "Governing Law"
@@ -2888,7 +3237,9 @@ msgstr "Legislație Aplicabilă"
 msgid ""
 "These Terms shall be governed and construed in accordance with the laws of "
 "Romania, without regard to its conflict of law provisions."
-msgstr "Acești termeni intră sub incidența și reglementările legilor de pe teritoriul României."
+msgstr ""
+"Acești termeni intră sub incidența și reglementările legilor de pe "
+"teritoriul României."
 
 #: .\invapp\templates\invapp\terms_and_conditions.html:33
 msgid "If you have any questions about these Terms, please contact us at "
@@ -2903,7 +3254,9 @@ msgid ""
 "We may terminate or suspend your account immediately, without prior notice "
 "or liability, for any reason whatsoever, including without limitation if you "
 "breach the Terms."
-msgstr "Ne rezervăm dreptul de a dezactiva conturile care încearcă să genereze spam sau atacuri cibernetice."
+msgstr ""
+"Ne rezervăm dreptul de a dezactiva conturile care încearcă să genereze spam "
+"sau atacuri cibernetice."
 
 #: .\invapp\templates\invapp\terms_and_conditions.html:37
 msgid ""
@@ -2911,7 +3264,11 @@ msgid ""
 "multiple, distinct events (e.g., changing a \"Wedding\" to a \"Baptism\") is "
 "a direct violation of these Terms and will result in immediate account "
 "termination."
-msgstr "Folosirea abuzivă a pachetului Gratuit, cum ar fi re-editarea aceluiași eveniment pentru a genera link-uri complet noi pentru alte evenimente (schimbând Nunta în Botezul altcuiva), poate rezulta în blocarea automată a contului."
+msgstr ""
+"Folosirea abuzivă a pachetului Gratuit, cum ar fi re-editarea aceluiași "
+"eveniment pentru a genera link-uri complet noi pentru alte evenimente "
+"(schimbând Nunta în Botezul altcuiva), poate rezulta în blocarea automată a "
+"contului."
 
 #: .\invapp\templates\invapp\upgrade_page.html:4
 msgid "Upgrade Your Plan"
@@ -2923,7 +3280,8 @@ msgstr "Deblochează pachetul"
 
 #: .\invapp\templates\invapp\upgrade_page.html:8
 msgid "We're excited to have you on board!"
-msgstr "Suntem încântați să participăm digital la organizarea evenimentului tău!"
+msgstr ""
+"Suntem încântați să participăm digital la organizarea evenimentului tău!"
 
 #: .\invapp\templates\invapp\upgrade_page.html:15
 msgid "You have selected the"
@@ -2939,7 +3297,8 @@ msgstr "Cum funcționează activarea instantă:"
 
 #: .\invapp\templates\invapp\upgrade_page.html:26
 msgid "Click the button below to be redirected to Stripe."
-msgstr "Apeși butonul de mai jos și ești redirecționat spre securitatea Stripe."
+msgstr ""
+"Apeși butonul de mai jos și ești redirecționat spre securitatea Stripe."
 
 #: .\invapp\templates\invapp\upgrade_page.html:27
 msgid "Enter your card details securely."
@@ -2948,7 +3307,8 @@ msgstr "Introduci datele cardului. Totul este encriptat de bancă."
 #: .\invapp\templates\invapp\upgrade_page.html:28
 msgid ""
 "You will be redirected back here and your plan will be active immediately."
-msgstr "Pachetul Premium se activează pe loc automat la întoarcerea în platformă."
+msgstr ""
+"Pachetul Premium se activează pe loc automat la întoarcerea în platformă."
 
 #: .\invapp\templates\invapp\upgrade_page.html:34
 msgid "Pay with Stripe"
@@ -2987,7 +3347,7 @@ msgstr "Nu ai permisiuni necesare pentru exportul datelor acestui eveniment."
 msgid "Type"
 msgstr "Tip Adresare"
 
-#: .\invapp\views.py:181 .\invapp\views.py:879
+#: .\invapp\views.py:181 .\invapp\views.py:921
 msgid "Guest Name"
 msgstr "Nume Invitat"
 
@@ -3018,7 +3378,9 @@ msgstr "Te invităm la %(title)s! Fii alături de noi."
 
 #: .\invapp\views.py:308
 msgid "Thank you! Your contact information has been updated."
-msgstr "Super! Datele tale de contact (telefon/email) au fost salvate cu succes în agendă."
+msgstr ""
+"Super! Datele tale de contact (telefon/email) au fost salvate cu succes în "
+"agendă."
 
 #: .\invapp\views.py:365
 msgid "Welcome to InvApp!"
@@ -3034,15 +3396,27 @@ msgid ""
 "\n"
 "Respectfully,\n"
 "InvApp Team"
-msgstr "Salutare %(username)s,\n\nContul tău a fost creat cu succes. Intră în dashboard și personalizează prima ta invitație digitală - este la fel de simplu precum completarea unui profil.\n\nSpor la organizare,\nEchipa InvApp"
+msgstr ""
+"Salutare %(username)s,\n"
+"\n"
+"Contul tău a fost creat cu succes. Intră în dashboard și personalizează "
+"prima ta invitație digitală - este la fel de simplu precum completarea unui "
+"profil.\n"
+"\n"
+"Spor la organizare,\n"
+"Echipa InvApp"
 
 #: .\invapp\views.py:372
 msgid "Registration successful! A confirmation email has been sent."
-msgstr "Contul a fost creat cu succes! Verifică-ți și căsuța de Spam pentru email-ul de confirmare."
+msgstr ""
+"Contul a fost creat cu succes! Verifică-ți și căsuța de Spam pentru email-ul "
+"de confirmare."
 
 #: .\invapp\views.py:374
 msgid "Registration successful, but we could not send a confirmation email."
-msgstr "Cont creat cu succes, însă serverul de e-mail a întâmpinat o eroare internă de moment."
+msgstr ""
+"Cont creat cu succes, însă serverul de e-mail a întâmpinat o eroare internă "
+"de moment."
 
 #: .\invapp\views.py:485
 #, python-format
@@ -3051,7 +3425,8 @@ msgstr "Masa '%(name)s' a fost ștearsă."
 
 #: .\invapp\views.py:494
 msgid "You do not have permission to manage assignments."
-msgstr "Nu ai permisiuni pentru a modifica organizarea meselor în acest eveniment."
+msgstr ""
+"Nu ai permisiuni pentru a modifica organizarea meselor în acest eveniment."
 
 #: .\invapp\views.py:503
 msgid "Guest unassigned successfully."
@@ -3078,7 +3453,9 @@ msgstr "Selecție nevalidă."
 
 #: .\invapp\views.py:541
 msgid "Table assignment is not included in your plan."
-msgstr "Așezarea interactivă la mese este o funcție Premium. Accesează prețurile pentru upgrade."
+msgstr ""
+"Așezarea interactivă la mese este o funcție Premium. Accesează prețurile "
+"pentru upgrade."
 
 #: .\invapp\views.py:553
 #, python-format
@@ -3093,108 +3470,143 @@ msgstr "S-a eliberat locul invitatului de la masă."
 msgid "Event limit reached. Upgrade to create more."
 msgstr "Număr maxim de evenimente atins. Treci la un pachet superior."
 
-#: .\invapp\views.py:659
+#: .\invapp\views.py:662 .\invapp\views.py:768
+#, fuzzy
+#| msgid "Ceremony Location"
+msgid "Ceremony Logistics"
+msgstr "Locația Ceremoniei Religioase"
+
+#: .\invapp\views.py:663 .\invapp\views.py:769
+#, fuzzy
+#| msgid "Reception"
+msgid "Reception Logistics"
+msgstr "Primirea Invitaților"
+
+#: .\invapp\views.py:666
+#, python-format
+msgid ""
+"Event published, but some details are missing: %(fields)s. You can add them "
+"later."
+msgstr ""
+
+#: .\invapp\views.py:668
 #, python-format
 msgid "Event '%(title)s' created!"
 msgstr "Evenimentul '%(title)s' tocmai a prins viață!"
 
-#: .\invapp\views.py:755
+#: .\invapp\views.py:772
+#, python-format
+msgid ""
+"Event updated, but some details are missing: %(fields)s. You can add them "
+"later."
+msgstr ""
+
+#: .\invapp\views.py:774
 msgid "Event updated."
 msgstr "Toate detaliile evenimentului au fost actualizate și salvate."
 
-#: .\invapp\views.py:774
+#: .\invapp\views.py:794
 msgid "Deleting events is locked on your plan."
-msgstr "Ștergerea evenimentelor este blocată din motive de securitate la nivelul tău actual de abonament."
+msgstr ""
+"Ștergerea evenimentelor este blocată din motive de securitate la nivelul tău "
+"actual de abonament."
 
-#: .\invapp\views.py:779
+#: .\invapp\views.py:799
 msgid "Event deleted."
 msgstr "Evenimentul și datele asociate au fost șterse permanent."
 
-#: .\invapp\views.py:959
+#: .\invapp\views.py:1001
 msgid "Guest limit reached."
 msgstr "Ai atins plafonul maxim de invitați."
 
-#: .\invapp\views.py:966
+#: .\invapp\views.py:1008
 msgid "Guest added."
 msgstr "Lista crește. Invitat adăugat cu succes."
 
-#: .\invapp\views.py:991
+#: .\invapp\views.py:1033
 #, python-format
 msgid "Edit Guest: %(name)s"
 msgstr "Se editează datele: %(name)s"
 
-#: .\invapp\views.py:1009
+#: .\invapp\views.py:1051
 msgid "Guest deleted."
 msgstr "A fost șters din lista de invitați."
 
-#: .\invapp\views.py:1075
+#: .\invapp\views.py:1124
 #, python-format
 msgid "Stripe Error: %(error)s"
 msgstr "Eroare la procesatorul de plată Stripe: %(error)s"
 
-#: .\invapp\views.py:1165
+#: .\invapp\views.py:1214
 msgid "Payment successful! Your plan has been upgraded."
-msgstr "Succes! Plata a fost confirmată și noile limite din cont au fost deblocate."
+msgstr ""
+"Succes! Plata a fost confirmată și noile limite din cont au fost deblocate."
 
-#: .\invapp\views.py:1171
+#: .\invapp\views.py:1220
 msgid "Payment cancelled."
 msgstr "Procesul de plată a fost anulat. Contul tău rămâne neschimbat."
 
-#: .\invapp\views.py:1184
+#: .\invapp\views.py:1235
 msgid "Honorific"
 msgstr "Grup (Familia/Dl.)"
 
-#: .\invapp\views.py:1184
+#: .\invapp\views.py:1236
 msgid "Name"
 msgstr "Nume"
 
-#: .\invapp\views.py:1184
+#: .\invapp\views.py:1239
 msgid "Max Attendees"
 msgstr "Nr Maxim Locuri (Bilete)"
 
-#: .\invapp\views.py:1197
+#: .\invapp\views.py:1254
 msgid "Missing 'Name' column"
-msgstr "Fișierul tău Excel nu conține capul de tabel obligatoriu cu denumirea 'Name'"
+msgstr ""
+"Fișierul tău Excel nu conține capul de tabel obligatoriu cu denumirea 'Name'"
 
-#: .\invapp\views.py:1204
+#: .\invapp\views.py:1261
 msgid "Import exceeds guest limit."
-msgstr "Importarea acestui fișier ar depăși limita maximă de persoane din abonamentul tău actual."
+msgstr ""
+"Importarea acestui fișier ar depăși limita maximă de persoane din "
+"abonamentul tău actual."
 
-#: .\invapp\views.py:1216
+#: .\invapp\views.py:1284
 #, python-format
 msgid "Imported %(count)d guests."
-msgstr "Magie tehnică! %(count)d invitați au fost importați din Excel cu succes."
+msgstr ""
+"Magie tehnică! %(count)d invitați au fost importați din Excel cu succes."
 
-#: .\invapp\views.py:1218
+#: .\invapp\views.py:1286
 #, python-format
 msgid "Import error: %(error)s"
 msgstr "Probleme la citirea Excel-ului: %(error)s"
 
-#: .\invapp\views.py:1334
+#: .\invapp\views.py:1402
 msgid "Thank you for your feedback!"
 msgstr "Feedback trimis! Îți mulțumim pentru recenzie."
 
-#: .\invapp\views.py:1355
+#: .\invapp\views.py:1423
 msgid "You do not have permission to view this event."
 msgstr "Acest link este securizat. Nu ai acces la panoul acestui eveniment."
 
-#: .\invapp\views.py:1358
+#: .\invapp\views.py:1426
 msgid "Select a design to see the preview."
-msgstr "Intră în Editare Eveniment și selectează mai întâi un design grafic din listă."
+msgstr ""
+"Intră în Editare Eveniment și selectează mai întâi un design grafic din "
+"listă."
 
-#: .\invapp\views.py:1364
+#: .\invapp\views.py:1432
 msgid "Sample Guest Name"
 msgstr "Nume Invitat Preview"
 
-#: .\invapp\views.py:1410
+#: .\invapp\views.py:1478
 msgid "Invalid design selected."
 msgstr "Design-ul solicitat nu mai face parte din colecția curentă."
 
-#: .\invapp\views.py:1412
+#: .\invapp\views.py:1480
 msgid "Please select a design for preview."
 msgstr "Înainte să generezi invitația digitală, bifează tema grafică dorită."
 
-#: .\invapp\views.py:1434
+#: .\invapp\views.py:1502
 #, python-format
 msgid "Error generating preview: %(error)s"
 msgstr "A intervenit o eroare la construirea web a invitației: %(error)s"
@@ -3230,7 +3642,10 @@ msgstr "Salutare,"
 msgid ""
 "Thank you for signing up on <strong>InvApp Romania</strong>. Please confirm "
 "your email address to activate your account."
-msgstr "Îți mulțumim că te-ai înregistrat pe <strong>platforma InvApp</strong>. Te rugăm să dai un click pe butonul de mai jos pentru a activa adresa ta și pentru a începe conturarea primei invitații."
+msgstr ""
+"Îți mulțumim că te-ai înregistrat pe <strong>platforma InvApp</strong>. Te "
+"rugăm să dai un click pe butonul de mai jos pentru a activa adresa ta și "
+"pentru a începe conturarea primei invitații."
 
 #: .\templates\account\email\email_confirmation_message.html:21
 msgid "Confirm Account"
@@ -3238,11 +3653,15 @@ msgstr "Activează Contul"
 
 #: .\templates\account\email\email_confirmation_message.html:26
 msgid "If the button above does not work, you can access this link directly:"
-msgstr "Dacă butonul pare să aibă o problemă tehnică, copiază link-ul de mai jos direct în browser:"
+msgstr ""
+"Dacă butonul pare să aibă o problemă tehnică, copiază link-ul de mai jos "
+"direct în browser:"
 
 #: .\templates\account\email\email_confirmation_message.html:36
 msgid "This message was sent automatically. Please do not reply to this email."
-msgstr "Acesta este un email automat de sistem. Te rugăm să nu folosești funcția de 'Reply' la el."
+msgstr ""
+"Acesta este un email automat de sistem. Te rugăm să nu folosești funcția de "
+"'Reply' la el."
 
 #: .\templates\account\email\email_confirmation_message.txt:2
 msgid "Hello!"
@@ -3256,11 +3675,15 @@ msgstr "Super! Ai intrat pe ușa cea mare în platforma InvApp România."
 msgid ""
 "To activate your account and start creating invitations, please confirm your "
 "email address by clicking the link below:"
-msgstr "Pentru a începe distracția și a crea primele invitații, dă te rog un click de confirmare pe acest link:"
+msgstr ""
+"Pentru a începe distracția și a crea primele invitații, dă te rog un click "
+"de confirmare pe acest link:"
 
 #: .\templates\account\email\email_confirmation_message.txt:10
 msgid "If you did not request this account, you can ignore this message."
-msgstr "Dacă cineva a folosit adresa ta din greșeală, poți șterge simplu acest e-mail."
+msgstr ""
+"Dacă cineva a folosit adresa ta din greșeală, poți șterge simplu acest e-"
+"mail."
 
 #: .\templates\account\email\email_confirmation_message.txt:12
 msgid "With love,"
@@ -3298,7 +3721,9 @@ msgstr "Introdu codul primit pe e-mail"
 msgid ""
 "We sent a code to your email. The code expires shortly, so please enter it "
 "soon."
-msgstr "Am trimis pe e-mail un pin din cifre. Atenție: din motive de securitate, expiră în curând."
+msgstr ""
+"Am trimis pe e-mail un pin din cifre. Atenție: din motive de securitate, "
+"expiră în curând."
 
 #: .\templates\account\login_code_entry.html:28
 msgid "Error"
@@ -3327,7 +3752,9 @@ msgstr "Ai uitat parola? E în regulă."
 msgid ""
 "Enter your email address below, and we'll send you a link to reset your "
 "password."
-msgstr "Lipește aici adresa de email din contul tău, și un algoritm îți va trimite pe loc o parolă nouă."
+msgstr ""
+"Lipește aici adresa de email din contul tău, și un algoritm îți va trimite "
+"pe loc o parolă nouă."
 
 #: .\templates\account\password_reset.html:57
 #: .\templates\registration\password_reset.html:53
@@ -3351,13 +3778,17 @@ msgstr "Aruncă o privire în contul tău de e-mail"
 msgid ""
 "We have sent you an email. If an account exists with the email you entered, "
 "you will receive a link to reset your password shortly."
-msgstr "Dacă emailul introdus este cel corect alăturat contului tău, e-mailul de reset este deja trimis. (Mai durează câteva secunde)."
+msgstr ""
+"Dacă emailul introdus este cel corect alăturat contului tău, e-mailul de "
+"reset este deja trimis. (Mai durează câteva secunde)."
 
 #: .\templates\account\password_reset_done.html:44
 msgid ""
 "If you don't receive an email, please check your spam folder or verify the "
 "address you entered."
-msgstr "Verifică atent și în folderul tău SPAM. Dacă nici acolo nu e, încearcă din nou."
+msgstr ""
+"Verifică atent și în folderul tău SPAM. Dacă nici acolo nu e, încearcă din "
+"nou."
 
 #: .\templates\account\password_reset_done.html:53
 msgid "Return to Sign In"
@@ -3385,7 +3816,9 @@ msgstr "Creare cont nou gratuit"
 
 #: .\templates\account\signup.html:52
 msgid "By signing up, you agree to our Terms and Privacy Policy."
-msgstr "Prin continuarea pe platformă, îți exprimi acordul referitor la prelucrarea datelor cu caracter limitat, Termenii & Politicile InvApp."
+msgstr ""
+"Prin continuarea pe platformă, îți exprimi acordul referitor la prelucrarea "
+"datelor cu caracter limitat, Termenii & Politicile InvApp."
 
 #: .\templates\account\snippets\social_buttons.html:11
 msgid "Continue with Google"
@@ -3407,11 +3840,15 @@ msgstr "Activare și Validare"
 msgid ""
 "We have sent an email to you for verification. Follow the link provided to "
 "finalize the signup process."
-msgstr "Acesta a fost penultimul pas. Tot ce mai e de făcut este să dai un singur click pe link-ul din căsuța de e-mail."
+msgstr ""
+"Acesta a fost penultimul pas. Tot ce mai e de făcut este să dai un singur "
+"click pe link-ul din căsuța de e-mail."
 
 #: .\templates\account\verification_sent.html:23
 msgid "Please contact us if you do not receive it within a few minutes."
-msgstr "Dacă trec câteva minute fără niciun semn, contactează-ne, este posibil ca o setare de server să blocheze mailurile."
+msgstr ""
+"Dacă trec câteva minute fără niciun semn, contactează-ne, este posibil ca o "
+"setare de server să blocheze mailurile."
 
 #: .\templates\account\verification_sent.html:29
 msgid "Back to Login"
@@ -3447,7 +3884,8 @@ msgstr "Formular de Creare - InvApp"
 
 #: .\templates\registration\signup_tailwind.html:45
 msgid "Errors occurred during registration"
-msgstr "Sistemul indică un format eronat la înregistrare. Verifică datele de mai sus."
+msgstr ""
+"Sistemul indică un format eronat la înregistrare. Verifică datele de mai sus."
 
 #: .\templates\registration\signup_tailwind.html:80
 msgid "Sign up"
@@ -3464,7 +3902,9 @@ msgstr "Verificare conexiune"
 #: .\templates\socialaccount\login.html:32
 #, python-format
 msgid "You are about to connect your %(provider)s account."
-msgstr "Începem conectarea punții digitale între contul tău de %(provider)s și InvApp."
+msgstr ""
+"Începem conectarea punții digitale între contul tău de %(provider)s și "
+"InvApp."
 
 #: .\templates\socialaccount\login.html:35
 msgid "This will link it to your existing InviteMe account."
@@ -3473,16 +3913,98 @@ msgstr "Operațiunea asta va face legătura și te va loga mult mai rapid."
 #: .\templates\socialaccount\login.html:39
 #, python-format
 msgid "You are about to sign in using your %(provider)s account."
-msgstr "Autentificare pe cale să se producă automat cu protocolul %(provider)s."
+msgstr ""
+"Autentificare pe cale să se producă automat cu protocolul %(provider)s."
 
 #: .\templates\socialaccount\login.html:46
 msgid "Continue"
 msgstr "Aprobă și continuă navigarea"
 
-#: .\wedding_project\settings.py:183
+#: .\wedding_project\settings.py:191
 msgid "Romanian"
 msgstr "Limba Română"
 
-#: .\wedding_project\settings.py:184
+#: .\wedding_project\settings.py:192
 msgid "English"
 msgstr "Limba Engleză"
+
+#~ msgid "Available Designs"
+#~ msgstr "Design-uri Disponibile"
+
+#~ msgid "Primary Details"
+#~ msgstr "Detalii Principale"
+
+#~ msgid "Locations"
+#~ msgstr "Locații"
+
+#~ msgid "+ Add Timeline Item"
+#~ msgstr "+ Adaugă moment în program"
+
+#~ msgid "Full Invitation Image"
+#~ msgstr "Imaginea completă a invitației (Dacă folosești Canva)"
+
+#~ msgid "Refresh Preview"
+#~ msgstr "Reîncarcă Previzualizarea"
+
+#~ msgid "Final Step"
+#~ msgstr "Pasul Final"
+
+#~ msgid "Ready to Save"
+#~ msgstr "Gata de Salvare"
+
+#~ msgid "Guest List for"
+#~ msgstr "Lista de Invitați pentru"
+
+#~ msgid "Managing guests for:"
+#~ msgstr "Gestionează lista de invitați pentru:"
+
+#~ msgid ""
+#~ "Tip: Download the template, fill it with your guests, and import the file."
+#~ msgstr ""
+#~ "Sfat: Descarcă modelul Excel, completează cu familiile invitate și "
+#~ "încarcă fișierul aici (Economisești ore întregi!)."
+
+#~ msgid "Import Guest List"
+#~ msgstr "Importă Lista din Excel"
+
+#~ msgid "Guest Limit Reached"
+#~ msgstr "Limită Invitați Atinsă"
+
+#~ msgid "Upgrade Now"
+#~ msgstr "Upgradează Acum"
+
+#~ msgid "Invited Guests"
+#~ msgstr "Total Invitați"
+
+#~ msgid "Guest Details"
+#~ msgstr "Detalii Invitat (Nume, Link)"
+
+#~ msgid "Status & Count"
+#~ msgstr "Status & Locuri"
+
+#~ msgid "Manually updated by host"
+#~ msgstr "Actualizat manual de tine"
+
+#~ msgid "Manual"
+#~ msgstr "Manual"
+
+#~ msgid "Responded online"
+#~ msgstr "A confirmat online prin link"
+
+#~ msgid "Online"
+#~ msgstr "Online"
+
+#~ msgid "Not Coming"
+#~ msgstr "Nu vine"
+
+#~ msgid "Save"
+#~ msgstr "Salvează"
+
+#~ msgid "View Invitation"
+#~ msgstr "Vezi Invitația"
+
+#~ msgid "Override RSVP?"
+#~ msgstr "Suprascrii confirmarea?"
+
+#~ msgid "Update failed."
+#~ msgstr "Actualizarea a eșuat."

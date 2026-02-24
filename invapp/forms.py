@@ -16,7 +16,7 @@ from allauth.account.forms import SignupForm
 from django.urls import reverse_lazy
 from .models import Guest, Testimonial
 
-INPUT_CLASSES = "block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 bg-gray-50 dark:bg-gray-700 dark:text-white dark:ring-gray-500"
+INPUT_CLASSES = "block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 bg-white dark:bg-slate-900 dark:text-white dark:ring-slate-700"
 INPUT_CLASSES_WITH_ICON = f"{INPUT_CLASSES} pl-10"
 
 
@@ -118,14 +118,19 @@ class AssignGuestForm(forms.Form):
                     return cleaned_data
 
 class EventForm(forms.ModelForm):
-     class Meta:
+    event_date = forms.DateTimeField(
+        input_formats=['%d/%m/%Y', '%Y-%m-%d', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S'],
+        widget=forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'DD/MM/YYYY'})
+    )
+
+    class Meta:
         model = Event
         fields = [
-            'event_type', 'title', 'event_date','party_time', 'venue_name', 'venue_address',
-            'bride_name', 'groom_name', 'bride_parents', 'groom_parents', 
+            'event_type', 'title', 'event_date', 'party_time', 'venue_name', 'venue_address',
+            'bride_name', 'groom_name', 'bride_parents', 'groom_parents',
             'child_name', 'parents_names',
-            'ceremony_maps_url','party_maps_url', 'calendar_description',
-            'ceremony_time', 'ceremony_location',
+            'ceremony_maps_url', 'party_maps_url', 'calendar_description',
+            'ceremony_time', 'ceremony_location', 'ceremony_address',
             'invitation_wording', 'schedule_details', 'other_info',
             'couple_photo',
             'landscape_photo',
@@ -135,16 +140,12 @@ class EventForm(forms.ModelForm):
 
         widgets = {
             'title': forms.TextInput(attrs={'class': INPUT_CLASSES}),
-             'event_date': forms.DateInput(
-                format='%Y-%m-%d',
-                attrs={'type': 'date', 'class': INPUT_CLASSES}
-            ),
             'party_time': forms.TimeInput(
                 format='%H:%M',
                 attrs={'type': 'time', 'class': INPUT_CLASSES}
             ),
             'venue_name': forms.TextInput(attrs={'class': INPUT_CLASSES}),
-            'venue_address': forms.Textarea(attrs={'class': INPUT_CLASSES, 'rows': 3}),
+            'venue_address': forms.TextInput(attrs={'class': INPUT_CLASSES}),
             'bride_name': forms.TextInput(attrs={'class': INPUT_CLASSES}),
             'groom_name': forms.TextInput(attrs={'class': INPUT_CLASSES}),
             'bride_parents': forms.TextInput(attrs={'class': INPUT_CLASSES}),
@@ -158,29 +159,33 @@ class EventForm(forms.ModelForm):
                 format='%H:%M',
                 attrs={'type': 'time', 'class': INPUT_CLASSES}
             ),
-            'ceremony_location': forms.TextInput(attrs={'class': INPUT_CLASSES}),
+            'ceremony_location': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'e.g. St. Nicholas Church'}),
+            'ceremony_address': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'Physical Address'}),
             'invitation_wording': forms.Textarea(attrs={'class': INPUT_CLASSES, 'rows': 5}),
             'schedule_details': forms.Textarea(attrs={'class': INPUT_CLASSES, 'rows': 4}),
             'other_info': forms.Textarea(attrs={'class': INPUT_CLASSES, 'rows': 4}),
             'selected_design': forms.RadioSelect(),
         }
 
-        def clean_map_url(self, field_name):
-            data = self.cleaned_data.get(field_name)
-            if not data:
-                return data
-
-            if '<iframe' in data:
-                match = re.search(r'src="([^"]+)"', data)
-                if match:
-                    return match.group(1)
+    def clean_map_url(self, field_name):
+        data = self.cleaned_data.get(field_name)
+        if not data:
             return data
 
-        def clean_ceremony_maps_url(self):
-            return self.clean_map_url('ceremony_maps_url')
+        # Only extract src if it's a full iframe tag
+        if data.strip().startswith('<iframe') and 'src="' in data:
+            match = re.search(r'src="([^"]+)"', data)
+            if match:
+                return match.group(1)
+        
+        # Otherwise, assume it's already a direct URL or a short link
+        return data.strip()
 
-        def clean_party_maps_url(self):
-            return self.clean_map_url('party_maps_url')
+    def clean_ceremony_maps_url(self):
+        return self.clean_map_url('ceremony_maps_url')
+
+    def clean_party_maps_url(self):
+        return self.clean_map_url('party_maps_url')
 
 
 class GuestForm(forms.ModelForm):
@@ -194,8 +199,6 @@ class GuestForm(forms.ModelForm):
             'email',
             'max_attendees',
             'invitation_method',
-            'manual_is_attending',
-            'manual_attending_count',
         ]
         labels = {
             'honorific': _("Courtesy Title"),
@@ -204,16 +207,12 @@ class GuestForm(forms.ModelForm):
             'phone_number': _('Phone Number (Optional)'),
             'email': _('Email Address (Optional)'),
             'max_attendees': _('Max Number of People Invited (including guest)'),
-            'invitation_method': _('Invitation Method'),
-            'manual_is_attending': _('Manually Confirmed Attending?'),
-            'manual_attending_count': _('Number Confirmed Attending (Manual)'),
+            'invitation_method': _('Invitation Method (Digital or Paper)'),
         }
         help_texts = {
             'max_attendees': _('Enter the total number of people this invitation covers (e.g., 2 for a couple).'),
             'name': _('Full name of the primary guest or couple/family name.'),
             'email': _('Primary email for the invitation.'),
-            'manual_is_attending': _('Set this if guest confirmed verbally or via physical RSVP card.'),
-            'manual_attending_count': _('If attending, how many? Overrides digital RSVP if set.'),
         }
         widgets = {
             'honorific': forms.Select(attrs={'class': INPUT_CLASSES}),
@@ -223,10 +222,13 @@ class GuestForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': INPUT_CLASSES_WITH_ICON, 'placeholder': 'john@example.com'}),
             'max_attendees': forms.NumberInput(attrs={'class': INPUT_CLASSES, 'min': '1', 'value': '1'}),
             'invitation_method': forms.Select(attrs={'class': INPUT_CLASSES}),
-            'manual_is_attending': forms.Select(choices=[(None, _('Unknown')), (True, _('Yes')), (False, _('No'))],
-                                                attrs={'class': INPUT_CLASSES}),
-            'manual_attending_count': forms.NumberInput(attrs={'class': INPUT_CLASSES}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.initial['preferred_language'] = 'ro'
+            self.initial['invitation_method'] = 'digital'
 
 class GuestCreateForm(GuestForm):
     class Meta(GuestForm.Meta):
@@ -237,6 +239,7 @@ class GuestCreateForm(GuestForm):
             'phone_number',
             'email',
             'max_attendees',
+            'invitation_method',
         ]
 
 class CustomUserCreationForm(UserCreationForm):
@@ -332,11 +335,11 @@ class GuestContactForm(forms.ModelForm):
         widgets = {
             'email': forms.EmailInput(attrs={
                 'placeholder': 'your.email@example.com',
-                'class': 'INPUT_CLASSES_WITH_ICON'
+                'class': INPUT_CLASSES_WITH_ICON
             }),
             'phone_number': forms.TextInput(attrs={
                 'placeholder': '+40712345678',
-                'class': 'INPUT_CLASSES_WITH_ICON'
+                'class': INPUT_CLASSES_WITH_ICON
             }),
         }
 
@@ -404,7 +407,7 @@ class ReviewForm(forms.ModelForm):
         fields = ['rating', 'text']
         widgets = {
             'text': forms.Textarea(attrs={
-                'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                'class': INPUT_CLASSES,
                 'rows': 4,
                 'placeholder': _('Tell us what you think (optional)...')
             }),

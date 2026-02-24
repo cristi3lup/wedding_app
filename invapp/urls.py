@@ -37,6 +37,7 @@ urlpatterns = [
     path('table/<int:pk>/delete/', views.TableDeleteView.as_view(), name='table_delete'),  # pk = table's primary key
     path('event/new/', views.EventCreateView.as_view(), name='event_create'),
     path('event/preview/', views.event_preview_view, name='event_preview'),
+    path('event/<int:pk>/autosave/', views.event_autosave_view, name='event_autosave'),
     path('event/<int:pk>/edit/', views.EventUpdateView.as_view(), name='event_edit'),  # pk = event's primary key
     path('event/<int:pk>/delete/', views.EventDeleteView.as_view(), name='event_delete'),
     path('event/<int:event_id>/guests/', views.guest_list, name='guest_list'),

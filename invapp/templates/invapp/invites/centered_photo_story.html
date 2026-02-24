@@ -57,10 +57,10 @@
     </section>
 
     <!-- 2. Main Photo -->
-    {% if event.couple_photo %}
+    {% if event.get_couple_photo_url %}
     <section class="reveal">
         <div class="photo-frame aspect-[4/5] shadow-2xl">
-            <img src="{{ event.couple_photo.url }}" alt="Couple" class="w-full h-full object-cover">
+            <img src="{{ event.get_couple_photo_url }}" alt="Couple" class="w-full h-full object-cover">
         </div>
     </section>
     {% endif %}

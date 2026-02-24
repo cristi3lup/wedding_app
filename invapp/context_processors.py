@@ -49,4 +49,5 @@ def seo_settings(request):
     return {
         'GOOGLE_SITE_VERIFICATION': getattr(settings, 'GOOGLE_SITE_VERIFICATION', ''),
         'GA_MEASUREMENT_ID': getattr(settings, 'GA_MEASUREMENT_ID', ''),
+        'GOOGLE_MAPS_API_KEY': getattr(settings, 'GOOGLE_MAPS_API_KEY', ''),
     }

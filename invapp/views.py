@@ -227,11 +227,12 @@ def invitation_rsvp_combined_view(request, guest_uuid):
             rsvp.guest = guest
             rsvp.save()
 
-            # Clear manual overrides if guest responds digitally
+            # Mark source as automatic and clear manual overrides
+            guest.rsvp_source = Guest.RSVPSourceChoices.AUTOMATIC
             if guest.manual_is_attending is not None:
                 guest.manual_is_attending = None
                 guest.manual_attending_count = None
-                guest.save()
+            guest.save()
 
             messages.success(request, _("Confirmation details are updated. Thank you!") if existing_rsvp else _(
                 'Thank you for confirmation!'))
@@ -641,28 +642,41 @@ class EventCreateView(LoginRequiredMixin, CreateView):
         gallery_image_formset = context['gallery_image_formset']
 
         # Complete validation (including gallery)
-        if form.is_valid() and godparent_formset.is_valid() and schedule_item_formset.is_valid() and gallery_image_formset.is_valid():
+        if form.is_valid():
             self.object = form.save(commit=False)
             self.object.owner = self.request.user
             self.object.save()
 
-            godparent_formset.instance = self.object
-            godparent_formset.save()
+            if godparent_formset.is_valid():
+                godparent_formset.instance = self.object
+                godparent_formset.save()
 
-            schedule_item_formset.instance = self.object
-            schedule_item_formset.save()
+            if schedule_item_formset.is_valid():
+                schedule_item_formset.instance = self.object
+                schedule_item_formset.save()
 
-            # Save gallery
-            gallery_image_formset.instance = self.object
-            gallery_image_formset.save()
+            if gallery_image_formset.is_valid():
+                gallery_image_formset.instance = self.object
+                gallery_image_formset.save()
 
-            messages.success(self.request, _("Event '%(title)s' created!") % {'title': self.object.title})
-            return redirect(self.get_success_url())
+            # Check for missing relevant info (Attention Message)
+            missing_info = []
+            if not self.object.couple_photo: missing_info.append(_("Couple Photo"))
+            if not self.object.ceremony_location or not self.object.ceremony_time: missing_info.append(_("Ceremony Logistics"))
+            if not self.object.venue_name or not self.object.party_time: missing_info.append(_("Reception Logistics"))
+            
+            if missing_info:
+                # Convert lazy objects to strings before joining to prevent TypeError
+                fields_str = ", ".join([str(f) for f in missing_info])
+                messages.warning(self.request, _("Event published, but some details are missing: %(fields)s. You can add them later.") % {'fields': fields_str})
+            else:
+                messages.success(self.request, _("Event '%(title)s' created!") % {'title': self.object.title})
+            
+            return redirect('invapp:dashboard')
         else:
-            print(f"DEBUG UPLOAD: Form invalid. Errors: {form.errors}", file=sys.stderr)
-            if not gallery_image_formset.is_valid():
-                print(f"DEBUG GALLERY: Gallery errors: {gallery_image_formset.errors}", file=sys.stderr)
-
+            print("--- VALIDATION FAILED ---", file=sys.stderr)
+            print(f"Form Errors: {form.errors}", file=sys.stderr)
+            # We only show formset errors if they were actually interacted with
             return self.render_to_response(self.get_context_data(form=form))
 
     def get_success_url(self):
@@ -731,7 +745,9 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        print(f"DEBUG UPDATE: User {self.request.user} updating event.", file=sys.stderr)
+        print(f"DEBUG UPDATE: User {self.request.user} updating event {self.object.pk}.", file=sys.stderr)
+        print(f"DEBUG FIELDS: Ceremony={form.cleaned_data.get('ceremony_location')}, Venue={form.cleaned_data.get('venue_name')}", file=sys.stderr)
+        print(f"DEBUG MAPS: CeremonyMap={form.cleaned_data.get('ceremony_maps_url')}, PartyMap={form.cleaned_data.get('party_maps_url')}", file=sys.stderr)
 
         context = self.get_context_data()
         godparent_formset = context['godparent_formset']
@@ -739,22 +755,39 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         gallery_image_formset = context['gallery_image_formset']
 
         # Complete validation
-        if form.is_valid() and godparent_formset.is_valid() and schedule_item_formset.is_valid() and gallery_image_formset.is_valid():
+        if form.is_valid():
             self.object = form.save()
 
-            godparent_formset.instance = self.object
-            godparent_formset.save()
+            if godparent_formset.is_valid():
+                godparent_formset.instance = self.object
+                godparent_formset.save()
 
-            schedule_item_formset.instance = self.object
-            schedule_item_formset.save()
+            if schedule_item_formset.is_valid():
+                schedule_item_formset.instance = self.object
+                schedule_item_formset.save()
 
             # Save gallery (add/delete)
-            gallery_image_formset.instance = self.object
-            gallery_image_formset.save()
+            if gallery_image_formset.is_valid():
+                gallery_image_formset.instance = self.object
+                gallery_image_formset.save()
 
-            messages.success(self.request, _("Event updated."))
-            return redirect(self.get_success_url())
+            # Check for missing relevant info (Attention Message)
+            missing_info = []
+            if not self.object.couple_photo: missing_info.append(_("Couple Photo"))
+            if not self.object.ceremony_location or not self.object.ceremony_time: missing_info.append(_("Ceremony Logistics"))
+            if not self.object.venue_name or not self.object.party_time: missing_info.append(_("Reception Logistics"))
+            
+            if missing_info:
+                # Convert lazy objects to strings before joining to prevent TypeError
+                fields_str = ", ".join([str(f) for f in missing_info])
+                messages.warning(self.request, _("Event updated, but some details are missing: %(fields)s. You can add them later.") % {'fields': fields_str})
+            else:
+                messages.success(self.request, _("Event updated."))
+            
+            return redirect('invapp:dashboard')
         else:
+            print("--- UPDATE VALIDATION FAILED ---", file=sys.stderr)
+            print(f"Form Errors: {form.errors}", file=sys.stderr)
             return self.render_to_response(self.get_context_data(form=form))
 
     def get_success_url(self):
@@ -778,6 +811,28 @@ class EventDeleteView(LoginRequiredMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, _("Event deleted."))
         return super().delete(request, *args, **kwargs)
+
+
+@login_required
+@csrf_exempt
+def event_autosave_view(request, pk):
+    """
+    Background save for event form data.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error'}, status=405)
+    
+    event = get_object_or_404(Event, pk=pk, owner=request.user)
+    
+    # We can use the existing EventForm but make fields optional for partial saves
+    form = EventForm(request.POST, request.FILES, instance=event)
+    
+    if form.is_valid():
+        form.save()
+        return JsonResponse({'status': 'success', 'last_saved': datetime.now().strftime('%H:%M:%S')})
+    else:
+        # For autosave, we don't block the user with errors, but we can log them
+        return JsonResponse({'status': 'invalid', 'errors': form.errors}, status=400)
 
 
 # --- Preview View ---
@@ -985,6 +1040,11 @@ class GuestUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse('invapp:guest_list', kwargs={'event_id': self.object.event.id})
 
+    def form_valid(self, form):
+        self.object = form.save()
+        messages.success(self.request, _("Guest details updated."))
+        return redirect('invapp:guest_list', event_id=self.object.event.id)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['event'] = self.object.event
@@ -1023,6 +1083,7 @@ def update_attendance_view(request, guest_id):
             new_count = int(data.get('number_attending', 0))
             guest.manual_attending_count = new_count
             guest.manual_is_attending = True if new_count > 0 else False
+            guest.rsvp_source = Guest.RSVPSourceChoices.MANUAL
         
         # 2. Handle preferred language update
         if 'preferred_language' in data:
@@ -1416,45 +1477,151 @@ def upgrade_plan(request):
 
 class EventLivePreviewView(LoginRequiredMixin, View):
     """
-    Special view to render preview without saving to DB.
+    Renders a live preview using form data without touching the database.
+    Bypasses model restrictions to allow real-time updates of unsaved relations.
     """
 
+    def get(self, request, *args, **kwargs):
+        return HttpResponse(_("Preview data expired. Please interact with the form to refresh."))
+
     def post(self, request, *args, **kwargs):
-        # 1. Extract data from request.POST without saving
-        form = EventForm(request.POST, request.FILES)
-
-        event_instance = form.save(commit=False)
-        event_instance.owner = request.user
-
-        # 2. Manage Design
+        # 1. Get Design (Required for rendering)
         design_id = request.POST.get('selected_design')
+        design = None
         if design_id:
             try:
                 design = CardDesign.objects.get(pk=design_id)
-                event_instance.selected_design = design
-            except CardDesign.DoesNotExist:
-                return HttpResponse(_("Invalid design selected."), status=400)
-        else:
-            return HttpResponse(_("Please select a design for preview."), status=400)
+            except: pass
+        
+        if not design:
+            return HttpResponse(_("Please select a template to see the preview."))
 
-        # 3. Manage Images (Live Upload - Hack for Preview)
+        # 2. Find existing event if any
+        event_id = request.POST.get('event_id')
+        existing_event = None
+        if event_id:
+            try:
+                existing_event = Event.objects.get(pk=event_id, owner=request.user)
+            except: pass
+
+        # 3. Build a Mock Event object (SimpleNamespace)
+        event_data = {}
+        for key in request.POST:
+            if not key.startswith('godparents-') and not key.startswith('schedule_items-'):
+                event_data[key] = request.POST.get(key)
+
+        # Parse critical fields for template filters
+        if event_data.get('event_date'):
+            try:
+                event_data['event_date'] = datetime.strptime(event_data['event_date'], "%d/%m/%Y")
+            except:
+                try:
+                    event_data['event_date'] = datetime.strptime(event_data['event_date'], "%Y-%m-%d")
+                except:
+                    event_data['event_date'] = None
+
+        for time_field in ['party_time', 'ceremony_time']:
+            if event_data.get(time_field):
+                try:
+                    event_data[time_field] = datetime.strptime(event_data[time_field], "%H:%M").time()
+                except:
+                    event_data[time_field] = None
+
+        mock_event = SimpleNamespace(**event_data)
+        mock_event.selected_design = design
+        mock_event.owner = request.user
+
+        # 4. Mock Related Managers for godparents/schedule
+        class MockRelatedManager:
+            def __init__(self, objects): self.objects = objects
+            def all(self): return self.objects
+            def count(self): return len(self.objects)
+
+        # Godparents
+        godparents = []
+        try:
+            total_gp = int(request.POST.get('godparents-TOTAL_FORMS', 0))
+            for i in range(total_gp):
+                name = request.POST.get(f'godparents-{i}-name')
+                delete = request.POST.get(f'godparents-{i}-DELETE') == 'on'
+                if name and not delete:
+                    godparents.append(SimpleNamespace(name=name))
+        except: pass
+        mock_event.godparents = MockRelatedManager(godparents)
+
+        # Schedule
+        schedule = []
+        try:
+            total_sch = int(request.POST.get('schedule_items-TOTAL_FORMS', 0))
+            for i in range(total_sch):
+                activity = request.POST.get(f'schedule_items-{i}-activity_type')
+                time_val = request.POST.get(f'schedule_items-{i}-time')
+                delete = request.POST.get(f'schedule_items-{i}-DELETE') == 'on'
+                if activity and not delete:
+                    try:
+                        parsed_time = datetime.strptime(time_val, "%H:%M").time() if time_val else None
+                    except: parsed_time = None
+                    schedule.append(SimpleNamespace(activity_type=activity, time=parsed_time))
+        except: pass
+        mock_event.schedule_items = MockRelatedManager(schedule)
+
+        # 5. Handle Photos (Live + Fallback)
+        mock_event.preview_couple_photo_b64 = None
         if 'couple_photo' in request.FILES:
             f = request.FILES['couple_photo']
             try:
                 img_data = base64.b64encode(f.read()).decode('utf-8')
-                event_instance.preview_couple_photo_b64 = f"data:{f.content_type};base64,{img_data}"
-            except Exception:
-                pass
+                mock_event.preview_couple_photo_b64 = f"data:{f.content_type};base64,{img_data}"
+            except: pass
 
-        # 4. Context for Template
+        mock_event.preview_main_image_b64 = None
+        if 'main_invitation_image' in request.FILES:
+            f = request.FILES['main_invitation_image']
+            try:
+                img_data = base64.b64encode(f.read()).decode('utf-8')
+                mock_event.preview_main_image_b64 = f"data:{f.content_type};base64,{img_data}"
+            except: pass
+        
+        # Smart Helper Logic for mock (Template compatibility)
+        if mock_event.preview_couple_photo_b64:
+            mock_event.couple_photo = SimpleNamespace(url=mock_event.preview_couple_photo_b64)
+            mock_event.get_couple_photo_url = mock_event.preview_couple_photo_b64
+        elif existing_event and existing_event.couple_photo:
+            mock_event.couple_photo = existing_event.couple_photo
+            mock_event.get_couple_photo_url = existing_event.couple_photo.url
+        else:
+            mock_event.couple_photo = None
+            mock_event.get_couple_photo_url = None
+
+        if mock_event.preview_main_image_b64:
+            mock_event.main_invitation_image = SimpleNamespace(url=mock_event.preview_main_image_b64)
+        elif existing_event and existing_event.main_invitation_image:
+            mock_event.main_invitation_image = existing_event.main_invitation_image
+        else:
+            mock_event.main_invitation_image = None
+
+        # 6. DUMMY DATA (As in Dashboard Preview)
+        # Prevents "NoneType" errors in templates that expect a guest/form
+        dummy_guest = SimpleNamespace(
+            unique_id='00000000-0000-0000-0000-000000000000',
+            name=_('Sample Guest Name'),
+            honorific='family',
+            max_attendees=2,
+            manual_is_attending=None,
+            rsvp_details=SimpleNamespace(attending=None),
+            event=mock_event
+        )
+        dummy_form = RSVPForm(guest=dummy_guest)
+
         context = {
-            'event': event_instance,
-            'guest': None,
+            'event': mock_event,
+            'guest': dummy_guest,
+            'form': dummy_form,
             'is_preview': True,
+            'google_calendar_link': None
         }
 
-        # 5. Render
         try:
             return render(request, design.template_name, context)
         except Exception as e:
-            return HttpResponse(_("Error generating preview: %(error)s") % {'error': str(e)}, status=500)
+            return HttpResponse(f"Preview Error: {str(e)}")

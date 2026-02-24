@@ -20,6 +20,7 @@ class SiteImage(models.Model):
     """
     KEY_CHOICES = [
         ('hero_bg', _('Hero Background (Landing)')),
+        ('global_bg', _('Global Site Background')),
         ('logo_main', _('Primary Logo')),
         ('feature_1', _('Feature Image 1')),
         ('feature_2', _('Feature Image 2')),
@@ -324,23 +325,28 @@ class Event(models.Model):
     ceremony_location = models.CharField(
         max_length=255,
         blank=True,
-        verbose_name=_("Ceremony Location"),
-        help_text=_("Name and address of the church/ceremony location.")
+        verbose_name=_("Ceremony Venue Name"),
+        help_text=_("Name of the church or ceremony location (e.g. 'St. Nicholas Church').")
     )
-
+    ceremony_address = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name=_("Ceremony Address"),
+        help_text=_("Physical address of the ceremony.")
+    )
     ceremony_maps_url = models.URLField(
         max_length=1000,
         blank=True,
         null=True,
         verbose_name=_("Ceremony Map Link"),
-        help_text=_("Optional: Google Maps Embed SRC URL")
+        help_text=_("Google Maps Link. This will be embedded as an interactive map in your invitation.")
     )
     party_maps_url = models.URLField(
         max_length=1000,
         blank=True,
         null=True,
         verbose_name=_("Party Map Link"),
-        help_text=_("Optional: Google Maps Embed SRC URL")
+        help_text=_("Google Maps Link. This will be embedded as an interactive map in your invitation.")
     )
     calendar_description = models.TextField(
         blank=True,
@@ -404,6 +410,14 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def get_couple_photo_url(self):
+        if hasattr(self, 'preview_couple_photo_b64') and self.preview_couple_photo_b64:
+            return self.preview_couple_photo_b64
+        if self.couple_photo:
+            return self.couple_photo.url
+        return None
+
 
 # Represents a guest or a couple/family invited
 class Guest(models.Model):
@@ -464,8 +478,8 @@ class Guest(models.Model):
 
     # --- Fields for invitation method and manual RSVP ---
     class InvitationMethodChoices(models.TextChoices):
-        DIGITAL = 'digital', _('Digital Invitation')
-        PHYSICAL = 'physical', _('Physical Invitation')
+        DIGITAL = 'digital', _('Digital')
+        PHYSICAL = 'physical', _('On Paper')
 
     invitation_method = models.CharField(
         max_length=20,
@@ -475,22 +489,29 @@ class Guest(models.Model):
         null=True
     )
 
-    # For guests not using the digital RSVP form, or for overriding digital RSVP
-    attending_count = models.PositiveIntegerField(
-        null=True,
+    class RSVPSourceChoices(models.TextChoices):
+        AUTOMATIC = 'automatic', _('Automatic (Guest)')
+        MANUAL = 'manual', _('Manual (Host)')
+
+    rsvp_source = models.CharField(
+        max_length=20,
+        choices=RSVPSourceChoices.choices,
+        default=RSVPSourceChoices.MANUAL,
         blank=True,
-        help_text=_("Number of guests attending")
+        null=True,
+        help_text=_("Indicates if the RSVP was confirmed digitally by the guest or manually by the host.")
     )
 
+    # For guests not using the digital RSVP form, or for overriding digital RSVP
     manual_is_attending = models.BooleanField(
         null=True,
         blank=True,
-        help_text=_("Manually set attendance status (e.g., for physical RSVPs).")
+        help_text=_("Manually set attendance status (e.g., for paper RSVPs).")
     )
     manual_attending_count = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text=_("Manually set number of attendees if known (especially for physical RSVPs).")
+        help_text=_("Manually set number of attendees if known (especially for paper RSVPs).")
     )
     # --- End new fields ---
 

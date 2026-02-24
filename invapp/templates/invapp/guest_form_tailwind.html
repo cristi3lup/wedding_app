@@ -28,14 +28,23 @@
     <form method="post" class="space-y-12">
         {% csrf_token %}
 
-        <!-- Display Non-Field Errors -->
-        {% if form.non_field_errors %}
+        <!-- Display Errors -->
+        {% if form.errors %}
             <div class="rounded-md bg-red-50 dark:bg-red-900/20 p-4 border-l-4 border-red-500">
                 <div class="flex">
                     <div class="ml-3">
                         <h3 class="text-sm font-medium text-red-800 dark:text-red-200">{% translate "There were errors with your submission" %}</h3>
                         <div class="mt-2 text-sm text-red-700 dark:text-red-300">
-                            {{ form.non_field_errors }}
+                            {% if form.non_field_errors %}
+                                {{ form.non_field_errors }}
+                            {% endif %}
+                            <ul class="list-disc pl-5 space-y-1">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -63,6 +72,9 @@
                             <div class="mt-2">
                                 {{ form.honorific }}
                             </div>
+                            {% if form.honorific.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.honorific.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Name -->
@@ -91,6 +103,9 @@
                             <div class="mt-2 sm:w-1/3">
                                 {{ form.max_attendees }}
                             </div>
+                            {% if form.max_attendees.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.max_attendees.errors.0 }}</p>
+                            {% endif %}
                             <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ form.max_attendees.help_text }}</p>
                         </div>
                     </div>
@@ -98,12 +113,12 @@
             </div>
         </div>
 
-        <!-- Section 2: Contact Info -->
+        <!-- Section 2: Contact Info & Method -->
         <div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
             <div class="px-4 sm:px-0">
-                <h2 class="text-base font-semibold leading-7 text-gray-900 dark:text-white">{% translate "Contact Details" %}</h2>
+                <h2 class="text-base font-semibold leading-7 text-gray-900 dark:text-white">{% translate "Contact & Delivery" %}</h2>
                 <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                    {% translate "How will you send the invitation? We use these details for digital sending features." %}
+                    {% translate "Choose how you want to send this invitation and provide the contact details." %}
                 </p>
             </div>
 
@@ -111,8 +126,34 @@
                 <div class="px-4 py-6 sm:p-8">
                     <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 
+                        <!-- Invitation Method -->
+                        <div class="sm:col-span-3">
+                            <label for="{{ form.invitation_method.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
+                                {{ form.invitation_method.label }}
+                            </label>
+                            <div class="mt-2">
+                                {{ form.invitation_method }}
+                            </div>
+                            {% if form.invitation_method.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.invitation_method.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Preferred Language -->
+                        <div class="sm:col-span-3">
+                            <label for="{{ form.preferred_language.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
+                                {{ form.preferred_language.label }}
+                            </label>
+                            <div class="mt-2">
+                                {{ form.preferred_language }}
+                            </div>
+                            {% if form.preferred_language.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.preferred_language.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
                         <!-- Email -->
-                        <div class="sm:col-span-4">
+                        <div class="sm:col-span-3">
                             <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
                                 {{ form.email.label }}
                             </label>
@@ -125,10 +166,13 @@
                                 </div>
                                 {{ form.email }}
                             </div>
+                            {% if form.email.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Phone -->
-                        <div class="sm:col-span-4">
+                        <div class="sm:col-span-3">
                             <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
                                 {{ form.phone_number.label }}
                             </label>
@@ -140,6 +184,9 @@
                                 </div>
                                 {{ form.phone_number }}
                             </div>
+                            {% if form.phone_number.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.phone_number.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                     </div>
@@ -151,9 +198,9 @@
         {% if form.manual_is_attending %}
         <div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
             <div class="px-4 sm:px-0">
-                <h2 class="text-base font-semibold leading-7 text-gray-900 dark:text-white">{% translate "Manual Override" %}</h2>
+                <h2 class="text-base font-semibold leading-7 text-gray-900 dark:text-white">{% translate "Attendance Status" %}</h2>
                 <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                    {% translate "Use this section if you receive a verbal or phone confirmation. Data entered here overrides the digital RSVP." %}
+                    {% translate "Use this section to manually set or override the attendance status for this guest." %}
                 </p>
             </div>
 
@@ -168,11 +215,6 @@
                         <div class="sm:col-span-3">
                             <label for="{{ form.manual_attending_count.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">{{ form.manual_attending_count.label }}</label>
                             <div class="mt-2">{{ form.manual_attending_count }}</div>
-                        </div>
-
-                        <div class="sm:col-span-4">
-                            <label for="{{ form.invitation_method.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">{{ form.invitation_method.label }}</label>
-                            <div class="mt-2">{{ form.invitation_method }}</div>
                         </div>
                     </div>
                 </div>

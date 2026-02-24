@@ -260,7 +260,8 @@
             </div>
             <h2 class="font-serif-display text-3xl mb-4">{% translate "Ceremony" %}</h2>
             <p class="font-classic text-2xl text-stone-600 mb-2">{{ event.ceremony_time|time:"H:i" }}</p>
-            <p class="text-stone-500 mb-6">{{ event.ceremony_location|default:_("Ceremony Location Name") }}</p>
+            <p class="text-stone-800 font-bold mb-1">{{ event.ceremony_location|default:_("Ceremony Location Name") }}</p>
+            <p class="text-stone-500 text-sm mb-6">{{ event.ceremony_address }}</p>
             {% if event.ceremony_maps_url %}
                 <a href="{{ event.ceremony_maps_url }}" target="_blank" class="text-xs font-bold uppercase tracking-widest text-[#5D7355] border-b border-[#5D7355]/30 pb-1 hover:border-[#5D7355] transition-all">
                     {% translate "View Map" %}

@@ -108,7 +108,7 @@
                     <form action="{% url 'set_language' %}" method="post">
                         {% csrf_token %}
                         <!-- Use request.get_full_path to stay on the same page -->
-                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                    <input name="next" type="hidden" value="{% if is_preview %}/{% else %}{{ request.get_full_path }}{% endif %}">
 
                         <button type="submit" name="language" value="ro" class="w-full text-left px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 transition-colors flex items-center justify-between group border-b border-stone-50">
                             <span class="{% if LANGUAGE_CODE == 'ro' %}font-bold text-lemon-gold{% endif %}">Română</span>
@@ -223,6 +223,7 @@
                         {% translate "Religious Ceremony" %}
                     </h3>
                     <p class="font-serif text-stone-600 italic">"{{ event.ceremony_location|default:'Biserica' }}"</p>
+                    <p class="font-serif text-[10px] text-stone-400">({{ event.ceremony_address }})</p>
                     <p class="font-sans text-xs font-bold text-stone-500 mt-1">{{ event.ceremony_time|time:"H:i" }}</p>
                     {% if event.ceremony_maps_url %}
                     <a href="{{ event.ceremony_maps_url }}" target="_blank" class="text-xs text-lemon-gold underline mt-1">{% translate "View Map" %}</a>
