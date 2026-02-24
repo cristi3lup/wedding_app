@@ -42,6 +42,36 @@
     </style>
 {% endblock %}
 
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "InvApp",
+  "url": "https://invapp-romania.ro/ro/",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://invapp-romania.ro/ro/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "InvApp",
+  "url": "https://invapp-romania.ro/ro/",
+  "logo": "https://invapp-romania.ro/static/images/logo.png",
+  "sameAs": [
+    "https://www.facebook.com/invapp.romania",
+    "https://www.instagram.com/invapp.romania"
+  ]
+}
+</script>
+{% endblock %}
+
 <!-- Nav links override -->
 {% block nav_links %}
     <a href="#features" class="relative group inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
