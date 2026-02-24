@@ -172,11 +172,14 @@ class EventForm(forms.ModelForm):
         if not data:
             return data
 
-        if '<iframe' in data:
+        # Only extract src if it's a full iframe tag
+        if data.strip().startswith('<iframe') and 'src="' in data:
             match = re.search(r'src="([^"]+)"', data)
             if match:
                 return match.group(1)
-        return data
+        
+        # Otherwise, assume it's already a direct URL or a short link
+        return data.strip()
 
     def clean_ceremony_maps_url(self):
         return self.clean_map_url('ceremony_maps_url')
@@ -196,8 +199,6 @@ class GuestForm(forms.ModelForm):
             'email',
             'max_attendees',
             'invitation_method',
-            'manual_is_attending',
-            'manual_attending_count',
         ]
         labels = {
             'honorific': _("Courtesy Title"),
@@ -206,16 +207,12 @@ class GuestForm(forms.ModelForm):
             'phone_number': _('Phone Number (Optional)'),
             'email': _('Email Address (Optional)'),
             'max_attendees': _('Max Number of People Invited (including guest)'),
-            'invitation_method': _('Invitation Method'),
-            'manual_is_attending': _('Manually Confirmed Attending?'),
-            'manual_attending_count': _('Number Confirmed Attending (Manual)'),
+            'invitation_method': _('Invitation Method (Digital or Paper)'),
         }
         help_texts = {
             'max_attendees': _('Enter the total number of people this invitation covers (e.g., 2 for a couple).'),
             'name': _('Full name of the primary guest or couple/family name.'),
             'email': _('Primary email for the invitation.'),
-            'manual_is_attending': _('Set this if guest confirmed verbally or via physical RSVP card.'),
-            'manual_attending_count': _('If attending, how many? Overrides digital RSVP if set.'),
         }
         widgets = {
             'honorific': forms.Select(attrs={'class': INPUT_CLASSES}),
@@ -225,10 +222,13 @@ class GuestForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': INPUT_CLASSES_WITH_ICON, 'placeholder': 'john@example.com'}),
             'max_attendees': forms.NumberInput(attrs={'class': INPUT_CLASSES, 'min': '1', 'value': '1'}),
             'invitation_method': forms.Select(attrs={'class': INPUT_CLASSES}),
-            'manual_is_attending': forms.Select(choices=[(None, _('Unknown')), (True, _('Yes')), (False, _('No'))],
-                                                attrs={'class': INPUT_CLASSES}),
-            'manual_attending_count': forms.NumberInput(attrs={'class': INPUT_CLASSES}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.initial['preferred_language'] = 'ro'
+            self.initial['invitation_method'] = 'digital'
 
 class GuestCreateForm(GuestForm):
     class Meta(GuestForm.Meta):
@@ -239,6 +239,7 @@ class GuestCreateForm(GuestForm):
             'phone_number',
             'email',
             'max_attendees',
+            'invitation_method',
         ]
 
 class CustomUserCreationForm(UserCreationForm):

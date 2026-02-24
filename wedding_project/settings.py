@@ -117,6 +117,7 @@ TEMPLATES = [
 # ==========================================================
 GOOGLE_SITE_VERIFICATION = os.environ.get('GOOGLE_SITE_VERIFICATION', '')
 GA_MEASUREMENT_ID = os.environ.get('GA_MEASUREMENT_ID', '')
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
 
 
 WSGI_APPLICATION = 'wedding_project.wsgi.application'

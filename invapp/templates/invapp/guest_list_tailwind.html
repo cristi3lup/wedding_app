@@ -41,40 +41,49 @@
         }" 
         class="relative">
         
-        <div class="md:flex md:items-center md:justify-between">
+        <a href="{% url 'invapp:dashboard' %}" class="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 transition-all mb-6 group">
+            <div class="w-8 h-8 rounded-full bg-gray-50 dark:bg-slate-800 flex items-center justify-center border border-gray-100 dark:border-slate-700 group-hover:border-indigo-100 dark:group-hover:border-indigo-900/50 transition-colors shadow-sm">
+                <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+            </div>
+            {% translate "Back to Dashboard" %}
+        </a>
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">
+                <h2 class="text-2xl font-black leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate tracking-tight">
                     {% translate "Guest List" %}
                 </h2>
-                <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
-                    <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
-                        <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <div class="flex items-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                        <svg class="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                         {{ event.title }}
                     </div>
                     {% if active_plan %}
-                    <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300 mr-2">
+                    <div class="flex items-center text-[10px] font-black uppercase tracking-tighter">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 mr-2 border border-indigo-100 dark:border-indigo-800">
                             {{ active_plan.name }}
                         </span>
-                        {% blocktranslate with count=guests|length max=active_plan.max_guests|default:0 %}
-                        {{ count }} / {{ max }} guests
-                        {% endblocktranslate %}
+                        <span class="text-gray-400">
+                            {% blocktranslate with count=guests|length max=active_plan.max_guests|default:0 %}
+                            {{ count }} / {{ max }} guests
+                            {% endblocktranslate %}
+                        </span>
                     </div>
                     {% endif %}
                 </div>
             </div>
             
-            <div class="mt-5 flex lg:mt-0 lg:ml-4 space-x-2">
-                <button @click="importOpen = true" type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none transition-all">
-                    <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                    {% translate "Import" %}
+            <div class="grid grid-cols-2 gap-3 sm:flex sm:items-center">
+                <button @click="importOpen = true" type="button" class="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-xl sm:rounded-lg shadow-sm text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none transition-all active:scale-95">
+                    <svg class="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    <span>{% translate "Import" %}</span>
                 </button>
 
                 <button type="button" 
                         @click.prevent="if (guestCount >= maxGuests) { showUpgradeModal = true } else { window.location.href = '{% url 'invapp:guest_create' event_id=event.id %}' }"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
-                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                    {% translate "Add Guest" %}
+                        class="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 border border-transparent rounded-xl sm:rounded-lg shadow-md text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition-all active:scale-95 whitespace-nowrap">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                    <span>{% translate "Add Guest" %}</span>
                 </button>
             </div>
         </div>
@@ -96,34 +105,36 @@
 <div x-data="{ sortOpen: false }" class="space-y-6">
     
     <!-- Stats & Filters Bar -->
-    <div class="glass-header sticky top-16 z-30 -mx-4 px-4 py-4 sm:mx-0 sm:px-6 sm:rounded-xl shadow-sm border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div class="flex items-center space-x-4">
-            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                {% translate "Total Attending:" %} 
-                <span id="total-attending-count" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 ml-1">{{ total_attending }}</span>
+    <div class="glass-header sticky top-16 z-30 -mx-4 px-4 py-5 sm:mx-0 sm:px-6 sm:rounded-2xl shadow-sm border-b sm:border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div class="flex items-center justify-between sm:justify-start sm:space-x-6">
+            <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                <span class="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-slate-500">{% translate "Attending" %}</span>
+                <span id="total-attending-count" class="text-2xl font-black text-indigo-600 dark:text-indigo-400 leading-none">{{ total_attending }}</span>
             </div>
-            <div class="h-8 w-px bg-gray-200 dark:border-gray-700"></div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">
-                <span class="font-semibold text-gray-900 dark:text-white">{{ guests|length }}</span> {% translate "Total Invited" %}
+            <div class="h-8 w-px bg-gray-200 dark:bg-slate-700 hidden sm:block"></div>
+            <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-2 text-right sm:text-left">
+                <span class="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-slate-500">{% translate "Invited" %}</span>
+                <span class="text-lg font-bold text-gray-900 dark:text-white leading-none">{{ guests|length }}</span>
             </div>
         </div>
 
-        <div class="flex items-center space-x-2">
-            <div class="relative" @click.away="sortOpen = false">
-                <button @click="sortOpen = !sortOpen" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50">
-                    <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>
-                    {% translate "Sort By" %}
+        <div class="grid grid-cols-2 gap-3 sm:flex sm:items-center sm:space-x-3">
+            <div class="relative" x-data="{ sortOpen: false }" @click.away="sortOpen = false">
+                <button @click="sortOpen = !sortOpen" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-xl sm:rounded-lg text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 active:scale-95 transition-all">
+                    <svg class="h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>
+                    <span>{% translate "Sort" %}</span>
                 </button>
-                <div x-show="sortOpen" x-cloak class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-40">
+                <div x-show="sortOpen" x-cloak x-transition class="absolute right-0 bottom-full sm:bottom-auto sm:top-full mb-2 sm:mb-0 sm:mt-2 w-full sm:w-48 rounded-xl shadow-2xl bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-40 overflow-hidden border border-gray-100 dark:border-slate-700">
                     <div class="py-1">
-                        <a href="?sort=name" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100">{% translate "Name (A-Z)" %}</a>
-                        <a href="?sort=-name" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100">{% translate "Name (Z-A)" %}</a>
-                        <a href="?sort=status" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100">{% translate "RSVP Status" %}</a>
+                        <a href="?sort=name" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">{% translate "Name (A-Z)" %}</a>
+                        <a href="?sort=-name" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">{% translate "Name (Z-A)" %}</a>
+                        <a href="?sort=status" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">{% translate "RSVP Status" %}</a>
                     </div>
                 </div>
             </div>
-            <a href="{% url 'invapp:download_guest_template' event_id=event.id %}" class="p-2 text-gray-400 hover:text-indigo-600 transition-colors" title="{% translate 'Download Template' %}">
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <a href="{% url 'invapp:download_guest_template' event_id=event.id %}" class="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl sm:rounded-lg border border-indigo-100 dark:border-indigo-800/50 text-sm font-bold active:scale-95 transition-all" title="{% translate 'Download Template' %}">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span class="sm:hidden">{% translate "Template" %}</span>
             </a>
         </div>
     </div>
@@ -142,7 +153,7 @@
                             <h4 class="text-sm font-bold text-gray-900 dark:text-white">{{ guest.get_full_display_name }}</h4>
                             
                             {# RSVP SOURCE TICK #}
-                            {% if guest.manual_is_attending is not None %}
+                            {% if guest.manual_is_attending is not None or guest.invitation_method == 'physical' %}
                                 <svg class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20" title="{% translate 'Manual Confirmation' %}"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
                             {% elif guest.rsvp_details.attending is not None %}
                                 <svg class="h-4 w-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20" title="{% translate 'Digital Confirmation' %}"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
@@ -170,9 +181,18 @@
                             
                             {# INVITATION METHOD ICON #}
                             {% if guest.invitation_method == 'digital' %}
-                                <svg class="h-3 w-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                <svg class="h-3 w-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" title="{% translate 'Digital' %}"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                             {% else %}
-                                <svg class="h-3 w-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                <svg class="h-3 w-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" title="{% translate 'On Paper' %}"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                            {% endif %}
+
+                            <span class="text-gray-300">•</span>
+
+                            {# RSVP SOURCE TICK #}
+                            {% if guest.rsvp_source == 'automatic' %}
+                                <svg class="h-4 w-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20" title="{% translate 'Automatic (Guest)' %}"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            {% elif guest.rsvp_source == 'manual' or guest.invitation_method == 'physical' %}
+                                <svg class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20" title="{% translate 'Manual (Host)' %}"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
                             {% endif %}
                         </div>
                     </div>
@@ -269,7 +289,7 @@
                         {% else %}
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border border-amber-100 dark:border-amber-800">
                                 <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                {% translate "Paper" %}
+                                {% translate "On Paper" %}
                             </span>
                         {% endif %}
                     </td>
@@ -284,10 +304,10 @@
                             {% endif %}
                             
                             {# RSVP SOURCE TICK #}
-                            {% if guest.manual_is_attending is not None %}
-                                <span class="text-[9px] text-blue-500 font-bold flex items-center"><svg class="h-3 w-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>{% translate "MANUAL" %}</span>
-                            {% elif guest.rsvp_details.attending is not None %}
-                                <span class="text-[9px] text-purple-500 font-bold flex items-center"><svg class="h-3 w-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>{% translate "DIGITAL" %}</span>
+                            {% if guest.rsvp_source == 'automatic' %}
+                                <span class="text-[9px] text-purple-500 font-bold flex items-center"><svg class="h-3 w-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>{% translate "Automatic (Guest)" %}</span>
+                            {% elif guest.rsvp_source == 'manual' or guest.invitation_method == 'physical' %}
+                                <span class="text-[9px] text-blue-500 font-bold flex items-center"><svg class="h-3 w-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>{% translate "Manual (Host)" %}</span>
                             {% endif %}
                         </div>
                     </td>

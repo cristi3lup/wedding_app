@@ -27,6 +27,9 @@
 - **RSVP Source Verification:** Distinguishing between digital RSVPs (via the platform) and manual updates (phone/physical) using visual "ticks" (e.g., Purple for Digital, Blue for Manual) significantly reduces host confusion.
 - **Invitation Lifecycle Tracking:** Tracking the delivery method (Digital vs. Paper) allows hosts to manage their physical stationery budget while leveraging the speed of digital links.
 - **Bulk Import Flexibility:** Customizing the Excel import logic to map human-readable strings (like "digital" or "paper") to model constants ensures data consistency during high-volume guest list setup.
+- **Invitation Method Terminology:** Using "Digital" and "On Paper" instead of "Physical Invitation" resonates better with users. Consistently updating model labels, form fields, and help texts ensures a seamless UX across the guest creation and management workflow.
+- **Field vs. Property Conflicts:** Avoid defining a database field with the same name as a model property (e.g., `attending_count`). This can lead to unpredictable behavior in forms and QuerySets. Always prefer the property for calculated logic and rename the underlying field if persistence is required.
+- **English-First Strategy (Mandatory):** Always use English as the primary source language in code, model labels, and templates. Mark strings for translation using `_()` or `{% translate %}`. This ensures a clean base for `makemessages` and prevents character encoding issues. Even if the user requests specific non-English text, implement it as a translation of an English original.
 
 ## 📱 Mobile-First UX & Foldable Optimization
 - **Fold-Aware Design:** For devices like the Galaxy Fold 5, using flex-based adaptive containers rather than fixed widths ensures the UI remains professional on both narrow cover screens and wide tablet-like displays.

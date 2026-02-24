@@ -227,11 +227,12 @@ def invitation_rsvp_combined_view(request, guest_uuid):
             rsvp.guest = guest
             rsvp.save()
 
-            # Clear manual overrides if guest responds digitally
+            # Mark source as automatic and clear manual overrides
+            guest.rsvp_source = Guest.RSVPSourceChoices.AUTOMATIC
             if guest.manual_is_attending is not None:
                 guest.manual_is_attending = None
                 guest.manual_attending_count = None
-                guest.save()
+            guest.save()
 
             messages.success(request, _("Confirmation details are updated. Thank you!") if existing_rsvp else _(
                 'Thank you for confirmation!'))
@@ -744,7 +745,9 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        print(f"DEBUG UPDATE: User {self.request.user} updating event.", file=sys.stderr)
+        print(f"DEBUG UPDATE: User {self.request.user} updating event {self.object.pk}.", file=sys.stderr)
+        print(f"DEBUG FIELDS: Ceremony={form.cleaned_data.get('ceremony_location')}, Venue={form.cleaned_data.get('venue_name')}", file=sys.stderr)
+        print(f"DEBUG MAPS: CeremonyMap={form.cleaned_data.get('ceremony_maps_url')}, PartyMap={form.cleaned_data.get('party_maps_url')}", file=sys.stderr)
 
         context = self.get_context_data()
         godparent_formset = context['godparent_formset']
@@ -1037,6 +1040,11 @@ class GuestUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse('invapp:guest_list', kwargs={'event_id': self.object.event.id})
 
+    def form_valid(self, form):
+        self.object = form.save()
+        messages.success(self.request, _("Guest details updated."))
+        return redirect('invapp:guest_list', event_id=self.object.event.id)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['event'] = self.object.event
@@ -1075,6 +1083,7 @@ def update_attendance_view(request, guest_id):
             new_count = int(data.get('number_attending', 0))
             guest.manual_attending_count = new_count
             guest.manual_is_attending = True if new_count > 0 else False
+            guest.rsvp_source = Guest.RSVPSourceChoices.MANUAL
         
         # 2. Handle preferred language update
         if 'preferred_language' in data:
@@ -1573,12 +1582,15 @@ class EventLivePreviewView(LoginRequiredMixin, View):
                 mock_event.preview_main_image_b64 = f"data:{f.content_type};base64,{img_data}"
             except: pass
         
-        # Smart Helper Logic for mock
+        # Smart Helper Logic for mock (Template compatibility)
         if mock_event.preview_couple_photo_b64:
+            mock_event.couple_photo = SimpleNamespace(url=mock_event.preview_couple_photo_b64)
             mock_event.get_couple_photo_url = mock_event.preview_couple_photo_b64
         elif existing_event and existing_event.couple_photo:
+            mock_event.couple_photo = existing_event.couple_photo
             mock_event.get_couple_photo_url = existing_event.couple_photo.url
         else:
+            mock_event.couple_photo = None
             mock_event.get_couple_photo_url = None
 
         if mock_event.preview_main_image_b64:

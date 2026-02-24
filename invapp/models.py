@@ -478,8 +478,8 @@ class Guest(models.Model):
 
     # --- Fields for invitation method and manual RSVP ---
     class InvitationMethodChoices(models.TextChoices):
-        DIGITAL = 'digital', _('Digital Invitation')
-        PHYSICAL = 'physical', _('Physical Invitation')
+        DIGITAL = 'digital', _('Digital')
+        PHYSICAL = 'physical', _('On Paper')
 
     invitation_method = models.CharField(
         max_length=20,
@@ -489,22 +489,29 @@ class Guest(models.Model):
         null=True
     )
 
-    # For guests not using the digital RSVP form, or for overriding digital RSVP
-    attending_count = models.PositiveIntegerField(
-        null=True,
+    class RSVPSourceChoices(models.TextChoices):
+        AUTOMATIC = 'automatic', _('Automatic (Guest)')
+        MANUAL = 'manual', _('Manual (Host)')
+
+    rsvp_source = models.CharField(
+        max_length=20,
+        choices=RSVPSourceChoices.choices,
+        default=RSVPSourceChoices.MANUAL,
         blank=True,
-        help_text=_("Number of guests attending")
+        null=True,
+        help_text=_("Indicates if the RSVP was confirmed digitally by the guest or manually by the host.")
     )
 
+    # For guests not using the digital RSVP form, or for overriding digital RSVP
     manual_is_attending = models.BooleanField(
         null=True,
         blank=True,
-        help_text=_("Manually set attendance status (e.g., for physical RSVPs).")
+        help_text=_("Manually set attendance status (e.g., for paper RSVPs).")
     )
     manual_attending_count = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text=_("Manually set number of attendees if known (especially for physical RSVPs).")
+        help_text=_("Manually set number of attendees if known (especially for paper RSVPs).")
     )
     # --- End new fields ---
 
