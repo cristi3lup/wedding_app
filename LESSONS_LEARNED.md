@@ -52,3 +52,17 @@
 
 ## 🛠 Template System & Path Resolution
 - **Standard Paths:** Always use forward slashes `/` in `{% extends %}` and `{% include %}` tags (e.g., `"invapp/base.html"`). Using colons `:` or other delimiters will trigger a `TemplateDoesNotExist` error, as Django's standard loader expects filesystem-style paths relative to the `templates` directories.
+
+## 💳 Payments, Vouchers & Conversions
+- **Payment Bypass for 100% Vouchers:** When implementing discount systems, ensure that 100% vouchers (Free Upgrades) completely bypass the payment gateway (Stripe) to reduce friction and avoid processing errors for zero-value transactions.
+- **Inline Voucher UI:** For mobile-first SaaS, keep voucher inputs inline rather than in modals. Using Alpine.js for real-time validation provides immediate feedback without full page reloads.
+- **Backend Validation (Security):** Never trust the price calculated by the frontend. Always re-verify the voucher validity and discount percentage on the backend before performing an upgrade.
+
+## 📈 Marketing & Growth Engines
+- **Wedding Fair "Fair Mode":** High-urgency campaigns benefit from fixed top banners with real-time countdowns. Driving traffic to WhatsApp for personalized lead generation provides higher conversion than static forms.
+- **Single-Use URL Vouchers:** Automating the application of vouchers via URL parameters (`?v=CODE`) reduces friction. Persisting these in the user's session ensures they are applied even if the user navigates away before signing up.
+- **Campaign Attribution:** Tracking `campaign_name`, `used_at`, and `used_by` on vouchers is essential for measuring ROI on specific marketing events (like wedding fairs).
+- **Automated Voucher Generation:** Using Django management commands to generate batches of unique codes and exporting them to CSV allows for quick distribution via WhatsApp or email after physical contracts are signed.
+- **Plan-Specific Vouchers:** Restricting vouchers to specific subscription tiers prevents revenue leakage (e.g., applying a "Basic" discount to a "Premium" plan).
+- **Bulk Create & M2M Relations:** When using `bulk_create` for performance, remember that it does not handle ManyToMany relationships. You must manually assign these (e.g., using `.set()`) after the main objects are created.
+- **Scheduled Vouchers:** Adding a `valid_from` field allows marketing teams to generate and distribute vouchers ahead of a campaign start date without worrying about early redemption.

@@ -81,6 +81,16 @@
                     </div>
                 </form>
 
+                <div class="mt-4 text-center">
+                    <p class="text-xs text-gray-500">
+                        {% url 'invapp:terms_and_conditions' as terms_url %}
+                        {% url 'invapp:privacy_policy' as privacy_url %}
+                        {% blocktranslate %}
+                        By signing up, you agree to our <a href="{{ terms_url }}" class="text-indigo-600 hover:underline">Terms and Conditions</a> and <a href="{{ privacy_url }}" class="text-indigo-600 hover:underline">Privacy Policy</a>.
+                        {% endblocktranslate %}
+                    </p>
+                </div>
+
                 <div class="mt-6">
                     <div class="relative">
                         <div class="absolute inset-0 flex items-center">

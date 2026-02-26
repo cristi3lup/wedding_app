@@ -111,27 +111,8 @@
 {% endblock %}
 
 {% block content %}
-<div x-data="{ rsvpOpen: false, langOpen: false }" class="relative">
+<div x-data="{ rsvpOpen: false }" class="relative">
     <div class="leaf-bg"></div>
-
-    <!-- Language Switcher (Top Right) -->
-    <div class="fixed top-4 right-4 z-50">
-        <button @click="langOpen = !langOpen" class="bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-sm text-stone-600 hover:text-stone-900 transition-colors">
-            <i class="fas fa-globe"></i>
-        </button>
-        <div x-show="langOpen" @click.away="langOpen = false" x-cloak
-             class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-xl border border-stone-100 overflow-hidden py-1">
-            <form action="{% url 'set_language' %}" method="post">
-                {% csrf_token %}
-                <button type="submit" name="language" value="ro" class="w-full text-left px-4 py-2 text-xs hover:bg-stone-50 flex justify-between items-center">
-                    <span>Română</span> {% if LANGUAGE_CODE == 'ro' %}<i class="fas fa-check text-[#5D7355]"></i>{% endif %}
-                </button>
-                <button type="submit" name="language" value="en" class="w-full text-left px-4 py-2 text-xs hover:bg-stone-50 flex justify-between items-center">
-                    <span>English</span> {% if LANGUAGE_CODE == 'en' %}<i class="fas fa-check text-[#5D7355]"></i>{% endif %}
-                </button>
-            </form>
-        </div>
-    </div>
 
     <!-- 1. HERO SECTION -->
     <section class="min-h-screen flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
@@ -152,7 +133,7 @@
             </h1>
             <div class="h-px w-20 bg-stone-300 mx-auto mb-8"></div>
             <p class="font-classic text-2xl md:text-3xl italic text-stone-600 mb-4">{{ event.event_date|date:"d F Y" }}</p>
-            <p class="text-xs uppercase tracking-widest text-stone-400">{{ event.venue_name|default:"Locația Noastră" }}</p>
+            <p class="text-xs uppercase tracking-widest text-stone-400">{{ event.venue_name|default:_("Our Venue") }}</p>
         </div>
 
         <!-- Scroll down indicator -->

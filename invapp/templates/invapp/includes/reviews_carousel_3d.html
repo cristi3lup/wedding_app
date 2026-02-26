@@ -205,15 +205,15 @@
                 // Previous (Left)
                 const prev = (this.active - 1 + this.total) % this.total;
                 if (index === prev) {
-                    // OPTIMIZARE MOBILE: Pe ecrane mici (fără 'md'), ascundem complet lateralele (hidden).
-                    // Pe desktop (md:block), le arătăm blurate și în spate.
+                    // MOBILE OPTIMIZATION: On small screens (without 'md'), hide sides completely (hidden).
+                    // On desktop (md:block), show them blurred and in the back.
                     return 'hidden md:block z-20 scale-90 opacity-70 -translate-x-[85%] blur-[1px] cursor-pointer hover:opacity-90 hover:scale-95 bg-gray-50 dark:bg-gray-700';
                 }
 
                 // Next (Right)
                 const next = (this.active + 1) % this.total;
                 if (index === next) {
-                    // Similar pentru dreapta
+                    // Similar for right side
                     return 'hidden md:block z-20 scale-90 opacity-70 translate-x-[85%] blur-[1px] cursor-pointer hover:opacity-90 hover:scale-95 bg-gray-50 dark:bg-gray-700';
                 }
 
@@ -225,7 +225,7 @@
 </script>
 
 <style>
-    /* Efect de adâncime */
+    /* Depth effect */
     .perspective-1000 {
         perspective: 1200px;
     }

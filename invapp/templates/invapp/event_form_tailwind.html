@@ -13,10 +13,10 @@
 
 <style type="text/tailwindcss">
     [x-cloak] { display: none !important; }
-    
+
     .fade-enter { opacity: 0; transform: translateY(10px); }
     .fade-enter-active { transition: all 0.3s ease-out; }
-    
+
     .glass-nav {
         @apply bg-white/80 dark:bg-slate-900/90 backdrop-blur-xl border-t border-gray-200 dark:border-white/5;
         @apply pb-[env(safe-area-inset-bottom)];
@@ -34,7 +34,7 @@
     .form-row {
         @apply flex flex-row items-center justify-between gap-4 py-2 sm:flex-col sm:items-start sm:gap-1.5;
     }
-    
+
     .form-row-invalid .premium-input {
         @apply border-red-500 ring-4 ring-red-500/10 dark:border-red-400 dark:ring-red-400/10;
     }
@@ -62,7 +62,7 @@
         @apply w-8 h-8 flex items-center justify-center rounded-full text-red-500 bg-red-50 hover:bg-red-100 transition-colors focus:outline-none;
         @apply dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40;
     }
-    
+
     .flatpickr-input[readonly] {
         @apply bg-white dark:bg-slate-900 !important;
     }
@@ -77,18 +77,18 @@
 {% block page_header %}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col main-container-transition" 
-     x-data="eventWizard()" 
+<div class="min-h-screen flex flex-col main-container-transition"
+     x-data="eventWizard()"
      x-init="init()"
      @input.debounce.500ms="autosave()"
      @input.debounce.300ms="triggerPreview()">
 
     <!-- Main Content Grid Refactored to Split-Screen -->
     <div class="flex flex-col lg:flex-row flex-1 w-full max-w-full">
-        
+
         <!-- LEFT: FORM SECTION -->
         <div class="w-full lg:w-7/12 xl:w-8/12 px-4 sm:px-8 lg:px-12 xl:px-16 py-10 pb-40 overflow-y-auto">
-            
+
             <a href="{% url 'invapp:dashboard' %}" class="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 transition-all mb-8 group">
                 <div class="w-8 h-8 rounded-full bg-gray-50 dark:bg-slate-800 flex items-center justify-center border border-gray-100 dark:border-slate-700 group-hover:border-indigo-100 dark:group-hover:border-indigo-900/50 transition-colors shadow-sm">
                     <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
@@ -122,7 +122,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Progress Bar -->
                 <div class="mt-8 flex items-center gap-2">
                     <template x-for="i in (isImageUpload() ? 3 : 5)">
@@ -217,7 +217,7 @@
                             {% for design in available_designs %}
                             <div class="design-wrapper" data-event-type="{{ design.event_type|lower|slugify }}">
                                 <label class="relative block group cursor-pointer">
-                                    <input type="radio" name="selected_design" value="{{ design.id }}" class="sr-only peer" 
+                                    <input type="radio" name="selected_design" value="{{ design.id }}" class="sr-only peer"
                                            {% if form.instance.selected_design.id == design.id %}checked{% endif %} required @change="triggerPreview(true); validateStep();">
                                     <div class="aspect-[3/4.2] rounded-xl overflow-hidden border-2 border-gray-200 dark:border-slate-800 transition-all duration-300 peer-checked:border-indigo-600 peer-checked:ring-4 peer-checked:ring-indigo-500/10 shadow-sm peer-checked:shadow-xl">
                                         {% if design.preview_image %}
@@ -328,6 +328,37 @@
                             </div>
                         </div>
 
+                        <!-- WhatsApp Integration Section -->
+                        <div x-show="!isImageUpload()" class="pt-8 border-t border-gray-100 dark:border-slate-700/50">
+                            <div class="mb-6">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.397-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.297.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                    <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-green-600 dark:text-green-400">{% translate "Direct Contact Button" %}</h4>
+                                </div>
+                                <p class="text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed">
+                                    {% translate "Enable a WhatsApp button on your invitation so guests can message you instantly with questions or to confirm their arrival personally." %}
+                                </p>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mt-4">
+                                <div class="form-row">
+                                    <label class="form-row-label text-gray-600 dark:text-slate-300 mb-3">{% translate "WhatsApp Contact (Optional)" %}</label>
+                                    <div class="form-row-field">
+                                        {% render_field form.host_whatsapp class="premium-input" placeholder="407XXXXXXXX" %}
+                                        <p class="mt-1 text-[9px] text-gray-400 uppercase font-bold tracking-wider">{{ form.host_whatsapp.help_text }}</p>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <label class="form-row-label text-gray-400 dark:text-slate-500 mb-3">{% translate "WhatsApp Message (Optional)" %}</label>
+                                    <div class="form-row-field">
+                                        {% render_field form.whatsapp_custom_message class="premium-input" placeholder="..." %}
+                                        {% if form.whatsapp_custom_message.help_text %}
+                                            <p class="mt-1 text-[9px] text-gray-400 uppercase font-bold tracking-wider">{{ form.whatsapp_custom_message.help_text }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div x-show="!isImageUpload()" class="pt-8 border-t border-gray-100 dark:border-slate-700/50">
                             <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-slate-400 mb-3">{% translate "Invitation Wording" %}</label>
                             {% render_field form.invitation_wording rows="5" class="premium-input h-auto resize-none !text-left" placeholder="..." %}
@@ -337,11 +368,11 @@
 
                 <!-- STEP 3: LOGISTICS -->
                 <div x-show="step === 3" x-transition.fade class="space-y-8">
-                    
+
                     <!-- Only show image upload in Step 3 for Image Upload Only mode -->
                     <div x-show="isImageUpload()" class="bg-white dark:bg-slate-800/60 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-slate-700/60 space-y-4">
                         <label class="block text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 px-1 mb-3">{% translate "Your Custom Invitation Image" %}</label>
-                        
+
                         <div class="relative group" @click="$refs.main_invitation_image_step3.click()">
                             <div class="mt-2 flex justify-center rounded-2xl border-2 border-dashed border-gray-300 dark:border-slate-500 px-6 py-12 hover:border-indigo-500 dark:hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-slate-800 transition-all cursor-pointer bg-gray-50/50 dark:bg-slate-900/30">
                                 <div class="text-center">
@@ -353,7 +384,7 @@
                                         </div>
                                         <p class="text-sm font-black text-indigo-600 uppercase tracking-widest">{% translate "Upload your design" %}</p>
                                     </div>
-                                    
+
                                     <div x-show="previews.main_invitation_image" class="space-y-4">
                                         <img :src="previews.main_invitation_image" class="max-h-64 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 mx-auto">
                                         <div class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
@@ -375,7 +406,7 @@
                                 </div>
                                 <h3 class="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">{% translate "Ceremony" %}</h3>
                             </div>
-                            
+
                             <div class="form-row" x-show="!isImageUpload()">
                                 <label class="form-row-label mb-3">{% translate "Ceremony Venue Name" %}</label>
                                 <div class="form-row-field">
@@ -416,7 +447,7 @@
                                 </div>
                                 <h3 class="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">{% translate "Reception" %}</h3>
                             </div>
-                            
+
                             <div class="form-row" x-show="!isImageUpload()">
                                 <label class="form-row-label mb-3">{% translate "Venue Name" %}</label>
                                 <div class="form-row-field">
@@ -460,20 +491,20 @@
                                 {% translate "+ Add moment" %}
                             </button>
                         </div>
-                        
+
                         {{ schedule_item_formset.management_form }}
                         <div id="schedule_items-formset-container" class="space-y-4">
                             {% for s_form in schedule_item_formset %}
                             <div class="schedule_items-form relative bg-gray-50 dark:bg-slate-800/40 p-4 sm:p-6 rounded-xl border border-gray-200 dark:border-slate-700 group hover:border-indigo-500/30 transition-colors">
                                 {% for hidden in s_form.hidden_fields %}{{ hidden }}{% endfor %}
                                 <div class="hidden">{{ s_form.DELETE }}</div>
-                                
+
                                 <div class="absolute -top-3 -right-3">
                                     <button type="button" @click="removeFormset($event, 'schedule_items')" class="delete-btn-refined shadow-lg">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
                                 </div>
-                                
+
                                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-6 md:gap-8">
                                     <div class="sm:col-span-4">
                                         <div class="form-row">
@@ -514,7 +545,7 @@
                             <div class="godparents-form relative bg-gray-50 dark:bg-slate-800/40 p-4 sm:p-6 rounded-xl border border-gray-200 dark:border-slate-700">
                                 {% for hidden in g_form.hidden_fields %}{{ hidden }}{% endfor %}
                                 <div class="hidden">{{ g_form.DELETE }}</div>
-                                
+
                                 <div class="absolute -top-3 -right-3">
                                     <button type="button" @click="removeFormset($event, 'godparents')" class="delete-btn-refined shadow-lg">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -536,11 +567,11 @@
                 <!-- STEP 5: MEDIA -->
                 <div x-show="step === 5" x-transition.fade class="space-y-10">
                     <div class="bg-white dark:bg-slate-800/60 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-slate-700/60 space-y-8">
-                        
+
                         <!-- Drag & Drop Zone (Standard) -->
                         <div x-show="!isImageUpload()" class="space-y-4">
                             <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400 px-1 mb-3">{% translate "Cover Image" %}</label>
-                            
+
                             <div class="relative group" @click="$refs.couple_photo.click()">
                                 <div class="mt-2 flex justify-center rounded-2xl border-2 border-dashed border-gray-300 dark:border-slate-500 px-6 py-12 hover:border-indigo-500 dark:hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-slate-800 transition-all cursor-pointer bg-gray-50/50 dark:bg-slate-900/30">
                                     <div class="text-center">
@@ -555,7 +586,7 @@
                                             </div>
                                             <p class="text-[9px] text-gray-400 uppercase font-bold tracking-[0.2em] mt-2">PNG, JPG up to 10MB</p>
                                         </div>
-                                        
+
                                         <div x-show="previews.couple_photo" class="space-y-4">
                                             <img :src="previews.couple_photo" class="max-h-64 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 mx-auto transform group-hover:scale-[1.02] transition-transform">
                                             <div class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
@@ -571,7 +602,7 @@
                         <!-- Custom Image (Image Upload Mode) -->
                         <div x-show="isImageUpload()" class="space-y-4">
                             <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400 px-1 mb-3">{% translate "Your Custom Invitation Image" %}</label>
-                            
+
                             <div class="relative group" @click="$refs.main_invitation_image_step5.click()">
                                 <div class="mt-2 flex justify-center rounded-2xl border-2 border-dashed border-gray-300 dark:border-slate-500 px-6 py-12 hover:border-indigo-500 dark:hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-slate-800 transition-all cursor-pointer bg-gray-50/50 dark:bg-slate-900/30">
                                     <div class="text-center">
@@ -583,7 +614,7 @@
                                             </div>
                                             <p class="text-sm font-black text-indigo-600 uppercase tracking-widest">{% translate "Upload your design" %}</p>
                                         </div>
-                                        
+
                                         <div x-show="previews.main_invitation_image" class="space-y-4">
                                             <img :src="previews.main_invitation_image" class="max-h-64 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 mx-auto">
                                             <div class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
@@ -616,18 +647,18 @@
 
         <!-- RIGHT: PERSISTENT PREVIEW -->
         <div class="hidden lg:flex lg:w-5/12 xl:w-4/12 bg-slate-50 dark:bg-slate-950/50 border-l border-gray-200 dark:border-slate-800 flex-col items-center justify-center sticky top-0 h-screen py-10 overflow-hidden">
-            <div class="relative w-full max-w-[340px] aspect-[9/19] max-h-[85vh] shadow-2xl rounded-[3rem] overflow-hidden border-[14px] border-gray-900 dark:border-slate-800 bg-white dark:bg-slate-950 ring-1 ring-white/10">
+            <div class="relative w-full max-w-[340px] aspect-[9/19] max-h-[85vh] shadow-2xl rounded-[3rem] overflow-hidden border-[14px] border-gray-900 bg-white ring-1 ring-black/5">
                 <!-- Top Notch -->
-                <div class="absolute top-0 inset-x-0 h-6 bg-gray-900 dark:bg-slate-800 rounded-b-3xl w-40 mx-auto z-20"></div>
-                
-                <iframe id="persistent-preview-iframe" class="w-full h-full border-0 bg-white dark:bg-slate-900" src="about:blank"></iframe>
-                
-                <div id="iframe-loader" class="absolute inset-0 bg-white/90 dark:bg-slate-900/95 flex items-center justify-center z-10 hidden">
+                <div class="absolute top-0 inset-x-0 h-4 bg-gray-900/40 rounded-b-2xl w-32 mx-auto z-20"></div>
+
+                <iframe id="persistent-preview-iframe" class="w-full h-full border-0 bg-white" src="about:blank"></iframe>
+
+                <div id="iframe-loader" class="absolute inset-0 bg-white/90 flex items-center justify-center z-10 hidden">
                     <div class="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                 </div>
             </div>
-            
-            <button type="button" onclick="runPreview()" class="mt-8 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group">
+
+            <button type="button" onclick="runPreview()" class="mt-8 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 hover:text-indigo-600 transition-all group">
                 <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 {% translate "Refresh Sync" %}
             </button>
@@ -635,10 +666,10 @@
     </div>
 
     <!-- STICKY FOOTER NAVIGATION -->
-    <div class="fixed bottom-0 inset-x-0 z-50 transition-all p-4 sm:p-6" 
+    <div class="fixed bottom-0 inset-x-0 z-50 transition-all p-4 sm:p-6"
          :class="showMobilePreview ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0' ">
         <div class="glass-nav h-20 rounded-[2.5rem] px-4 flex items-center justify-between shadow-2xl shadow-gray-200 dark:shadow-black/40 border border-gray-200 dark:border-white/5 max-w-2xl mx-auto">
-            
+
             <button type="button" @click="prev()" x-show="step > 1" x-transition
                     class="w-14 h-14 shrink-0 flex items-center justify-center text-gray-400 dark:text-slate-400 hover:text-indigo-600 transition-colors bg-gray-50 dark:bg-slate-800 rounded-full border border-gray-200 dark:border-slate-700 shadow-sm active:scale-90">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
@@ -666,7 +697,7 @@
                 </button>
             </div>
 
-            <button type="button" @click="openMobilePreview()" 
+            <button type="button" @click="openMobilePreview()"
                     class="lg:hidden w-14 h-14 shrink-0 flex items-center justify-center text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-slate-800 rounded-full relative border border-gray-200 dark:border-slate-700 active:scale-90 transition-all shadow-md">
                 <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                 <span class="absolute top-2.5 right-2.5 w-3 h-3 bg-pink-500 rounded-full border-4 border-white dark:border-slate-800 animate-pulse"></span>
@@ -686,7 +717,7 @@
             </div>
             <button @click="showMobilePreview = false" class="w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center text-2xl hover:bg-white/20">&times;</button>
         </div>
-        <div class="flex-1 w-full bg-white dark:bg-slate-950">
+        <div class="flex-1 w-full bg-white">
              <iframe id="preview-iframe" class="w-full h-full border-0"></iframe>
         </div>
     </div>
@@ -703,17 +734,17 @@ function eventWizard() {
         showMobilePreview: false,
         saveStatus: 'idle',
         lastSaved: '',
-        previews: { 
-            couple_photo: '{% if form.instance.couple_photo %}{{ form.instance.couple_photo.url }}{% endif %}', 
-            main_invitation_image: '{% if form.instance.main_invitation_image %}{{ form.instance.main_invitation_image.url }}{% endif %}' 
+        previews: {
+            couple_photo: '{% if form.instance.couple_photo %}{{ form.instance.couple_photo.url }}{% endif %}',
+            main_invitation_image: '{% if form.instance.main_invitation_image %}{{ form.instance.main_invitation_image.url }}{% endif %}'
         },
         previewTimer: null,
         autosaveTimer: null,
-        
+
         init() {
             this.eventType = document.getElementById('id_event_type')?.value || '';
             this.handleTypeChange();
-            
+
             // If there are server-side errors, jump to the relevant step
             {% if form.errors %}
                 {% if form.event_type.errors or form.selected_design.errors %}
@@ -729,8 +760,8 @@ function eventWizard() {
                 altFormat: "F j, Y",
                 altInputClass: "premium-input datepicker !pl-10",
                 theme: (document.documentElement.classList.contains('dark') ? 'dark' : 'light'),
-                onChange: () => { 
-                    this.autosave(); 
+                onChange: () => {
+                    this.autosave();
                     this.triggerPreview(true);
                 }
             });
@@ -781,7 +812,7 @@ function eventWizard() {
         next() {
             if (this.isImageUpload() && this.step === 3) {
                 // Submit the form only on the final step (Step 3) for image upload mode
-                return; 
+                return;
             }
 
             if (this.step < (this.isImageUpload() ? 3 : 5)) {
@@ -804,11 +835,11 @@ function eventWizard() {
 
         isWedding() {
             const val = this.eventType.toLowerCase();
-            return val === 'wedding' || (!val.includes('botez') && val !== 'baptism' && val !== 'image_upload');
+            return val === 'wedding' || (!val.includes('baptism') && val !== 'image_upload');
         },
         isBaptism() {
             const val = this.eventType.toLowerCase();
-            return val.includes('botez') || val === 'baptism';
+            return val.includes('baptism');
         },
         isImageUpload() {
             return this.eventType === 'image_upload';
@@ -839,7 +870,7 @@ function eventWizard() {
 
         triggerPreview(immediate = false) {
             clearTimeout(this.previewTimer);
-            if (immediate) { runPreview(); } 
+            if (immediate) { runPreview(); }
             else { this.previewTimer = setTimeout(() => runPreview(), 300); }
         },
 
@@ -887,7 +918,7 @@ function eventWizard() {
             else { row.remove(); }
             this.triggerPreview(true);
         },
-        
+
         validateStep() { this.stepValid = true; }
     }
 }
@@ -898,9 +929,9 @@ async function runPreview() {
     const mIframe = document.getElementById('preview-iframe');
     const loader = document.getElementById('iframe-loader');
     if (loader) loader.classList.remove('hidden');
-    
+
     const formData = new FormData(form);
-    
+
     try {
         const res = await fetch("{% url 'invapp:event_live_preview' %}", {
             method: 'POST',
@@ -910,10 +941,10 @@ async function runPreview() {
         const html = await res.text();
         if (pIframe) pIframe.srcdoc = html;
         if (mIframe) mIframe.srcdoc = html;
-    } catch (e) { 
+    } catch (e) {
         console.error("Preview failed", e);
-    } finally { 
-        if (loader) loader.classList.add('hidden'); 
+    } finally {
+        if (loader) loader.classList.add('hidden');
     }
 }
 </script>

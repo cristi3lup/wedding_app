@@ -206,8 +206,8 @@
                     <div>
                         <label class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{% translate "Language" %}</label>
                         <select onchange="updateGuestLanguage({{ guest.id }}, this.value)" class="mt-1 block w-full text-sm rounded-lg border-gray-200 dark:bg-gray-700 dark:text-white">
-                            <option value="ro" {% if guest.preferred_language == 'ro' %}selected{% endif %}>Română</option>
-                            <option value="en" {% if guest.preferred_language == 'en' %}selected{% endif %}>English</option>
+                            <option value="ro" {% if guest.preferred_language == 'ro' %}selected{% endif %}>{% translate "Romanian" %}</option>
+                            <option value="en" {% if guest.preferred_language == 'en' %}selected{% endif %}>{% translate "English" %}</option>
                         </select>
                     </div>
                     <div>
@@ -319,8 +319,8 @@
                     </td>
                     <td class="px-6 py-4">
                         <select onchange="updateGuestLanguage({{ guest.id }}, this.value)" class="w-28 text-xs rounded-lg border-gray-200 dark:bg-gray-700 dark:border-gray-600 shadow-sm">
-                            <option value="ro" {% if guest.preferred_language == 'ro' %}selected{% endif %}>Română</option>
-                            <option value="en" {% if guest.preferred_language == 'en' %}selected{% endif %}>English</option>
+                            <option value="ro" {% if guest.preferred_language == 'ro' %}selected{% endif %}>{% translate "Romanian" %}</option>
+                            <option value="en" {% if guest.preferred_language == 'en' %}selected{% endif %}>{% translate "English" %}</option>
                         </select>
                     </td>
                     <td class="px-6 py-4">

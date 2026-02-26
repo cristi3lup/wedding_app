@@ -49,7 +49,11 @@
         </div>
 
         <div class="text-xs text-center text-gray-500 mt-4">
-            {% translate "By signing up, you agree to our Terms and Privacy Policy." %}
+            {% url 'invapp:terms_and_conditions' as terms_url %}
+            {% url 'invapp:privacy_policy' as privacy_url %}
+            {% blocktranslate %}
+            By signing up, you agree to our <a href="{{ terms_url }}" class="text-indigo-600 hover:underline">Terms and Conditions</a> and <a href="{{ privacy_url }}" class="text-indigo-600 hover:underline">Privacy Policy</a>.
+            {% endblocktranslate %}
         </div>
     </form>
 
