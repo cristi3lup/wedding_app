@@ -128,7 +128,7 @@ class EventForm(forms.ModelForm):
         fields = [
             'event_type', 'title', 'event_date', 'party_time', 'venue_name', 'venue_address',
             'bride_name', 'groom_name', 'bride_parents', 'groom_parents',
-            'child_name', 'parents_names',
+            'child_name', 'host_whatsapp', 'whatsapp_custom_message', 'parents_names',
             'ceremony_maps_url', 'party_maps_url', 'calendar_description',
             'ceremony_time', 'ceremony_location', 'ceremony_address',
             'invitation_wording', 'schedule_details', 'other_info',
@@ -151,6 +151,8 @@ class EventForm(forms.ModelForm):
             'bride_parents': forms.TextInput(attrs={'class': INPUT_CLASSES}),
             'groom_parents': forms.TextInput(attrs={'class': INPUT_CLASSES}),
             'child_name': forms.TextInput(attrs={'class': INPUT_CLASSES}),
+            'host_whatsapp': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': '407XXXXXXXX'}),
+            'whatsapp_custom_message': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': _('Message for host...')}),
             'parents_names': forms.TextInput(attrs={'class': INPUT_CLASSES}),
             'ceremony_maps_url': forms.TextInput(attrs={'class': INPUT_CLASSES}),
             'party_maps_url': forms.TextInput(attrs={'class': INPUT_CLASSES}),
@@ -165,6 +167,11 @@ class EventForm(forms.ModelForm):
             'schedule_details': forms.Textarea(attrs={'class': INPUT_CLASSES, 'rows': 4}),
             'other_info': forms.Textarea(attrs={'class': INPUT_CLASSES, 'rows': 4}),
             'selected_design': forms.RadioSelect(),
+        }
+
+        labels = {
+            'host_whatsapp': _('WhatsApp Contact (Optional)'),
+            'whatsapp_custom_message': _('WhatsApp Message (Optional)'),
         }
 
     def clean_map_url(self, field_name):

@@ -1,146 +1,177 @@
-# Ghid de Lucru pentru Crearea și Înregistrarea Template-urilor (SOP)
+# Standard Operating Procedure (SOP): Digital Marketing & Design Services Promotion
 
-Acest ghid detaliază procesul de adăugare a noilor design-uri premium în platforma InvApp, asigurând control creativ deplin fără a afecta logica de backend.
+## 1. Overview
+This strategy focuses on cross-promoting InvApp digital invitations alongside premium wedding decor and floral design services to provide couples with a cohesive, "digitally harmonized" wedding experience.
 
----
+## 2. Value Proposition
+*   **Unified Aesthetic:** The digital invitation design matches the physical floral and decor themes.
+*   **All-in-One Luxury:** The couple receives a premium technical solution (InvApp) as an added-value gift for high-tier decor contracts.
+*   **Zero-Stress Organization:** Positioning the platform as the "Digital Assistant" that handles the boring logistics while the couple focuses on design.
 
-### **Pasul 1: Scheletul UI (Crearea Fișierului HTML)**
-Pentru a începe un design nou, creați un fișier HTML în directorul `invapp/templates/invapp/invites/`. Folosiți Tailwind CSS pentru styling rapid și responsiv.
+## 3. Promotion Channels & Execution
+### A. Social Media (Instagram/TikTok/Facebook)
+1.  **"Behind the Scenes" Content:** Post videos of a floral setup being built alongside a phone screen showing the matching digital invitation.
+2.  **Reels/Stories:** Use the "Limited Offer" urgency. Highlight that the Premium InvApp gift is only available for contracts signed during specific windows (e.g., Fair Weekends).
+3.  **Link in Bio:** Always include the direct landing page link: `https://invapp-romania.ro/ro/`.
 
-*   **Locație recomandată:** `invapp/templates/invapp/invites/nume_design.html`
-*   **Structura de bază:**
-    ```html
-    {% load static %}
-    {% load i18n %}
-    <!DOCTYPE html>
-    <html lang="{{ guest.preferred_language|default:'ro' }}">
-    <head>
-        <meta charset="UTF-8">
-        <script src="https://cdn.tailwindcss.com"></script>
-        <title>{{ event.title }}</title>
-        <!-- Adăugați fonturi Google aici -->
-    </head>
-    <body class="bg-gray-100 font-sans">
-        <!-- Design-ul tău aici -->
-    </body>
-    </html>
-    ```
+### B. Direct Sales & Consultation
+1.  **The "Wow" Factor:** During decor consultations, show the client their potential invitation design on a tablet. 
+2.  **The Closer:** If a client is hesitant on a decor package price, use the InvApp Premium voucher as the final "free gift" to close the deal.
 
----
+### C. Physical QR Codes
+1.  Print high-quality business cards or mini-flyers with a QR code pointing to `https://invapp-romania.ro/ro/`.
+2.  Place these QR codes inside floral centerpieces at display booths during fairs.
 
-### **Pasul 2: Injecția de Date (Variabile Django)**
-
-#### **2.1. Date Generale Eveniment**
-*   **Titlu Eveniment:** `{{ event.title }}`
-*   **Dată:** `{{ event.event_date|date:"d F Y" }}`
-*   **Locație Petrecere:** `{{ event.venue_name }}`, `{{ event.venue_address }}`
-*   **Ora Petrecere:** `{{ event.party_time|time:"H:i" }}`
-*   **Locație Ceremonie:** `{{ event.ceremony_location }}`, `{{ event.ceremony_address }}`
-*   **Ora Ceremonie:** `{{ event.ceremony_time|time:"H:i" }}`
-*   **Hărți (Links):** `{{ event.ceremony_maps_url }}` și `{{ event.party_maps_url }}`
-
-#### **2.2. Protagoniști (Nuntă & Botez)**
-*   **Nume Mirilor:** `{{ event.bride_name }}` și `{{ event.groom_name }}`
-*   **Părinți Miri:** `{{ event.bride_parents }}` și `{{ event.groom_parents }}`
-*   **Nume Copil (Botez):** `{{ event.child_name }}`
-*   **Părinți Copil (Botez):** `{{ event.parents_names }}`
-*   **Nași (Listă):**
-    ```html
-    {% for godparent in event.godparents.all %}
-        <p>{{ godparent.name }}</p>
-    {% endfor %}
-    ```
-
-#### **2.3. Program (Timeline/Schedule)**
-Pentru a afișa evenimentele în ordine cronologică:
-```html
-{% for item in event.schedule_items.all %}
-    <div class="flex gap-4">
-        <span>{{ item.time|time:"H:i" }}</span>
-        <span>{{ item.get_activity_type_display }}</span>
-        <span>{{ item.location }}</span>
-        <p>{{ item.description }}</p>
-    </div>
-{% endfor %}
-```
-
-#### **2.4. Texte Personalizate**
-*   **Text Invitație:** `{{ event.invitation_wording|linebreaks }}`
-*   **Detalii Program:** `{{ event.schedule_details|linebreaks }}`
-*   **Alte Informații (Dresscode etc):** `{{ event.other_info|linebreaks }}`
+## 4. Brand Integration
+*   Ensure all promotional graphics use the **Indigo/Gold/White** palette to maintain the "InvApp Premium" feel.
+*   Mention "Powered by Culori" in the website footer to leverage the authority of the established design brand.
 
 ---
 
-### **Pasul 3: Media & Managementul Asset-urilor**
+# Standard Operating Procedure (SOP): Wedding Fair Campaign
 
-#### **3.1. Fotografii Utilizator**
-*   **Imagine Principală (Canva/Design):** `{{ event.main_invitation_image.url }}`
-*   **Poză Cuplu:** `{{ event.couple_photo.url }}`
-*   **Poză Landscape:** `{{ event.landscape_photo.url }}`
-*   **Galerie Foto (Până la 6 poze):**
-    ```html
-    <div class="grid grid-cols-2 gap-2">
-        {% for photo in event.gallery_images.all %}
-            <img src="{{ photo.image.url }}" class="rounded-lg shadow">
-        {% endfor %}
-    </div>
-    ```
-    *Atenție: Folosiți întotdeauna un `if` pentru a verifica dacă imaginea există:*
-    `{% if event.couple_photo %}<img src="{{ event.couple_photo.url }}">{% endif %}`
+## 1. Overview
+This campaign is designed to convert leads at physical wedding fairs into premium digital invitation users. The workflow automates the process of generating 100% discount vouchers and applying them instantly via WhatsApp links.
 
-#### **3.2. Audio (Melodie de Fundal)**
-Pentru a adăuga mesajul audio sau melodia încărcată de utilizator:
-```html
-{% if event.audio_greeting %}
-    <audio id="bgMusic" src="{{ event.audio_greeting.url }}" preload="auto"></audio>
-    <button onclick="document.getElementById('bgMusic').play()">Play Music</button>
-{% endif %}
-```
+## 2. Preparation (Admin Panel)
+1.  **Log in** to the Django Admin.
+2.  Navigate to **InvApp > Vouchers**.
+3.  Click the **"➕ Generează Vouchere Bulk"** button (top right).
+4.  Fill in the parameters:
+    *   **Count:** e.g., 100
+    *   **Campaign Name:** e.g., `Targ_Bucuresti_Martie_2026`
+    *   **Days Valid:** e.g., 7 (determines when the link stops working).
+    *   **Discount %:** 100
+5.  Click **"Generează și Descarcă CSV"**.
+6.  **Save the CSV file** securely. It contains the unique activation links.
 
-#### **3.3. Asset-uri Statice (Design-ul tău)**
-Asset-urile care fac parte din tema grafică (nu sunt încărcate de utilizator):
-`{% static 'invapp/images/nume_fisier.png' %}`
+## 3. Sales Execution (At the Fair)
+1.  When a customer signs a floral/decor contract, identify their unique voucher link from the CSV.
+2.  **Send the link via WhatsApp** to the client.
+    *   *Message Template:* "Felicitări pentru contract! Iată cadoul promis - accesul tău gratuit la InvApp Premium: https://invapp-romania.ro/ro/accounts/signup/?v=TARG-XXXX"
+3.  The client clicks the link, signs up, and is **automatically upgraded** to Premium without any payment step.
 
----
+## 4. Automation & UI Cleanup
+*   **Countdown:** The landing page displays a live countdown to the end of the fair (Sunday 20:00).
+*   **Auto-Hide:** The urgency banner is active from **Friday to Monday**. 
+*   **Expiration:** 24 hours after the Sunday 20:00 deadline (i.e., Monday 20:00), the top black banner will automatically disappear from the website to maintain brand integrity.
 
-### **Pasul 4: Awareness Live Preview (Modul Editare)**
-Sistemul InvApp permite utilizatorului să vadă modificările în timp real (Live Preview) în timp ce completează formularul de editare. Template-ul tău trebuie să știe dacă este în mod "Preview" sau în mod "Invitatie Reală".
-
-Folosește variabila booleană `is_preview` pentru a dezactiva elementele care nu au sens în timpul editării:
-
-*   **Dezactivare Formular RSVP:**
-    ```html
-    <button type="submit" 
-            {% if is_preview %}disabled onclick="alert('RSVP dezactivat în preview');"{% endif %}
-            class="{% if is_preview %}opacity-50 cursor-not-allowed{% endif %}">
-        Confirmă Prezența
-    </button>
-    ```
-
-*   **Ascundere Script-uri (Analytics, Facebook Pixel):**
-    Nu vrei să numeri vizitele proprietarului care își editează invitația ca fiind vizite de la invitați.
-    ```html
-    {% if not is_preview %}
-        <!-- Cod Google Analytics / Facebook Pixel -->
-    {% endif %}
-    ```
+## 5. Performance Tracking
+1.  In the Admin panel, filter Vouchers by **Campaign Name**.
+2.  Check the **Is Used** and **Used At** columns to see how many clients activated their gift in real-time.
+3.  Review the **Used By** column to cross-reference with your contract list.
 
 ---
 
-### **Pasul 5: Înregistrarea în Sistem (Activarea Design-ului)**
-După ce fișierul HTML este gata, trebuie să îl faceți vizibil utilizatorilor prin Interfața de Administrare Django.
+# Standard Operating Procedure (SOP): Invitation Design Development
 
-1.  Accesați **Panoul de Administrare** (`/admin/`).
-2.  Navigați la secțiunea **Card Designs** -> **Add Card Design**.
-3.  Completați câmpurile:
-    *   **Name:** Numele comercial (ex: "Royal Velvet").
-    *   **Template Name:** Calea exactă către fișier, de ex: `invapp/invites/nume_design.html`.
-    *   **Event Type:** Wedding, Baptism sau Image Upload Only.
-    *   **Preview Image:** Încărcați un mockup (copertă) pentru selectorul de teme.
-    *   **Priority:** Număr mare (ex: 50) pentru a apărea printre primele.
-    *   **Is Public:** Bifați pentru activare.
-4.  **Salvați.** Design-ul va apărea acum în selectorul de teme al utilizatorilor.
+## 1. Overview
+This procedure outlines how to create, test, and deploy new invitation templates. Following this workflow ensures that designs remain responsive, multi-language compatible, and under full administrative control.
+
+## 2. Design Workflow
+### A. Creative (External)
+1.  **Figma/Canva:** Create the visual concept. Identify "Dynamic Zones" (e.g., where names, dates, and locations will go).
+2.  **Asset Export:** Export static backgrounds, ornaments, or icons. Upload large images to **Cloudinary** via the Django Admin (Site Assets) to keep the app fast.
+
+### B. Technical Implementation (The Template)
+1.  **Create File:** Create a new HTML file in `invapp/templates/invapp/invites/` (e.g., `design_vintage_luxury.html`).
+2.  **Inheritance:** Always extend `invapp/base_invite.html` to inherit core CSS, JS, and font logic.
+3.  **Dynamic Tags:** Use standard Django tags for all event data:
+    *   Couple: `{{ event.bride_name }} & {{ event.groom_name }}`
+    *   Date: `{{ event.event_date|date:"d F Y" }}`
+    *   Logic: Use `{% if event.godparents.all %}` blocks to handle optional fields gracefully.
+4.  **Localization:** Wrap ALL static text in `{% translate "..." %}`.
+
+### C. Registration (Admin Panel)
+To have **maximum control** over the design without writing code, register it in the database:
+1.  Navigate to **Admin > Card Designs > Add Card Design**.
+2.  **Name:** Give it a premium name (e.g., "Boho Eucalyptus").
+3.  **Template Name:** Enter the exact path created in Step B (e.g., `invapp/invites/design_boho.html`).
+4.  **Preview Image:** Upload a high-quality mockup thumbnail.
+5.  **Priority:** Set a number (higher = appears first in the carousel).
+6.  **Public Toggle:** Use this to "Soft Launch" designs before making them live.
+
+## 3. Controlling Access & Pricing
+*   **Plan Restrictions:** In the `Card Design` admin page, select which **Plans** can use this design. This allows you to lock "Luxury" designs to only the most expensive pachet.
+*   **Special Fields:** Use the `Special Fields` ManyToMany to tell the event form which inputs are needed (e.g., if a design *must* have a Couple Photo, select `couple_photo`).
+
+## 4. Testing & Validation
+1.  **Demo View:** Before going public, use the `event_preview_demo` URL to see how the design renders with real user data.
+2.  **Mobile Check:** Use Chrome DevTools (F12) to test the design on "iPhone SE" and "Samsung Galaxy" widths.
+3.  **Language Toggle:** Switch between RO/EN to ensure text doesn't overflow or break the layout.
 
 ---
 
-**Sfat de Tech Lead:** Întotdeauna folosiți filtrul `|linebreaks` pentru câmpurile de text lungi pentru a păstra paragrafele create de utilizator în formulare.
+# Appendix: Event Data Mapping (Used Fields)
+
+When creating a new design, use this list to map out which data points will be displayed. These fields are accessible via the `{{ event }}` object in Django templates.
+
+### 1. Core Event Info
+*   `{{ event.title }}`: The internal title or main heading (e.g., "Our Wedding").
+*   `{{ event.event_type }}`: Choice field: `wedding`, `baptism`, or `image_upload`.
+*   `{{ event.event_date }}`: Full date and time. Use filters: `{{ event.event_date|date:"d F Y" }}`.
+
+### 2. People & Roles
+*   **Wedding Specific:**
+    *   `{{ event.bride_name }}`: Name of the bride.
+    *   `{{ event.groom_name }}`: Name of the groom.
+    *   `{{ event.bride_parents }}`: Names of the bride's parents.
+    *   `{{ event.groom_parents }}`: Names of the groom's parents.
+*   **Baptism Specific:**
+    *   `{{ event.child_name }}`: Name of the child being baptized.
+    *   `{{ event.parents_names }}`: Names of the parents.
+*   **Common:**
+    *   `{{ event.godparents.all }}`: QuerySet of godparents. Loop using `{% for gp in event.godparents.all %}{{ gp.name }}{% endfor %}`.
+
+### 3. Locations & Logistics
+*   **Ceremony (Church/City Hall):**
+    *   `{{ event.ceremony_time }}`: Time of the ceremony.
+    *   `{{ event.ceremony_location }}`: Name of the church or venue.
+    *   `{{ event.ceremony_address }}`: Full physical address.
+    *   `{{ event.ceremony_maps_url }}`: Google Maps link for navigation.
+*   **Reception/Party:**
+    *   `{{ event.party_time }}`: Start time of the celebration.
+    *   `{{ event.venue_name }}`: Name of the restaurant/ballroom.
+    *   `{{ event.venue_address }}`: Full physical address.
+    *   `{{ event.party_maps_url }}`: Google Maps link for navigation.
+
+### 4. Custom Content
+*   `{{ event.invitation_wording }}`: The main body text/story of the invitation.
+*   `{{ event.calendar_description }}`: Text for "Add to Calendar" events.
+*   `{{ event.other_info }}`: Additional logistics or notes (e.g., "No flowers please").
+
+### 5. Media & Visuals
+*   `{{ event.couple_photo.url }}`: Primary photo of the couple/child.
+*   `{{ event.landscape_photo.url }}`: Wide-format photo for banners.
+*   `{{ event.main_invitation_image.url }}`: Full static invitation (for Image Upload designs).
+*   `{{ event.audio_greeting.url }}`: Path to the background music/voice message.
+*   `{{ event.gallery_images.all }}`: Up to 6 photos. Loop: `{% for img in event.gallery_images.all %}{{ img.image.url }}{% endfor %}`.
+
+### 6. Schedule (Timeline)
+*   `{{ event.schedule_items.all }}`: Detailed itinerary.
+    *   Fields per item: `.time`, `.activity_type`, `.location`, `.description`.
+
+---
+
+# Appendix: RSVP Integration Mapping (Used Fields)
+
+To integrate RSVP functionality into a new design, use these fields to build the confirmation form. RSVP data is linked to a specific `Guest` via their `unique_id`.
+
+### 1. Guest Context (Pre-filled or Logic)
+*   `{{ guest.name }}`: The name(s) of the people invited (e.g., "The Smith Family").
+*   `{{ guest.max_attendees }}`: The maximum number of people allowed for this specific invitation.
+*   `{{ guest.unique_id }}`: Used in the URL to identify the guest (e.g., `invapp-romania.ro/rsvp/UUID/`).
+
+### 2. RSVP Form Fields (Data to Collect)
+*   `attending`: (Boolean) `True` for Yes, `False` for No.
+*   `number_attending`: (Integer) How many people from the group are actually coming (must be `<= guest.max_attendees`).
+*   `meal_preference`: (Text) Space for dietary restrictions, allergies, or menu choices (e.g., "1 Vegetarian, 1 Child").
+*   `message`: (Text) Optional personal note from the guest to the hosts.
+
+### 3. Displaying RSVP Status (For the Host/Admin)
+*   `{{ guest.is_attending }}`: Returns the current status (Yes/No/None).
+*   `{{ guest.attending_count }}`: Returns the confirmed number of participants.
+*   `{{ guest.rsvp_details.submitted_at }}`: Timestamp of when the guest last responded.
+*   `{{ guest.rsvp_source }}`: Indicates if the RSVP was `automatic` (via the site) or `manual` (updated by the host).
+
+

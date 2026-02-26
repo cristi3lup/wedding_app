@@ -258,29 +258,10 @@
 {% endblock %}
 
 {% block content %}
-<div x-data="{ rsvpOpen: false, langOpen: false }">
+<div x-data="{ rsvpOpen: false }">
 
     <div class="card-container"
          style="background-image: url('{% static 'invapp/images/BaloonBear/BaloonBear.png' %}'); background-size: 100% auto;">
-
-        <!-- Language Switcher -->
-        <div class="absolute top-4 right-4 z-40">
-            <div class="relative">
-                <button @click="langOpen = !langOpen" class="flex items-center justify-center space-x-1 bg-white/80 backdrop-blur-md border border-white/60 shadow-sm rounded-full px-3 py-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider hover:bg-white transition-all">
-                    <i class="fas fa-globe mr-1 text-blue-400"></i>
-                    <span>{{ LANGUAGE_CODE|upper }}</span>
-                </button>
-
-                <div x-show="langOpen" @click.away="langOpen = false" x-cloak
-                     class="absolute right-0 mt-2 w-28 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-100 py-1 z-50">
-                    <form action="{% url 'set_language' %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit" name="language" value="ro" class="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-blue-50 transition-colors">Română</button>
-                        <button type="submit" name="language" value="en" class="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-blue-50 transition-colors">English</button>
-                    </form>
-                </div>
-            </div>
-        </div>
 
         <div class="content">
             <div style="height: 33vh;"></div>

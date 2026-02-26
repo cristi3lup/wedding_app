@@ -15,9 +15,6 @@ from cloudinary_storage.storage import RawMediaCloudinaryStorage
 
 
 class SiteImage(models.Model):
-    """
-    Static images manageable from Admin (Hero, Logo, Banners).
-    """
     KEY_CHOICES = [
         ('hero_bg', _('Hero Background (Landing)')),
         ('global_bg', _('Global Site Background')),
@@ -28,15 +25,9 @@ class SiteImage(models.Model):
         ('cta_bg', _('Call to Action Background')),
         ('partner_promo', _('Partner Promotion (Culori)')),
     ]
-
-    key = models.CharField(
-        max_length=50,
-        choices=KEY_CHOICES,
-        unique=True,
-        help_text=_("Where this image will appear.")
-    )
-    image = models.ImageField(upload_to='site_assets/', help_text=_("Upload image here."))
-    description = models.CharField(max_length=200, blank=True, help_text=_("Description for Alt Text (SEO)"))
+    key = models.CharField(max_length=50, choices=KEY_CHOICES, unique=True)
+    image = models.ImageField(upload_to='site_assets/')
+    description = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return self.get_key_display()
@@ -46,78 +37,28 @@ class Plan(models.Model):
     name = models.CharField(max_length=100, unique=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     description = models.TextField(blank=True)
-
-    # Feature Controls
-    max_guests = models.PositiveIntegerField(
-        default=0,
-        help_text=_("Maximum number of guests allowed. Use a very large number for unlimited.")
-    )
-    max_events = models.PositiveIntegerField(
-        default=1,
-        help_text=_("Maximum number of events this plan allows.")
-    )
-    is_public = models.BooleanField(
-        default=True,
-        help_text=_("Uncheck this to hide the plan from the landing page (useful for Admin-only testing plans).")
-    )
-    has_table_assignment = models.BooleanField(
-        default=False,
-        help_text=_("Does this plan include the table assignment feature?")
-    )
-    can_upload_own_design = models.BooleanField(
-        default=False,
-        help_text=_("Does this plan allow uploading a custom design image?")
-    )
-
-    # Watermark Control
-    show_watermark = models.BooleanField(
-        default=True,
-        verbose_name=_("Show Watermark"),
-        help_text=_("If checked, invites from this plan will have a watermark.")
-    )
-
-    icon_svg_path = models.TextField(
-        blank=True,
-        help_text=_("Paste the SVG <path> data for an icon here. e.g., <path d='...'/>")
-    )
-    color_class = models.CharField(
-        max_length=50,
-        blank=True,
-        help_text=_("Main Tailwind CSS accent color. e.g., 'text-indigo-500'")
-    )
-    featured = models.BooleanField(
-        default=False,
-        help_text=_("Check this to make the plan stand out visually.")
-    )
-    lock_event_on_creation = models.BooleanField(
-        default=False,
-        help_text=_("If True, events created under this plan cannot be edited or deleted.")
-    )
-    stripe_price_id = models.CharField(
-        max_length=100,
-        blank=True,
-        help_text=_("The Price ID from Stripe for this plan (e.g., price_1J...).")
-    )
+    max_guests = models.PositiveIntegerField(default=0)
+    max_events = models.PositiveIntegerField(default=1)
+    is_public = models.BooleanField(default=True)
+    has_table_assignment = models.BooleanField(default=False)
+    can_upload_own_design = models.BooleanField(default=False)
+    show_watermark = models.BooleanField(default=True, verbose_name=_("Show Watermark"))
+    icon_svg_path = models.TextField(blank=True)
+    color_class = models.CharField(max_length=50, blank=True)
+    featured = models.BooleanField(default=False)
+    lock_event_on_creation = models.BooleanField(default=False)
+    stripe_price_id = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
         return self.name
 
 
-# === NEW: Plan Features (for Pricing list) ===
 class PlanFeature(models.Model):
     plan = models.ForeignKey(Plan, related_name='features', on_delete=models.CASCADE)
     text_ro = models.CharField(max_length=255, verbose_name=_("Feature Text (RO)"))
     text_en = models.CharField(max_length=255, verbose_name=_("Feature Text (EN)"), blank=True)
-
-    is_included = models.BooleanField(
-        default=True,
-        help_text=_("If checked, it appears in green (included). If not, it appears struck through or gray.")
-    )
-
-    order = models.PositiveIntegerField(
-        default=0,
-        help_text=_("Display order in the list.")
-    )
+    is_included = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ['order']
@@ -134,18 +75,71 @@ class PlanFeature(models.Model):
         return self.text_ro
 
 
-# --- 1. Special Fields Config ---
+class PlatformPartner(models.Model):
+    name = models.CharField(max_length=100, verbose_name=_("Partner Name"))
+    whatsapp_number = models.CharField(max_length=20, verbose_name=_("WhatsApp Number"))
+    facebook_url = models.URLField(blank=True, verbose_name=_("Facebook URL"))
+    instagram_url = models.URLField(blank=True, verbose_name=_("Instagram URL"))
+    website_url = models.URLField(blank=True, verbose_name=_("Website URL"))
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _("Platform Partner")
+        verbose_name_plural = _("Platform Partners")
+
+
+class MarketingCampaign(models.Model):
+    name = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=False)
+    partner = models.ForeignKey(PlatformPartner, on_delete=models.SET_NULL, null=True, blank=True)
+    show_urgency_bar = models.BooleanField(default=False)
+    urgency_text = models.CharField(max_length=255, blank=True)
+    countdown_end_date = models.DateTimeField(null=True, blank=True)
+    hero_headline = models.CharField(max_length=200)
+    hero_subheadline = models.TextField(blank=True)
+    primary_button_text = models.CharField(max_length=50, default=_("Start Now"))
+    primary_button_link = models.CharField(max_length=200, default="/ro/accounts/signup/")
+    theme_color_hex = models.CharField(max_length=7, default="#4f46e5")
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            MarketingCampaign.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _("Marketing Campaign")
+        verbose_name_plural = _("Marketing Campaigns")
+
+
+class Voucher(models.Model):
+    code = models.CharField(max_length=50, unique=True, db_index=True)
+    discount_percentage = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
+    active = models.BooleanField(default=True)
+    max_uses = models.PositiveIntegerField(default=100)
+    current_uses = models.PositiveIntegerField(default=0)
+    is_used = models.BooleanField(default=False)
+    used_by = models.CharField(max_length=255, blank=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    campaign_name = models.CharField(max_length=100, blank=True)
+    valid_from = models.DateTimeField(default=timezone.now)
+    valid_until = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    applicable_plans = models.ManyToManyField(Plan, blank=True)
+    custom_message = models.TextField(blank=True, help_text=_("Optional custom message for WhatsApp sharing."))
+
+    def __str__(self):
+        return f"{self.code} ({self.discount_percentage}%)"
+
+
 class SpecialField(models.Model):
-    name = models.CharField(
-        max_length=100,
-        unique=True,
-        help_text=_("The exact field name from the Event model (e.g., 'couple_photo').")
-    )
-    description = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text=_("A user-friendly description for the admin panel.")
-    )
+    name = models.CharField(max_length=100, unique=True)
+    description = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.name
@@ -159,253 +153,56 @@ class CardDesign(models.Model):
 
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
-
-    # Legacy path (optional)
-    preview_image_path = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text=_("Path to preview image in static files (Legacy)")
-    )
-
-    # --- ImageField for Admin Upload ---
-    preview_image = models.ImageField(
-        upload_to='design_previews/',
-        blank=True,
-        null=True,
-        help_text=_("Upload a mockup image here (Cloudinary).")
-    )
-
-    template_name = models.CharField(
-        max_length=255,
-        help_text=_("e.g., 'invapp/invites/design_classic.html'")
-    )
-
-    event_type = models.CharField(
-        max_length=20,
-        choices=EventTypeChoices.choices,
-        default=EventTypeChoices.WEDDING,
-        help_text=_("The type of event this design is for.")
-    )
-
-    available_on_plans = models.ManyToManyField(
-        'Plan',
-        blank=True,
-        related_name='card_designs',
-        help_text=_("Select which subscription plans can use this design.")
-    )
-
-    priority = models.PositiveIntegerField(
-        default=0,
-        help_text=_("Higher numbers appear first in the carousel.")
-    )
-
-    is_multilanguage = models.BooleanField(
-        default=False,
-        help_text=_("Check if this design supports multiple languages (shows tick icon).")
-    )
-
-    is_public = models.BooleanField(
-        default=False,
-        help_text=_("If unchecked, this design is hidden from the public gallery.")
-    )
-
-    # --- is_active for Admin control ---
-    is_active = models.BooleanField(
-        default=True,
-        help_text=_("Admin control: Uncheck to soft-delete/hide this design everywhere.")
-    )
-
-    special_fields = models.ManyToManyField(
-        SpecialField,
-        blank=True,
-        related_name='card_designs',
-        help_text=_("Select any special form fields this design requires.")
-    )
+    preview_image_path = models.CharField(max_length=255, blank=True, null=True)
+    preview_image = models.ImageField(upload_to='design_previews/', blank=True, null=True)
+    template_name = models.CharField(max_length=255)
+    event_type = models.CharField(max_length=20, choices=EventTypeChoices.choices, default=EventTypeChoices.WEDDING)
+    available_on_plans = models.ManyToManyField(Plan, blank=True, related_name='card_designs')
+    priority = models.PositiveIntegerField(default=0)
+    is_multilanguage = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    special_fields = models.ManyToManyField(SpecialField, blank=True, related_name='card_designs')
 
     def __str__(self):
         return self.name
 
 
-# Represents the main wedding event details
 class Event(models.Model):
-    # event Type
     class EventTypeChoices(models.TextChoices):
         WEDDING = 'wedding', _('Wedding')
         BAPTISM = 'baptism', _('Baptism')
         IMAGE_UPLOAD = 'image_upload', _('Image Upload Only')
 
-    event_type = models.CharField(
-        max_length=20,
-        choices=EventTypeChoices.choices,
-        default=EventTypeChoices.WEDDING,
-        verbose_name=_("Event Type"),
-        help_text=_("The type of event being planned.")
-    )
-
-    # --- BAPTISM-SPECIFIC FIELDS ---
-    child_name = models.CharField(
-        max_length=200,
-        blank=True,
-        verbose_name=_("Child Name"),
-        help_text=_("Name of the child (for baptism).")
-    )
-    parents_names = models.CharField(
-        max_length=200,
-        blank=True,
-        verbose_name=_("Parents' Names"),
-        help_text=_("Names of the parents (for baptism).")
-    )
-
-    # --- WEDDING-SPECIFIC FIELDS ---
-    bride_name = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name=_("Bride Name"),
-        help_text=_("Name of the bride.")
-    )
-    groom_name = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name=_("Groom Name"),
-        help_text=_("Name of the groom.")
-    )
-    bride_parents = models.CharField(
-        max_length=200,
-        blank=True,
-        verbose_name=_("Bride's Parents"),
-        help_text=_("Names of the bride's parents (e.g., 'John & Jane Doe').")
-    )
-    groom_parents = models.CharField(
-        max_length=200,
-        blank=True,
-        verbose_name=_("Groom's Parents"),
-        help_text=_("Names of the groom's parents (e.g., 'George & Mary Smith').")
-    )
-    # GENERAL FIELDS
+    event_type = models.CharField(max_length=20, choices=EventTypeChoices.choices, default=EventTypeChoices.WEDDING)
+    child_name = models.CharField(max_length=200, blank=True)
+    host_whatsapp = models.CharField(max_length=20, blank=True, null=True, help_text=_("Format: 407XXXXXXXX (no '+' or '0' in front)"))
+    whatsapp_custom_message = models.CharField(max_length=255, blank=True, null=True, help_text=_("Default pre-filled message for the guest to send to the host."))
+    parents_names = models.CharField(max_length=200, blank=True)
+    bride_name = models.CharField(max_length=100, blank=True)
+    groom_name = models.CharField(max_length=100, blank=True)
+    bride_parents = models.CharField(max_length=200, blank=True)
+    groom_parents = models.CharField(max_length=200, blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='events')
-    selected_design = models.ForeignKey(CardDesign, on_delete=models.SET_NULL, null=True, blank=True,
-                                        related_name='events')
-
-    title = models.CharField(
-        max_length=200,
-        default=_("Our Wedding"),
-        verbose_name=_("Event Title")
-    )
-    event_date = models.DateTimeField(
-        default=timezone.now,
-        verbose_name=_("Date"),
-        help_text=_("Date of the event")
-    )
-    party_time = models.TimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("Party Time"),
-        help_text=_("Time when party starts.")
-    )
-    venue_name = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True,
-        verbose_name=_("Venue Name"),
-        help_text=_("Name of the venue")
-    )
-    venue_address = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Venue Address"),
-        help_text=_("Full address of the venue")
-    )
-    ceremony_time = models.TimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("Ceremony Time"),
-        help_text=_("Time of the religious ceremony (for baptism/wedding).")
-    )
-    ceremony_location = models.CharField(
-        max_length=255,
-        blank=True,
-        verbose_name=_("Ceremony Venue Name"),
-        help_text=_("Name of the church or ceremony location (e.g. 'St. Nicholas Church').")
-    )
-    ceremony_address = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Ceremony Address"),
-        help_text=_("Physical address of the ceremony.")
-    )
-    ceremony_maps_url = models.URLField(
-        max_length=1000,
-        blank=True,
-        null=True,
-        verbose_name=_("Ceremony Map Link"),
-        help_text=_("Google Maps Link. This will be embedded as an interactive map in your invitation.")
-    )
-    party_maps_url = models.URLField(
-        max_length=1000,
-        blank=True,
-        null=True,
-        verbose_name=_("Party Map Link"),
-        help_text=_("Google Maps Link. This will be embedded as an interactive map in your invitation.")
-    )
-    calendar_description = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Calendar Description"),
-        help_text=_("Optional: Short description for calendar event")
-    )
-
-    invitation_wording = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Invitation Wording"),
-        help_text=_("Main invitation text (e.g., 'Together with their families...')")
-    )
-    schedule_details = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Schedule Details"),
-        help_text=_("Details about the schedule (e.g., Ceremony, Reception times)")
-    )
-    other_info = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Other Information"),
-        help_text=_("Other information (e.g., Dress code, Gift registry)")
-    )
-    # --- MEDIA-SPECIFIC FIELDS ---
-
-    main_invitation_image = models.ImageField(
-        upload_to='invitation_images/',
-        null=True,
-        blank=True,
-        verbose_name=_("Main Invitation Image"),
-        help_text=_("Upload your main invitation image designed in Canva (or another tool).")
-    )
-    audio_greeting = models.FileField(
-        upload_to='audio_greetings/',
-        storage=RawMediaCloudinaryStorage(),  # <--- CRITIC PENTRU AUDIO
-        blank=True,
-        null=True,
-        verbose_name=_("Audio Greeting"),
-        help_text=_("Optional: Upload an audio greeting (e.g., MP3, M4A, WAV).")
-    )
-
-    couple_photo = models.ImageField(
-        upload_to='event_photos/',
-        null=True,
-        blank=True,
-        verbose_name=_("Couple Photo"),
-        help_text=_("A photo of the couple to be displayed on the invitation.")
-    )
-    landscape_photo = models.ImageField(
-        upload_to='event_landscape_photos/',
-        null=True,
-        blank=True,
-        verbose_name=_("Landscape Photo"),
-        help_text=_(
-            "Optional: A landscape-oriented photo to display after the greeting (e.g., a photo of the venue or couple).")
-    )
+    selected_design = models.ForeignKey(CardDesign, on_delete=models.SET_NULL, null=True, blank=True, related_name='events')
+    title = models.CharField(max_length=200, default=_("Our Wedding"))
+    event_date = models.DateTimeField(default=timezone.now)
+    party_time = models.TimeField(null=True, blank=True)
+    venue_name = models.CharField(max_length=200, blank=True, null=True)
+    venue_address = models.TextField(blank=True, null=True)
+    ceremony_time = models.TimeField(null=True, blank=True)
+    ceremony_location = models.CharField(max_length=255, blank=True)
+    ceremony_address = models.TextField(blank=True, null=True)
+    ceremony_maps_url = models.URLField(max_length=1000, blank=True, null=True)
+    party_maps_url = models.URLField(max_length=1000, blank=True, null=True)
+    calendar_description = models.TextField(blank=True, null=True)
+    invitation_wording = models.TextField(blank=True, null=True)
+    schedule_details = models.TextField(blank=True, null=True)
+    other_info = models.TextField(blank=True, null=True)
+    main_invitation_image = models.ImageField(upload_to='invitation_images/', null=True, blank=True)
+    audio_greeting = models.FileField(upload_to='audio_greetings/', storage=RawMediaCloudinaryStorage(), blank=True, null=True)
+    couple_photo = models.ImageField(upload_to='event_photos/', null=True, blank=True)
+    landscape_photo = models.ImageField(upload_to='event_landscape_photos/', null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -419,36 +216,27 @@ class Event(models.Model):
         return None
 
 
-# Represents a guest or a couple/family invited
+class GalleryImage(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='gallery_images')
+    image = CloudinaryField('image', folder='invapp_gallery')
+
+    def save(self, *args, **kwargs):
+        if not self.pk and self.event.gallery_images.count() >= 6:
+            raise ValidationError(_("The limit of 6 photos for this package has been reached."))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Image for {self.event}"
+
+
 class Guest(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='guests')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='guests')
+    name = models.CharField(max_length=200)
+    email = models.EmailField(blank=True, null=True)
+    max_attendees = models.PositiveIntegerField(default=1)
+    phone_number = models.CharField(max_length=30, blank=True, null=True)
 
-    name = models.CharField(
-        max_length=200,
-        help_text=_("Primary name for the invitation (e.g., 'The Smith Family', 'John Doe')")
-    )
-    email = models.EmailField(
-        blank=True,
-        null=True,
-        help_text=_("Optional: Used for sending updates")
-    )
-    max_attendees = models.PositiveIntegerField(
-        default=1,
-        help_text=_("How many people are included in this invitation")
-    )
-
-    # --- Add new phone_number field ---
-    phone_number = models.CharField(
-        max_length=30,
-        blank=True,
-        null=True,
-        help_text=_("Optional: Guest's phone number.")
-    )
-
-    # --- End new phone_number field ---
-
-    # --- Define choices for the gender field ---
     class HonorificChoices(models.TextChoices):
         MR = 'mr', _('Mr.')
         MRS = 'mrs', _('Mrs.')
@@ -458,12 +246,7 @@ class Guest(models.Model):
         COUPLE = 'couple', _('Couple')
         NONE = 'none', _('None')
 
-    honorific = models.CharField(
-        max_length=10,
-        choices=HonorificChoices.choices,
-        default=HonorificChoices.NONE,
-        help_text=_("The courtesy title for addressing the guest (e.g., Mr., Mrs., Family).")
-    )
+    honorific = models.CharField(max_length=10, choices=HonorificChoices.choices, default=HonorificChoices.NONE)
 
     @property
     def get_full_display_name(self):
@@ -476,62 +259,22 @@ class Guest(models.Model):
         else:
             return self.name
 
-    # --- Fields for invitation method and manual RSVP ---
     class InvitationMethodChoices(models.TextChoices):
         DIGITAL = 'digital', _('Digital')
         PHYSICAL = 'physical', _('On Paper')
 
-    invitation_method = models.CharField(
-        max_length=20,
-        choices=InvitationMethodChoices.choices,
-        default=InvitationMethodChoices.PHYSICAL,
-        blank=True,
-        null=True
-    )
+    invitation_method = models.CharField(max_length=20, choices=InvitationMethodChoices.choices, default=InvitationMethodChoices.PHYSICAL, blank=True, null=True)
 
     class RSVPSourceChoices(models.TextChoices):
         AUTOMATIC = 'automatic', _('Automatic (Guest)')
         MANUAL = 'manual', _('Manual (Host)')
 
-    rsvp_source = models.CharField(
-        max_length=20,
-        choices=RSVPSourceChoices.choices,
-        default=RSVPSourceChoices.MANUAL,
-        blank=True,
-        null=True,
-        help_text=_("Indicates if the RSVP was confirmed digitally by the guest or manually by the host.")
-    )
+    rsvp_source = models.CharField(max_length=20, choices=RSVPSourceChoices.choices, default=RSVPSourceChoices.MANUAL, blank=True, null=True)
+    manual_is_attending = models.BooleanField(null=True, blank=True)
+    manual_attending_count = models.PositiveIntegerField(null=True, blank=True)
+    unique_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    preferred_language = models.CharField(max_length=5, choices=settings.LANGUAGES, default='ro')
 
-    # For guests not using the digital RSVP form, or for overriding digital RSVP
-    manual_is_attending = models.BooleanField(
-        null=True,
-        blank=True,
-        help_text=_("Manually set attendance status (e.g., for paper RSVPs).")
-    )
-    manual_attending_count = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        help_text=_("Manually set number of attendees if known (especially for paper RSVPs).")
-    )
-    # --- End new fields ---
-
-    # --- Add the new UUID field ---
-    unique_id = models.UUIDField(
-        default=uuid.uuid4,
-        editable=False,
-        unique=True,
-        help_text=_("Unique identifier for the guest's invitation link")
-    )
-
-    preferred_language = models.CharField(
-        max_length=5,
-        choices=settings.LANGUAGES,
-        default='ro',
-        verbose_name=_("Preferred Language"),
-        help_text=_("The language in which the guest will see the digital invitation.")
-    )
-
-    # Property to get definitive attending count
     @property
     def is_attending(self):
         if self.manual_is_attending is not None:
@@ -558,33 +301,12 @@ class Guest(models.Model):
         return self.name
 
 
-# Stores the response from a guest
 class RSVP(models.Model):
-    # Link directly to the Guest who is responding
     guest = models.OneToOneField(Guest, on_delete=models.CASCADE, related_name='rsvp_details')
-
-    attending = models.BooleanField(
-        null=True,
-        blank=True,
-        choices=[(True, _('Yes')), (False, _('No'))],
-        help_text=_("Will they attend?")
-    )
-    number_attending = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        help_text=_("How many are actually coming?")
-    )
-    meal_preference = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True,
-        help_text=_("e.g., Vegetarian, Allergies")
-    )
-    message = models.TextField(
-        blank=True,
-        null=True,
-        help_text=_("Optional message from the guest")
-    )
+    attending = models.BooleanField(null=True, blank=True, choices=[(True, _('Yes')), (False, _('No'))])
+    number_attending = models.PositiveIntegerField(null=True, blank=True)
+    meal_preference = models.CharField(max_length=200, blank=True, null=True)
+    message = models.TextField(blank=True, null=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -596,7 +318,7 @@ class RSVP(models.Model):
             status = _("Not Attending")
         return str(format_lazy(_("RSVP for {name} - {status}"), name=self.guest.name, status=status))
 
-# Represents a physical table at the reception
+
 class Table(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tables')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='tables')
@@ -605,12 +327,10 @@ class Table(models.Model):
 
     @property
     def current_seated_count(self):
-        """Calculate total number of confirmed attendees seated at this table."""
         return sum(assignment.guest.attending_count for assignment in self.assigned_guests.all())
 
     @property
     def remaining_capacity(self):
-        """Calculate remaining seats at this table."""
         return max(0, self.capacity - self.current_seated_count)
 
     class Meta:
@@ -620,7 +340,6 @@ class Table(models.Model):
         return self.name
 
 
-# Assigns a guest (who RSVP'd Yes) to a table
 class TableAssignment(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True)
     guest = models.OneToOneField(Guest, on_delete=models.CASCADE)
@@ -633,8 +352,7 @@ class TableAssignment(models.Model):
         guest_name = self.guest.name if self.guest else _("Unknown Guest")
         table_name = self.table.name if self.table else _("Unknown Table")
         if self.event:
-            return format_lazy(_("{guest} -> {table} for {event}"), guest=guest_name, table=table_name,
-                               event=self.event.title)
+            return format_lazy(_("{guest} -> {table} for {event}"), guest=guest_name, table=table_name, event=self.event.title)
         return str(format_lazy(_("{guest} -> {table} (No Event Assigned)"), guest=guest_name, table=table_name))
 
 
@@ -648,37 +366,17 @@ class UserProfile(models.Model):
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def ensure_profile_exists(sender, instance, created, **kwargs):
-    """
-    This function runs on EVERY user save (Sign Up Email, Google Login, or just Update).
-    Guarantees that the user has a Profile and a Plan.
-    """
-    # 1. Try to get the profile or create it if it doesn't exist (Safe & Self-Healing)
     profile, newly_created = UserProfile.objects.get_or_create(user=instance)
-
-    # 2. If the profile was created NOW (or existed but had no plan set)
     if newly_created or profile.plan is None:
-        # Search for Free plan
-        default_plan = Plan.objects.filter(price=0).first()
-
-        # Fallback: If no Free plan exists, take the first plan in the database
-        if not default_plan:
-            default_plan = Plan.objects.first()
-
-        # Assign plan and save
+        default_plan = Plan.objects.filter(price=0).first() or Plan.objects.first()
         if default_plan:
             profile.plan = default_plan
             profile.save()
-            print(f"DEBUG: Plan '{default_plan.name}' was allocated to user {instance.username}")
 
 
-# === NEW: Godparent Model                   ===
-# ==============================================
 class Godparent(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='godparents')
-    name = models.CharField(
-        max_length=200,
-        help_text=_("Full name of the godparent or godparent couple (e.g., 'John & Jane Smith').")
-    )
+    name = models.CharField(max_length=200)
 
     def __str__(self):
         return f"{self.name} (for event: {self.event.title})"
@@ -694,27 +392,10 @@ class ScheduleItem(models.Model):
         OTHER = 'other', _('Other')
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='schedule_items')
-
     time = models.TimeField(verbose_name=_("Time"))
-
-    activity_type = models.CharField(
-        max_length=50,
-        choices=ActivityType.choices,
-        default=ActivityType.CIVIL_CEREMONY,
-        verbose_name=_("Activity Type")
-    )
-
-    location = models.CharField(
-        max_length=255,
-        blank=True,
-        verbose_name=_("Location")
-    )
-
-    description = models.TextField(
-        blank=True,
-        verbose_name=_("Details"),
-        help_text=_("Optional details about this part of the event.")
-    )
+    activity_type = models.CharField(max_length=50, choices=ActivityType.choices, default=ActivityType.CIVIL_CEREMONY)
+    location = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
 
     class Meta:
         ordering = ['time']
@@ -726,15 +407,11 @@ class ScheduleItem(models.Model):
 
 
 class FAQ(models.Model):
-    # --- English Version (Default) ---
-    question = models.CharField(max_length=255, verbose_name=_("Question (EN)"))
-    answer = models.TextField(verbose_name=_("Answer (EN)"))
-
-    # --- Romanian Version ---
-    question_ro = models.CharField(max_length=255, blank=True, verbose_name=_("Question (RO)"))
-    answer_ro = models.TextField(blank=True, verbose_name=_("Answer (RO)"))
-
-    order = models.PositiveIntegerField(default=0, help_text=_("Display order"))
+    question = models.CharField(max_length=255)
+    answer = models.TextField()
+    question_ro = models.CharField(max_length=255, blank=True)
+    answer_ro = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
     is_visible = models.BooleanField(default=True)
 
     class Meta:
@@ -746,45 +423,16 @@ class FAQ(models.Model):
 
 
 class Testimonial(models.Model):
-    # Link to user to prevent spam (one review per user)
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='testimonial'
-    )
-
-    # Keep client_name as string to edit manually if needed
-    # (or if user deletes account, review remains with name)
-    client_name = models.CharField(max_length=100, verbose_name=_("Client Name"))
-
-    # Optional avatar (if we want to pull profile photo in future)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='testimonial')
+    client_name = models.CharField(max_length=100)
     avatar_url = models.URLField(blank=True, null=True)
-
-    text = models.TextField(blank=True, verbose_name=_("Message (Optional)"))
-
-    rating = models.PositiveIntegerField(
-        default=5,
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text=_("Star rating (1-5)")
-    )
-
-    is_featured = models.BooleanField(default=False, help_text=_("Appears on home page?"))
-    is_active = models.BooleanField(default=True, help_text=_("Is visible publicly?"))
+    text = models.TextField(blank=True)
+    rating = models.PositiveIntegerField(default=5, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    is_featured = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    PROVIDER_CHOICES = [
-        ('email', _('Email')),
-        ('google', _('Google')),
-        ('facebook', _('Facebook')),
-    ]
-    social_provider = models.CharField(
-        max_length=20,
-        choices=PROVIDER_CHOICES,
-        default='email',
-        verbose_name=_("Review Source")
-    )
+    PROVIDER_CHOICES = [('email', _('Email')), ('google', _('Google')), ('facebook', _('Facebook'))]
+    social_provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES, default='email')
 
     class Meta:
         ordering = ['-created_at']
@@ -792,29 +440,16 @@ class Testimonial(models.Model):
         verbose_name_plural = _("Customer Reviews")
 
     def __str__(self):
-        return f"{self.client_name} ({self.social_provider}) - {self.rating}★"
+        return f"{self.client_name} - {self.rating}★"
 
 
-# === NEW: Dynamic About Section (Bilingual) ===
 class AboutSection(models.Model):
-    # English Fields (Default)
-    title_en = models.CharField(max_length=200, default=_("Crafted with Love"), verbose_name=_("Title (EN)"))
-    description_en = models.TextField(verbose_name=_("Description (EN)"), help_text=_("Main text in English."))
-
-    # Romanian Fields
-    title_ro = models.CharField(max_length=200, default=_("Creat cu Dragoste"), verbose_name=_("Title (RO)"), blank=True)
-    description_ro = models.TextField(verbose_name=_("Description (RO)"), help_text=_("Main text in Romanian."),
-                                      blank=True)
-
-    icon_svg_path = models.TextField(
-        blank=True,
-        help_text=_("Paste the SVG <path> data here.")
-    )
-    color_class = models.CharField(
-        max_length=50,
-        default="text-indigo-600",
-        help_text=_("Tailwind color class for the icon (e.g., text-indigo-600, text-pink-500).")
-    )
+    title_en = models.CharField(max_length=200, default=_("Crafted with Love"))
+    description_en = models.TextField()
+    title_ro = models.CharField(max_length=200, default=_("Created with Love"), blank=True)
+    description_ro = models.TextField(blank=True)
+    icon_svg_path = models.TextField(blank=True)
+    color_class = models.CharField(max_length=50, default="text-indigo-600")
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -823,88 +458,34 @@ class AboutSection(models.Model):
 
     @property
     def title(self):
-        if get_language() == 'ro':
-            return self.title_ro or self.title_en
-        return self.title_en
+        return self.title_ro if get_language() == 'ro' else self.title_en
 
     @property
     def description(self):
-        if get_language() == 'ro':
-            return self.description_ro or self.description_en
-        return self.description_en
+        return self.description_ro if get_language() == 'ro' else self.description_en
 
     def __str__(self):
         return f"About Section: {self.title_en}"
 
 
-# === NEW: Future Features / Roadmap (Bilingual) ===
 class FutureFeature(models.Model):
-    # English Fields (Default)
-    title_en = models.CharField(max_length=200, verbose_name=_("Feature Title (EN)"))
-    description_en = models.TextField(blank=True, verbose_name=_("Short Description (EN)"))
-
-    # Romanian Fields
-    title_ro = models.CharField(max_length=200, verbose_name=_("Feature Title (RO)"), blank=True)
-    description_ro = models.TextField(blank=True, verbose_name=_("Short Description (RO)"))
-
-    # --- UPDATED: Icon SVG & Color ---
-    icon_svg_path = models.TextField(
-        blank=True,
-        help_text=_("Paste the SVG <path> data here (e.g., <path d='...'/>).")
-    )
-    color_class = models.CharField(
-        max_length=50,
-        default="text-indigo-600",
-        help_text=_("Tailwind color class for the icon wrapper (e.g., text-indigo-600).")
-    )
-
-    # Internal tracking fields
-    target_date = models.DateField(
-        null=True,
-        blank=True,
-        help_text=_("Internal target date for completion (Month/Year). Not necessarily shown publicly.")
-    )
-
-    is_public = models.BooleanField(
-        default=True,
-        help_text=_("Show this in the 'Coming Soon' section on the landing page?")
-    )
-
-    priority = models.PositiveIntegerField(
-        default=0,
-        help_text=_("Higher numbers appear first.")
-    )
+    title_en = models.CharField(max_length=200)
+    description_en = models.TextField(blank=True)
+    title_ro = models.CharField(max_length=200, blank=True)
+    description_ro = models.TextField(blank=True)
+    icon_svg_path = models.TextField(blank=True)
+    color_class = models.CharField(max_length=50, default="text-indigo-600")
+    target_date = models.DateField(null=True, blank=True)
+    is_public = models.BooleanField(default=True)
+    priority = models.PositiveIntegerField(default=0)
 
     @property
     def title(self):
-        if get_language() == 'ro':
-            return self.title_ro or self.title_en
-        return self.title_en
+        return self.title_ro if get_language() == 'ro' else self.title_en
 
     @property
     def description(self):
-        if get_language() == 'ro':
-            return self.description_ro or self.description_en
-        return self.description_en
+        return self.description_ro if get_language() == 'ro' else self.description_en
 
     def __str__(self):
         return self.title_en
-
-
-class GalleryImage(models.Model):
-    # Presupposing your main model is named 'Event'
-    event = models.ForeignKey(
-        'Event',
-        on_delete=models.CASCADE,
-        related_name='gallery_images'  # Important for template
-    )
-    image = CloudinaryField('image', folder='invapp_gallery', help_text=_("Recommended format: JPG/PNG. Maximum 5MB."))
-
-    def save(self, *args, **kwargs):
-        # PROTECTION: If new instance (no ID) and limit is reached
-        if not self.pk and self.event.gallery_images.count() >= 6:
-            raise ValidationError(_("The limit of 6 photos for this package has been reached."))
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"Image for {self.event}"

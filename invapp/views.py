@@ -9,7 +9,8 @@ from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from .models import (
     UserProfile, Event, Guest, RSVP, Table, TableAssignment, 
-    CardDesign, Plan, FAQ, AboutSection, FutureFeature, Testimonial
+    CardDesign, Plan, FAQ, AboutSection, FutureFeature, Testimonial, Voucher,
+    MarketingCampaign
 )
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -28,8 +29,9 @@ import csv
 import base64
 import sys
 import stripe
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from types import SimpleNamespace
+from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from .forms import (
@@ -215,6 +217,28 @@ def invitation_rsvp_combined_view(request, guest_uuid):
     guest = get_object_or_404(Guest.objects.select_related('event__selected_design'), unique_id=guest_uuid)
     event = guest.event
 
+    # --- SMART LANGUAGE REDIRECT ---
+    from django.utils import translation
+    current_lang = translation.get_language()
+    
+    # Use a session key unique to this guest to allow manual overrides later
+    session_key = f'lang_forced_{guest_uuid}'
+    
+    if current_lang != guest.preferred_language and not request.session.get(session_key):
+        # 1. Mark that we've performed the auto-redirect
+        request.session[session_key] = True
+        # 2. Set the language in the session (standard Django way)
+        request.session['_language'] = guest.preferred_language
+        # 3. Actually activate it for the current thread
+        translation.activate(guest.preferred_language)
+        # 4. Redirect to the URL with the correct prefix
+        return redirect(reverse('invapp:guest_invite', kwargs={'guest_uuid': guest_uuid}))
+
+    # Extra safety: Ensure the current thread matches the URL prefix (already handled by LocaleMiddleware)
+    # but we can force it just in case if session didn't stick
+    if current_lang != translation.get_language():
+        translation.activate(current_lang)
+
     try:
         existing_rsvp = guest.rsvp_details
     except (RSVP.DoesNotExist, AttributeError):
@@ -331,6 +355,21 @@ def invitation_view(request):
 
 # --- Landing Page ---
 def landing_page_view(request):
+    # Capture Voucher from URL (?v=CODE)
+    voucher_code = request.GET.get('v')
+    if voucher_code:
+        try:
+            voucher = Voucher.objects.get(code__iexact=voucher_code, active=True, is_used=False)
+            # Check activation and expiration
+            is_active = not (voucher.valid_from and voucher.valid_from > timezone.now())
+            is_not_expired = not (voucher.valid_until and voucher.valid_until < timezone.now())
+            
+            if is_active and is_not_expired:
+                request.session['active_voucher'] = voucher.code
+                print(f"DEBUG: Voucher {voucher.code} captured in session.")
+        except Voucher.DoesNotExist:
+            pass
+
     plans = Plan.objects.filter(is_public=True).prefetch_related('card_designs').order_by('price')
 
     # UPDATED: Order by priority (descending), then by name
@@ -347,12 +386,16 @@ def landing_page_view(request):
     # 2. Future Features (Only public ones)
     future_features = FutureFeature.objects.filter(is_public=True).order_by('-priority', 'target_date')
 
+    # 3. Marketing Campaign
+    active_campaign = MarketingCampaign.objects.filter(is_active=True).select_related('partner').first()
+
     context = {
         'reviews': recent_reviews,
         'designs': designs,
         'plans': plans,
         'about_section': about_section,
         'future_features': future_features,
+        'active_campaign': active_campaign,
     }
     return render(request, 'invapp/landing_page_tailwind.html', context)
 
@@ -375,6 +418,40 @@ def signup_view(request):
                 messages.warning(request, _("Registration successful, but we could not send a confirmation email."))
 
             login(request, user)
+            
+            # --- Apply Voucher from Session if any ---
+            voucher_code = request.session.get('active_voucher')
+            if voucher_code:
+                try:
+                    voucher = Voucher.objects.get(code__iexact=voucher_code, active=True, is_used=False)
+                    # Expiration & Activation checks
+                    is_expired = voucher.valid_until and voucher.valid_until < timezone.now()
+                    is_not_active_yet = voucher.valid_from and voucher.valid_from > timezone.now()
+                    
+                    if not is_expired and not is_not_active_yet:
+                        # 1. Update Profile Plan
+                        profile, created = UserProfile.objects.get_or_create(user=user)
+                        
+                        # Find the first paid plan (or Premium if we want to be specific)
+                        premium_plan = Plan.objects.filter(price__gt=0).order_by('-price').first()
+                        if premium_plan:
+                            profile.plan = premium_plan
+                            profile.save()
+                            
+                            # 2. Mark Voucher as Used
+                            voucher.is_used = True
+                            voucher.used_by = user.email
+                            voucher.used_at = timezone.now()
+                            voucher.current_uses += 1
+                            voucher.save()
+                            
+                            messages.success(request, _("Welcome! Your account has been upgraded to %(plan)s for free thanks to your voucher.") % {'plan': premium_plan.name})
+                            
+                            # 3. Clear session
+                            del request.session['active_voucher']
+                except Voucher.DoesNotExist:
+                    pass
+
             return redirect('invapp:dashboard')
     else:
         form = CustomUserCreationForm()
@@ -817,21 +894,31 @@ class EventDeleteView(LoginRequiredMixin, DeleteView):
 @csrf_exempt
 def event_autosave_view(request, pk):
     """
-    Background save for event form data.
+    Background save for event form data and related formsets.
     """
     if request.method != 'POST':
         return JsonResponse({'status': 'error'}, status=405)
     
     event = get_object_or_404(Event, pk=pk, owner=request.user)
     
-    # We can use the existing EventForm but make fields optional for partial saves
     form = EventForm(request.POST, request.FILES, instance=event)
+    godparent_formset = GodparentFormSet(request.POST, request.FILES, instance=event)
+    schedule_item_formset = ScheduleItemFormSet(request.POST, request.FILES, instance=event)
+    gallery_image_formset = GalleryImageFormSet(request.POST, request.FILES, instance=event)
     
     if form.is_valid():
         form.save()
+        
+        # Save related formsets if valid
+        if godparent_formset.is_valid():
+            godparent_formset.save()
+        if schedule_item_formset.is_valid():
+            schedule_item_formset.save()
+        if gallery_image_formset.is_valid():
+            gallery_image_formset.save()
+            
         return JsonResponse({'status': 'success', 'last_saved': datetime.now().strftime('%H:%M:%S')})
     else:
-        # For autosave, we don't block the user with errors, but we can log them
         return JsonResponse({'status': 'invalid', 'errors': form.errors}, status=400)
 
 
@@ -1240,6 +1327,119 @@ def payment_cancel_view(request):
     return redirect(reverse('invapp:landing_page') + '#pricing')
 
 
+@csrf_exempt
+def api_verify_voucher(request):
+    """
+    JSON endpoint to verify if a voucher is valid.
+    """
+    code = request.GET.get('code') or request.POST.get('code')
+    requested_plan_id = request.GET.get('plan_id') or request.POST.get('plan_id')
+    
+    print(f"DEBUG VOUCHER: Verifying code='{code}' for plan_id='{requested_plan_id}'")
+
+    if not code:
+        return JsonResponse({'valid': False, 'message': _('Please enter a voucher code.')})
+
+    try:
+        voucher = Voucher.objects.prefetch_related('applicable_plans').get(code__iexact=code)
+    except Voucher.DoesNotExist:
+        return JsonResponse({'valid': False, 'message': _('Invalid voucher code.')})
+
+    if not voucher.active:
+        return JsonResponse({'valid': False, 'message': _('This voucher is no longer active.')})
+
+    if voucher.is_used:
+        return JsonResponse({'valid': False, 'message': _('This voucher has already been used.')})
+
+    if voucher.valid_until and voucher.valid_until < timezone.now():
+        return JsonResponse({'valid': False, 'message': _('This voucher has expired.')})
+
+    if voucher.valid_from and voucher.valid_from > timezone.now():
+        return JsonResponse({'valid': False, 'message': _('This voucher is not yet active.')})
+
+    if voucher.current_uses >= voucher.max_uses:
+        return JsonResponse({'valid': False, 'message': _('This voucher has reached its maximum uses.')})
+
+    # Plan Restriction Check
+    if requested_plan_id and voucher.applicable_plans.exists():
+        try:
+            plan_id_int = int(requested_plan_id)
+            if not voucher.applicable_plans.filter(id=plan_id_int).exists():
+                print(f"DEBUG VOUCHER: Plan {plan_id_int} not in {list(voucher.applicable_plans.values_list('id', flat=True))}")
+                return JsonResponse({'valid': False, 'message': _('This voucher is not valid for the selected plan.')})
+        except ValueError:
+            pass
+
+    print(f"DEBUG VOUCHER: SUCCESS for code='{code}'")
+    return JsonResponse({
+        'valid': True,
+        'discount_percentage': voucher.discount_percentage,
+        'message': _('Voucher applied successfully!')
+    })
+
+
+@login_required
+def api_apply_free_voucher(request):
+    """
+    Special endpoint for 100% discount vouchers to upgrade users instantly.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        code = data.get('code')
+        plan_id = data.get('plan_id')
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+
+    if not code or not plan_id:
+        return JsonResponse({'status': 'error', 'message': 'Missing code or plan_id'}, status=400)
+
+    plan = get_object_or_404(Plan, id=plan_id)
+
+    try:
+        voucher = Voucher.objects.get(code__iexact=code, active=True)
+    except Voucher.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': _('Invalid voucher.')}, status=400)
+
+    if voucher.is_used:
+        return JsonResponse({'status': 'error', 'message': _('Voucher already used.')}, status=400)
+
+    if voucher.valid_until and voucher.valid_until < timezone.now():
+        return JsonResponse({'status': 'error', 'message': _('Voucher expired.')}, status=400)
+
+    if voucher.valid_from and voucher.valid_from > timezone.now():
+        return JsonResponse({'status': 'error', 'message': _('Voucher not yet active.')}, status=400)
+
+    if voucher.discount_percentage != 100:
+        return JsonResponse({'status': 'error', 'message': _('This voucher is not for a free upgrade.')}, status=400)
+
+    if voucher.current_uses >= voucher.max_uses:
+        return JsonResponse({'status': 'error', 'message': _('Voucher reached usage limit.')}, status=400)
+
+    # Plan Restriction Check
+    if voucher.applicable_plans.exists():
+        if not voucher.applicable_plans.filter(id=plan.id).exists():
+            return JsonResponse({'status': 'error', 'message': _('This voucher is not valid for the selected plan.')}, status=400)
+
+    # Perform Upgrade
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    profile.plan = plan
+    profile.save()
+
+    # Increment uses and mark as used
+    voucher.current_uses += 1
+    voucher.is_used = True
+    voucher.used_by = request.user.email
+    voucher.used_at = timezone.now()
+    voucher.save()
+
+    messages.success(request,
+                     _("Congratulations! Your plan has been upgraded to %(plan)s for free!") % {'plan': plan.name})
+    return JsonResponse({'status': 'success', 'redirect_url': reverse('invapp:dashboard')})
+
+
 @login_required
 def manual_upgrade_page_view(request, plan_id):
     plan = get_object_or_404(Plan, id=plan_id)
@@ -1536,6 +1736,7 @@ class EventLivePreviewView(LoginRequiredMixin, View):
             def __init__(self, objects): self.objects = objects
             def all(self): return self.objects
             def count(self): return len(self.objects)
+            def exists(self): return len(self.objects) > 0
 
         # Godparents
         godparents = []

@@ -39,6 +39,21 @@
             background-size: 200% 100%;
             animation: shimmer 3s infinite;
         }
+
+        /* --- FIXED: Navigation Offset for Fair Banner --- */
+        :root {
+            --nav-offset: 0px;
+        }
+        {% if active_campaign and active_campaign.show_urgency_bar %}
+        :root {
+            --nav-offset: 2.5rem; /* 40px mobile */
+        }
+        @media (min-width: 1024px) {
+            :root {
+                --nav-offset: 3rem; /* 48px desktop */
+            }
+        }
+        {% endif %}
     </style>
 {% endblock %}
 
@@ -84,7 +99,54 @@
     </div>
 {% endblock mobile_nav_links %}
 
-{% block page_header %}{% endblock %}
+{% block top_banner %}
+    {# --- DYNAMIC MARKETING BANNER START --- #}
+    {% if active_campaign and active_campaign.show_urgency_bar %}
+    <div id="fair-banner" class="bg-black text-white h-10 lg:h-12 flex items-center justify-between px-4 sm:px-8 fixed top-0 w-full z-[100] border-b border-yellow-500/30">
+        <!-- Left: Partnership info -->
+        <div class="flex items-center gap-3">
+            <div class="hidden sm:flex items-center gap-2">
+                <span class="text-[10px] uppercase tracking-tighter text-gray-400">{% translate "Special Offer by" %}</span>
+                <span class="text-xs font-black text-rose-500 tracking-tight">CULORI</span>
+            </div>
+            
+            {% if active_campaign.partner %}
+            <div class="flex items-center gap-2 border-l border-white/10 pl-3">
+                {% if active_campaign.partner.facebook_url %}
+                <a href="{{ active_campaign.partner.facebook_url }}" target="_blank" class="text-gray-400 hover:text-[#1877F2] transition-colors">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </a>
+                {% endif %}
+                {% if active_campaign.partner.instagram_url %}
+                <a href="{{ active_campaign.partner.instagram_url }}" target="_blank" class="text-gray-400 hover:text-[#E4405F] transition-colors">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.332 3.608 1.308.975.975 1.247 2.242 1.308 3.607.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.332 2.633-1.308 3.608-.975.975-2.242 1.247-3.607 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.332-3.608-1.308-.975-.975-1.247-2.242-1.308-3.607-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.062-1.366.332-2.633 1.308-3.608.975-.975 2.242-1.247 3.607-1.308 1.266-.058-1.646.07-4.85.07zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.358-.2 6.78-2.618 6.98-6.98.058-1.281.072-1.689.072-4.948s-.014-3.667-.072-4.947c-.2-4.358-2.618-6.78-6.98-6.98-1.281-.058-1.689-.072-4.948-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Center: Countdown -->
+        <div class="flex items-center gap-2">
+            <span class="text-yellow-400 hidden lg:inline">🔥 {{ active_campaign.urgency_text|default:"LIMITED OFFER:" }}</span> 
+            <span class="bg-yellow-500 text-black px-2 py-0.5 rounded animate-pulse whitespace-nowrap text-[10px] sm:text-xs">
+                <span id="fair-countdown" data-end-date="{{ active_campaign.countdown_end_date.isoformat|default:'' }}">--:--:--</span>
+            </span>
+        </div>
+
+        <!-- Right: CTA -->
+        {% blocktranslate asvar wa_message with name=active_campaign.name|default:'Premium' %}Hi! I'm interested in the {{ name }} offer.{% endblocktranslate %}
+        <a href="https://wa.me/{{ active_campaign.partner.whatsapp_number|default:'407XXXXXXXX' }}?text={{ wa_message|urlencode }}" 
+           target="_blank"
+           class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded-full flex items-center gap-1.5 transition-all active:scale-95 shadow-lg text-[10px] sm:text-xs">
+            <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .004 5.408 0 12.044c0 2.12.554 4.189 1.605 6.035L0 24l6.105-1.602a11.832 11.832 0 005.937 1.597h.005c6.637 0 12.046-5.411 12.05-12.048a11.802 11.802 0 00-3.582-8.448z"/></svg>
+            <span class="hidden sm:inline">{% translate "I want the Offer" %}</span>
+            <span class="sm:hidden">{% translate "Offer" %}</span>
+        </a>
+    </div>
+    {% endif %}
+    {# --- DYNAMIC MARKETING BANNER END --- #}
+{% endblock %}
 
 {% block content %}
     <main class="-mt-6"> <!-- Negative margin to pull hero up if needed -->
@@ -103,24 +165,30 @@
 
             <div class="relative z-10 px-4 text-center max-w-4xl mx-auto">
                 <h1 class="text-5xl sm:text-6xl lg:text-7xl font-serif font-bold text-white tracking-tight drop-shadow-lg animate-fade-in-up">
-                    {% translate "Premium Digital Invitations for Weddings & Baptisms" %}
+                    <span class="block">{{ active_campaign.hero_headline|default:"Your wedding, fully digitized." }}</span>
                 </h1>
                 <p class="mt-6 text-lg sm:text-xl text-gray-200 max-w-2xl mx-auto font-light leading-relaxed animate-fade-in-up delay-100">
-                    {% translate "Easy create and organize guest list. Share story with a beautiful, elegant and digital invitation." %}
+                    {{ active_campaign.hero_subheadline|default:"Create premium digital invitations with real-time RSVP confirmation. Manage invitations intelligently and stress-free." }}
                 </p>
-                <div class="mt-10 animate-fade-in-up delay-200">
-                    <a href="{% url 'account_signup' %}" class="inline-flex items-center px-8 py-4 text-lg font-semibold text-indigo-900 bg-white rounded-full hover:bg-indigo-50 hover:scale-105 transition-all duration-300 shadow-xl ring-4 ring-white/30">
-                        {% translate "Start now! For free!" %}
-                        <svg aria-hidden="true" class="ml-2 -mr-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                <div class="mt-10 animate-fade-in-up delay-200 flex flex-col sm:flex-row items-center justify-center gap-4">
+                    {% blocktranslate asvar wa_message_hero with name=active_campaign.name|default:'Premium' %}Hi! I'm interested in the {{ name }} offer.{% endblocktranslate %}
+                    <a href="https://wa.me/{{ active_campaign.partner.whatsapp_number|default:'407XXXXXXXX' }}?text={{ wa_message_hero|urlencode }}" 
+                       target="_blank"
+                       class="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-green-600 rounded-full hover:bg-green-700 hover:scale-105 transition-all duration-300 shadow-xl ring-4 ring-green-600/30">
+                        <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .004 5.408 0 12.044c0 2.12.554 4.189 1.605 6.035L0 24l6.105-1.602a11.832 11.832 0 005.937 1.597h.005c6.637 0 12.046-5.411 12.05-12.048a11.802 11.802 0 00-3.582-8.448z"/></svg>
+                        {% translate "Get the Offer" %}
+                    </a>
+                    <a href="#features" class="inline-flex items-center px-8 py-4 text-lg font-semibold text-white border-2 border-white/30 rounded-full hover:bg-white/10 transition-all duration-300 backdrop-blur-sm">
+                        {% translate "How it works" %}
                     </a>
                 </div>
             </div>
-
-            <!-- Scroll Down Indicator -->
-            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce text-white/70">
-                <svg aria-hidden="true" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-            </div>
         </section>
+
+        <!-- SOCIAL PROOF (Relocated) -->
+        <div class="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+            {% include "invapp/includes/reviews_carousel_3d.html" %}
+        </div>
 
         <!-- Features Section -->
         <section id="features" class="py-24 bg-white dark:bg-gray-800">
@@ -333,19 +401,19 @@
                                         <span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase"> RON / {% translate "event" %}</span>
                                     </div>
 
-                                    <!-- MODIFICARE: Listă Dinamică din Admin -->
+                                    <!-- UPDATE: Dynamic list from Admin -->
                                     <ul class="space-y-2 mb-6 flex-grow text-left">
-                                        <!-- 1. Afișăm features custom definite în Admin -->
+                                        <!-- 1. Show custom features defined in Admin -->
                                         {% for feature in plan.features.all %}
                                             <li class="flex items-center">
                                                 {% if feature.is_included %}
-                                                    <!-- Icon Verde (Check) -->
+                                                    <!-- Green Icon (Check) -->
                                                     <svg class="h-4 w-4 text-green-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                                     </svg>
                                                     <span class="text-sm text-gray-600 dark:text-gray-300">{{ feature.text }}</span>
                                                 {% else %}
-                                                    <!-- Icon Gri/Roșu (X sau Minus) -->
+                                                    <!-- Gray/Red Icon (X or Minus) -->
                                                     <svg class="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                                     </svg>
@@ -354,14 +422,14 @@
                                             </li>
                                         {% endfor %}
 
-                                        <!-- 2. (Opțional) Păstrăm logica hardcodată veche ca fallback sau pentru chestii de sistem critice -->
-                                        <!-- De exemplu, Max Guests e un câmp tehnic, poate vrei să-l afișezi mereu primul -->
+                                        <!-- 2. (Optional) Keep old hardcoded logic as fallback or for critical system features -->
+                                        <!-- For example, Max Guests is a technical field, maybe you want to show it first -->
                                         {% if not plan.features.exists %}
                                              <li class="flex items-center">
                                                 <svg class="h-4 w-4 text-green-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                                 <span class="text-sm text-gray-600 dark:text-gray-300">{% translate "Up to" %} <strong class="text-gray-900 dark:text-white">{{ plan.max_guests }}</strong> {% translate "Guests" %}</span>
                                             </li>
-                                            <!-- ... restul listei vechi ... -->
+                                            <!-- ... rest of old list ... -->
                                         {% endif %}
                                     </ul>
 
@@ -502,9 +570,6 @@
         </section>
         {% endif %}
 
-               <!-- REVIEWS CAROUSEL -->
-            {% include "invapp/includes/reviews_carousel_3d.html" %}
-
         <!-- 7. FAQ Teaser / Still Have Questions -->
         <section class="py-16 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
             <div class="max-w-4xl mx-auto px-4 text-center">
@@ -644,9 +709,12 @@
                         <p class="text-sm text-gray-500 dark:text-gray-400">
                             &copy; {% now "Y" %} InvApp Romania. {% translate "All rights reserved." %}
                         </p>
-                        <p class="text-[10px] text-gray-400 dark:text-gray-600 uppercase tracking-widest font-medium">
-                            {% translate "Handcrafted with passion in Romania" %}
-                        </p>
+                        <div class="flex gap-4 text-[10px] text-gray-400 dark:text-gray-600 uppercase tracking-widest font-medium">
+                            <a href="{% url 'invapp:terms_and_conditions' %}" class="hover:text-indigo-600">{% translate "Terms" %}</a>
+                            <a href="{% url 'invapp:privacy_policy' %}" class="hover:text-indigo-600">{% translate "Privacy" %}</a>
+                            <span>•</span>
+                            <span>{% translate "Handcrafted with passion in Romania" %}</span>
+                        </div>
                     </div>
                     
                     <div class="flex items-center gap-6">
@@ -728,5 +796,37 @@
                 });
             }
         }
+
+        // --- FAIR COUNTDOWN & AUTO-HIDE LOGIC ---
+        function updateFairCountdown() {
+            const display = document.getElementById('fair-countdown');
+            if (!display) return;
+
+            const endDateStr = display.getAttribute('data-end-date');
+            if (!endDateStr) {
+                display.textContent = "--:--:--";
+                return;
+            }
+
+            const now = new Date();
+            const targetDate = new Date(endDateStr);
+            
+            const diff = targetDate - now;
+
+            if (diff <= 0) {
+                display.textContent = "{% translate 'EXPIRED' %}";
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            display.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+        
+        setInterval(updateFairCountdown, 1000);
+        updateFairCountdown();
     </script>
 {% endblock extra_js %}

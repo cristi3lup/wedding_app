@@ -1,11 +1,20 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from django.urls import reverse
+from django.urls import reverse, path
 from django.utils.html import format_html
+from django.http import HttpResponse
+from django.shortcuts import render, redirect
+from django.utils import timezone
+from django.contrib import messages
+from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _, gettext as __
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
-
+import csv
+import uuid
+import urllib.parse
+from datetime import timedelta
 
 from .models import (
     Event,
@@ -26,6 +35,9 @@ from .models import (
     FutureFeature,
     PlanFeature,
     GalleryImage,
+    Voucher,
+    MarketingCampaign,
+    PlatformPartner,
 )
 from .forms import TableAssignmentAdminForm
 
@@ -83,29 +95,31 @@ class TableAssignmentInline(admin.TabularInline):
     autocomplete_fields = ['guest', 'table']
 
 
-# ==========================================
-# === 2. EVENT MANAGEMENT                ===
-# ==========================================
 class GalleryImageInline(admin.TabularInline):
     model = GalleryImage
     extra = 1
     max_num = 6
-    verbose_name = "Gallery Image"
-    verbose_name_plural = "Photo Gallery (Max 6 images)"
+    verbose_name = _("Gallery Image")
+    verbose_name_plural = _("Photo Gallery (Max 6 images)")
+
+
+# ==========================================
+# === 2. EVENT MANAGEMENT                ===
+# ==========================================
 
 @admin.register(Event)
 class EventAdmin(ImportExportModelAdmin):
     resource_class = EventResource
-    list_display = ('title', 'owner', 'event_date', 'venue_name', 'view_guests_link')
-    search_fields = ('title', 'venue_name', 'owner__username', 'owner__email')
+    list_display = ('title', 'owner', 'event_date', 'venue_name', 'host_whatsapp', 'view_guests_link')
+    search_fields = ('title', 'venue_name', 'owner__username', 'owner__email', 'host_whatsapp')
     list_filter = ('event_type', 'event_date')
     inlines = [TableInline, TableAssignmentInline, GodparentInline, ScheduleItemInline, GalleryImageInline]
 
-    @admin.display(description='Guests')
+    @admin.display(description=_('Guests'))
     def view_guests_link(self, obj):
         count = obj.guests.count()
         url = reverse('admin:invapp_guest_changelist') + f'?event__id__exact={obj.id}'
-        return format_html('<a href="{}">{} Guests</a>', url, count)
+        return format_html('<a href="{}">{} {}</a>', url, count, _('Guests'))
 
 
 
@@ -117,24 +131,24 @@ class GuestAdmin(ImportExportModelAdmin):
     list_filter = ('event', 'preferred_language')
     readonly_fields = ('unique_id',)
 
-    @admin.display(description='RSVP Status')
+    @admin.display(description=_('RSVP Status'))
     def get_rsvp_status(self, obj):
         try:
             rsvp = obj.rsvp_details
             if rsvp.attending is True:
-                return f"Yes ({rsvp.number_attending or '?'})"
+                return f"{_('Yes')} ({rsvp.number_attending or '?'})"
             elif rsvp.attending is False:
-                return "No"
+                return _("No")
         except (RSVP.DoesNotExist, AttributeError):
             pass
-        return "No Response"
+        return _("No Response")
 
-    @admin.display(description='Assigned Table')
+    @admin.display(description=_('Assigned Table'))
     def get_assigned_table(self, obj):
         try:
             return obj.tableassignment.table.name
         except (TableAssignment.DoesNotExist, AttributeError):
-            return "Not Assigned"
+            return _("Not Assigned")
 
 
 @admin.register(Table)
@@ -151,7 +165,7 @@ class TableAssignmentAdmin(admin.ModelAdmin):
     autocomplete_fields = ['guest', 'table']
     search_fields = ('guest__name', 'table__name', 'event__title')
 
-    @admin.display(description='Event', ordering='event__title')
+    @admin.display(description=_('Event'), ordering='event__title')
     def get_event_title(self, obj):
         if obj.event: return obj.event.title
         return "—"
@@ -193,11 +207,11 @@ class UserProfileAdmin(admin.ModelAdmin):
     list_select_related = ('user', 'plan')
     list_editable = ('plan',)
 
-    @admin.display(description='Email Address', ordering='user__email')
+    @admin.display(description=_('Email Address'), ordering='user__email')
     def get_user_email(self, obj):
         return obj.user.email
 
-    @admin.display(description='Events Created')
+    @admin.display(description=_('Events Created'))
     def get_event_count(self, obj):
         return Event.objects.filter(owner=obj.user).count()
 
@@ -246,7 +260,7 @@ class CardDesignAdmin(ImportExportModelAdmin):
                 obj.preview_image.url
             )
         return "-"
-    show_preview_icon.short_description = "Preview"
+    show_preview_icon.short_description = _("Preview")
 
     def show_large_preview(self, obj):
         if obj.preview_image:
@@ -254,14 +268,14 @@ class CardDesignAdmin(ImportExportModelAdmin):
                 '<img src="{}" style="max-height: 300px; max-width: 100%; border-radius: 8px;" />',
                 obj.preview_image.url
             )
-        return "No image uploaded"
-    show_large_preview.short_description = "Current Image Preview"
+        return _("No image uploaded")
+    show_large_preview.short_description = _("Current Image Preview")
 
-    @admin.display(description='Available Plans')
+    @admin.display(description=_('Available Plans'))
     def display_plans(self, obj):
         return ", ".join([plan.name for plan in obj.available_on_plans.all()])
 
-    @admin.display(description='Special Fields')
+    @admin.display(description=_('Special Fields'))
     def display_special_fields(self, obj):
         return ", ".join([field.name for field in obj.special_fields.all()])
 
@@ -282,17 +296,17 @@ class PlanAdmin(ImportExportModelAdmin):
     inlines = [PlanFeatureInline]
 
     fieldsets = (
-        ('General Information', {
+        (_('General Information'), {
             'fields': ('name', 'price', 'description', 'stripe_price_id')
         }),
-        ('Limitations', {
+        (_('Limitations'), {
             'fields': ('max_guests', 'max_events', 'lock_event_on_creation'),
-            'description': "Set technical limits for this plan."
+            'description': _("Set technical limits for this plan.")
         }),
-        ('Visual & Public', {
+        (_('Visual & Public'), {
             'fields': ('featured', 'is_public', 'icon_svg_path', 'color_class')
         }),
-        ('Legacy Settings', {
+        (_('Legacy Settings'), {
             'classes': ('collapse',),
             'fields': ('has_table_assignment', 'can_upload_own_design', 'show_watermark'),
         }),
@@ -306,7 +320,145 @@ class SiteImageAdmin(admin.ModelAdmin):
 
 
 # ==========================================
-# === 5. MARKETING (FAQ & Reviews)       ===
+# === 5. MARKETING & VOUCHERS            ===
+# ==========================================
+
+@admin.register(Voucher)
+class VoucherAdmin(admin.ModelAdmin):
+    list_display = ('code', 'campaign_name', 'discount_percentage', 'is_used', 'valid_from', 'valid_until')
+    list_editable = ('campaign_name',)
+    search_fields = ('code', 'used_by', 'campaign_name')
+    list_filter = ('is_used', 'campaign_name', 'valid_from', 'valid_until', 'discount_percentage')
+    readonly_fields = ('created_at', 'used_at')
+    fields = ('code', 'campaign_name', 'discount_percentage', 'active', 'max_uses', 'current_uses', 'is_used', 'used_by', 'used_at', 'valid_from', 'valid_until', 'applicable_plans', 'custom_message')
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('generate-bulk/', self.admin_site.admin_view(self.generate_bulk_view), name='invapp_voucher_generate_bulk'),
+        ]
+        return custom_urls + urls
+
+    def generate_bulk_view(self, request):
+        if request.method == 'POST':
+            try:
+                count = int(request.POST.get('count', 50))
+                campaign = request.POST.get('campaign', 'General Admin')
+                days_valid = int(request.POST.get('days_valid', 30))
+                discount = int(request.POST.get('discount', 100))
+                selected_plan_ids = request.POST.getlist('applicable_plans')
+                custom_message = request.POST.get('custom_message', '')
+                
+                # Handle optional start date
+                start_date_str = request.POST.get('valid_from')
+                if start_date_str:
+                    valid_from = timezone.datetime.fromisoformat(start_date_str)
+                    if not timezone.is_aware(valid_from):
+                        valid_from = timezone.make_aware(valid_from)
+                else:
+                    valid_from = timezone.now()
+
+                valid_until = valid_from + timedelta(days=days_valid)
+                vouchers_to_create = []
+                codes = []
+
+                for i in range(count):
+                    code = f"TARG-{uuid.uuid4().hex[:4].upper()}"
+                    while code in codes:
+                        code = f"TARG-{uuid.uuid4().hex[:4].upper()}"
+                    codes.append(code)
+                    
+                    vouchers_to_create.append(Voucher(
+                        code=code,
+                        discount_percentage=discount,
+                        campaign_name=campaign,
+                        valid_from=valid_from,
+                        valid_until=valid_until,
+                        active=True,
+                        max_uses=1,
+                        custom_message=custom_message
+                    ))
+
+                from django.db import transaction
+                with transaction.atomic():
+                    Voucher.objects.bulk_create(vouchers_to_create)
+                    created_vouchers = Voucher.objects.filter(code__in=codes)
+                    if selected_plan_ids:
+                        for v in created_vouchers:
+                            v.applicable_plans.set(selected_plan_ids)
+
+                safe_campaign = slugify(campaign) if campaign else "direct_sale"
+                base_domain = "https://invapp-romania.ro/ro/accounts/signup/"
+                
+                response = HttpResponse(content_type='text/csv')
+                response['Content-Disposition'] = f'attachment; filename="vouchers_{safe_campaign}.csv"'
+                response.write(u'\ufeff'.encode('utf8'))
+                
+                writer = csv.writer(response)
+                writer.writerow([
+                    __('Code'), __('Campaign'), __ ('Discount %'), 
+                    __('Valid From'), __('Valid Until'), __('Plans'), 
+                    __('Activation Link (Client)'), __('Send via WhatsApp')
+                ])
+                
+                plan_names = __("All")
+                if selected_plan_ids:
+                    plan_names = ", ".join(Plan.objects.filter(id__in=selected_plan_ids).values_list('name', flat=True))
+
+                for v in created_vouchers:
+                    activation_url = f"{base_domain}?v={v.code}&utm_source=whatsapp&utm_medium=direct_message&utm_campaign={safe_campaign}"
+                    open_link_text = __("Open Link")
+                    activation_formula = f'=HYPERLINK("{activation_url}", "{open_link_text}")'
+                    
+                    # Use custom message if provided, otherwise fallback to default
+                    if v.custom_message:
+                        wa_text = f"{v.custom_message}\n\n{activation_url}"
+                    else:
+                        wa_text = __("Hi! 🥂 We're happy we reached an agreement for your event decor! As promised, here is your link to activate the InvApp platform (Free). Click here to create your account: %(url)s") % {'url': activation_url}
+                    
+                    encoded_wa_text = urllib.parse.quote(wa_text)
+                    wa_link = f"https://wa.me/?text={encoded_wa_text}"
+                    send_wa_text = __("SEND VIA WHATSAPP ➔")
+                    wa_formula = f'=HYPERLINK("{wa_link}", "{send_wa_text}")'
+                    
+                    writer.writerow([
+                        v.code, v.campaign_name, v.discount_percentage, 
+                        v.valid_from.strftime('%Y-%m-%d %H:%M'),
+                        v.valid_until.strftime('%Y-%m-%d %H:%M'), 
+                        plan_names, activation_formula, wa_formula
+                    ])
+                return response
+
+            except Exception as e:
+                error_msg = __("Error: %(error)s") % {'error': str(e)}
+                self.message_user(request, error_msg, level=messages.ERROR)
+                return redirect("..")
+
+        context = dict(
+            self.admin_site.each_context(request),
+            title=__("Generate Bulk Vouchers"),
+            opts=self.model._meta,
+            available_plans=Plan.objects.all().order_by('price'),
+        )
+        return render(request, "admin/invapp/voucher/generate_bulk.html", context)
+
+
+@admin.register(MarketingCampaign)
+class MarketingCampaignAdmin(admin.ModelAdmin):
+    list_display = ('name', 'partner', 'is_active', 'show_urgency_bar', 'countdown_end_date')
+    list_editable = ('is_active',)
+    search_fields = ('name',)
+
+
+@admin.register(PlatformPartner)
+class PlatformPartnerAdmin(admin.ModelAdmin):
+    list_display = ('name', 'whatsapp_number', 'is_active')
+    list_editable = ('is_active',)
+    search_fields = ('name', 'whatsapp_number')
+
+
+# ==========================================
+# === 6. FAQ & REVIEWS                   ===
 # ==========================================
 
 class FAQResource(resources.ModelResource):
@@ -328,19 +480,10 @@ class FAQAdmin(ImportExportModelAdmin):
 
 @admin.register(Testimonial)
 class TestimonialAdmin(admin.ModelAdmin):
-    list_display = ('client_name', 'social_provider', 'social_provider_badge', 'rating', 'created_at', 'is_active')
+    list_display = ('client_name', 'social_provider', 'rating', 'created_at', 'is_active')
     list_filter = ('social_provider', 'is_active', 'rating')
-    search_fields = ('client_name', 'content')
-    list_editable = ('is_active', 'social_provider')
-
-    def social_provider_badge(self, obj):
-        if obj.social_provider == 'facebook':
-            return "🔵 Facebook"
-        elif obj.social_provider == 'google':
-            return "🔴 Google"
-        return "✉️ Email"
-
-    social_provider_badge.short_description = 'Badge'
+    search_fields = ('client_name',)
+    list_editable = ('is_active',)
 
 
 @admin.register(AboutSection)
@@ -348,14 +491,7 @@ class AboutSectionAdmin(admin.ModelAdmin):
     list_display = ('title_en', 'title_ro', 'is_active')
 
 
-class FutureFeatureResource(resources.ModelResource):
-    class Meta:
-        model = FutureFeature
-        fields = ('id', 'title_en', 'description_en', 'title_ro', 'description_ro', 'target_date', 'priority', 'is_public', 'icon_svg_path', 'color_class')
-        export_order = ('id', 'title_en', 'description_en', 'title_ro', 'description_ro', 'target_date', 'priority', 'is_public', 'icon_svg_path', 'color_class')
-
 @admin.register(FutureFeature)
 class FutureFeatureAdmin(ImportExportModelAdmin):
-    resource_class = FutureFeatureResource
     list_display = ('title_en', 'target_date', 'priority', 'is_public')
     list_editable = ('priority', 'is_public')

@@ -1,0 +1,72 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+&rsaquo; {% translate 'Bulk Generation' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <p>{% translate "Complete the parameters below to generate a new set of vouchers. Upon completion, a CSV file will be downloaded automatically." %}</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <fieldset class="module aligned">
+                <div class="form-row">
+                    <label class="required" for="id_count">{% translate "Number of vouchers:" %}</label>
+                    <input type="number" name="count" id="id_count" value="50" min="1" max="1000" class="vIntegerField">
+                    <div class="help">{% translate "How many unique codes you want to generate (Max 1000)." %}</div>
+                </div>
+                <div class="form-row">
+                    <label class="required" for="id_campaign">{% translate "Campaign Name:" %}</label>
+                    <input type="text" name="campaign" id="id_campaign" placeholder="{% translate 'e.g. Wedding_Fair_March_2026' %}" class="vTextField" required size="40">
+                    <div class="help">{% translate "Used to identify the source of these vouchers in statistics." %}</div>
+                </div>
+                <div class="form-row">
+                    <label for="id_valid_from">{% translate "Valid From:" %}</label>
+                    <input type="datetime-local" name="valid_from" id="id_valid_from" class="vDateTimeField">
+                    <div class="help">{% translate "Date when the voucher becomes active. Leave empty for 'Now'." %}</div>
+                </div>
+                <div class="form-row">
+                    <label class="required" for="id_days_valid">{% translate "Days Valid:" %}</label>
+                    <input type="number" name="days_valid" id="id_days_valid" value="30" min="1" class="vIntegerField">
+                    <div class="help">{% translate "How many days until these vouchers expire from the moment of generation?" %}</div>
+                </div>
+                <div class="form-row">
+                    <label class="required" for="id_discount">{% translate "Discount %:" %}</label>
+                    <input type="number" name="discount" id="id_discount" value="100" min="1" max="100" class="vIntegerField">
+                    <div class="help">{% translate "Applied discount percentage (100 = Free)." %}</div>
+                </div>
+                <div class="form-row">
+                    <label for="id_applicable_plans">{% translate "Applicable Plans:" %}</label>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        {% for plan in available_plans %}
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" name="applicable_plans" value="{{ plan.id }}">
+                                {{ plan.name }} ({{ plan.price|floatformat:0 }} RON)
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <div class="help">{% translate "If you don't select any plan, the voucher will be valid for ALL plans." %}</div>
+                </div>
+                <div class="form-row">
+                    <label for="id_custom_message">{% translate "Custom Message:" %}</label>
+                    <textarea name="custom_message" id="id_custom_message" rows="4" cols="60" placeholder="{% translate 'Write your custom WhatsApp message here...' %}"></textarea>
+                    <div class="help">{% translate "This message will be used for WhatsApp sharing. The activation link will be automatically added at the end." %}</div>
+                </div>
+            </fieldset>
+            
+            <div class="submit-row">
+                <input type="submit" value="{% translate 'Generate and Download CSV' %}" class="default" name="_save">
+                <a href=".." class="closelink">{% translate "Cancel" %}</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -91,42 +91,7 @@
 
 {% block content %}
 <!-- x-data for Modal & Language Menu -->
-<div x-data="{ rsvpOpen: false, langOpen: false }" class="relative min-h-screen pb-24">
-
-    <!-- ============================================== -->
-    <!-- === LANGUAGE SWITCHER (Top Right)          === -->
-    <!-- ============================================== -->
-    <div class="absolute top-4 right-4 z-50" @click.away="langOpen = false">
-        {% get_current_language as LANGUAGE_CODE %}
-        <div class="relative">
-            <button @click="langOpen = !langOpen" type="button" class="flex items-center justify-center space-x-1 bg-white/80 backdrop-blur-md border border-stone-200 shadow-sm rounded-full px-3 py-1 text-xs font-bold text-stone-600 uppercase tracking-wider hover:bg-white hover:shadow-md transition-all">
-                <i class="fas fa-globe mr-1 text-[#b9909b]"></i>
-                <span>{{ LANGUAGE_CODE|default:'ro' }}</span>
-                <i class="fas fa-chevron-down ml-1 text-[10px] text-gray-400"></i>
-            </button>
-
-            <!-- Dropdown -->
-            <div x-show="langOpen"
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-100 z-50 origin-top-right"
-                 style="display: none;">
-                <form action="{% url 'set_language' %}" method="post">
-                    {% csrf_token %}
-                    <input name="next" type="hidden" value="{% if is_preview %}/{% else %}{{ request.get_full_path }}{% endif %}">
-                    <button type="submit" name="language" value="ro" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex justify-between border-b border-gray-50">
-                        <span class="{% if LANGUAGE_CODE == 'ro' %}font-bold text-[#b9909b]{% endif %}">Română</span>
-                        {% if LANGUAGE_CODE == 'ro' %}<i class="fas fa-check text-xs text-[#b9909b]"></i>{% endif %}
-                    </button>
-                    <button type="submit" name="language" value="en" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex justify-between">
-                        <span class="{% if LANGUAGE_CODE == 'en' %}font-bold text-[#b9909b]{% endif %}">English</span>
-                        {% if LANGUAGE_CODE == 'en' %}<i class="fas fa-check text-xs text-[#b9909b]"></i>{% endif %}
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
+<div x-data="{ rsvpOpen: false }" class="relative min-h-screen pb-24">
 
     <!-- ============================================== -->
     <!-- === BACKGROUND GRAPHICS                    === -->

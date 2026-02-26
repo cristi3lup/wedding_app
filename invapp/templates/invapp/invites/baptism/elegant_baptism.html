@@ -1,0 +1,293 @@
+{% extends 'invapp/base_invite.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Julius+Sans+One&family=Montserrat:wght@100..900&family=Baskervville:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    'display': ['"Playfair Display"', 'serif'],
+                    'accent': ['"Julius Sans One"', 'sans-serif'],
+                    'body': ['"Montserrat"', 'sans-serif'],
+                    'classic': ['"Baskervville"', 'serif'],
+                },
+                letterSpacing: {
+                    'ultra-widest': '0.55em',
+                },
+                colors: {
+                    'inv-dark': '#1a1a1a',
+                    'inv-gold': '#af9472',
+                    'inv-paper': '#fdfcfb',
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    /* Mobile-specific UI safeguards */
+    html {
+        scroll-behavior: smooth;
+        overscroll-behavior-y: none;
+    }
+
+    body {
+        background-color: #fdfcfb;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* Subtle Paper Texture Overlay */
+    .texture-overlay::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        opacity: 0.03;
+        z-index: 50;
+        pointer-events: none;
+        background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+    }
+
+    /* Scroll Animations */
+    .reveal {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Floating Navigation Item Active State */
+    .nav-active {
+        color: #af9472;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="texture-overlay relative min-h-screen font-body text-inv-dark">
+
+    <section id="home-anchor" class="relative h-[92vh] flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+
+        <div class="absolute inset-0 z-0">
+            {% if event.couple_photo %}
+                <img src="{{ event.couple_photo.url }}" class="w-full h-full object-cover brightness-[0.85]" alt="Event Header">
+            {% else %}
+                <div class="w-full h-full bg-stone-200"></div>
+            {% endif %}
+            <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-inv-paper"></div>
+        </div>
+
+        <div class="relative z-10 w-full flex flex-col items-center">
+            <span class="reveal font-accent text-[10px] tracking-ultra-widest uppercase text-white/90 mb-6">
+                {% translate "Welcome to the Baptism of" %}
+            </span>
+
+            <h1 class="reveal font-display text-5xl md:text-7xl text-white italic drop-shadow-sm" style="transition-delay: 150ms;">
+                {{ event.child_name|default:_("Baby Name") }}
+            </h1>
+
+            <div class="reveal w-10 h-[1px] bg-white/40 my-8" style="transition-delay: 300ms;"></div>
+
+            <p class="reveal font-classic text-xl text-white italic drop-shadow-sm" style="transition-delay: 450ms;">
+                {{ event.event_date|date:"d F Y" }}
+            </p>
+
+            <p class="reveal font-accent text-[9px] tracking-widest uppercase mt-4 text-inv-gold font-bold drop-shadow-sm" style="transition-delay: 600ms;">
+                {{ event.ceremony_location|default:_("Church Name") }}
+            </p>
+        </div>
+
+        <div class="absolute bottom-12 left-1/2 -translate-x-1/2 animate-bounce opacity-40">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+        </div>
+    </section>
+
+    <section class="bg-inv-paper py-20 px-8">
+        <div class="max-w-md mx-auto space-y-20">
+
+            <div class="text-center reveal">
+                <h3 class="font-accent text-[11px] tracking-[0.4em] uppercase text-inv-gold mb-6">{% translate "Welcome" %}</h3>
+
+                <p class="font-classic text-lg italic leading-relaxed text-stone-600 mb-4">
+                    {% translate "Together with my parents" %}, <br>
+                    <span class="font-bold text-inv-dark not-italic">{{ event.parents_names }}</span>
+                </p>
+
+                {% if event.godparents.exists %}
+                <p class="font-classic text-lg italic leading-relaxed text-stone-600 mb-8">
+                    {% translate "Alongside my godparents" %}, <br>
+                    <span class="font-bold text-inv-dark not-italic">
+                        {% for gp in event.godparents.all %}
+                            {{ gp.name }}{% if not forloop.last %} & {% endif %}
+                        {% endfor %}
+                    </span>
+                </p>
+                {% endif %}
+
+                <p class="font-body text-sm font-light leading-relaxed text-stone-600 border-t border-stone-200 pt-6 mt-6">
+                    {{ event.invitation_wording|default:_("We are delighted to invite you to the holy baptism") }}
+                </p>
+            </div>
+
+            <div class="reveal">
+                <h3 class="font-accent text-[11px] tracking-[0.4em] uppercase text-center mb-10">{% translate "The Day's Schedule" %}</h3>
+                <div class="space-y-12">
+                    <div class="flex items-start gap-6">
+                        <span class="font-display text-2xl italic text-inv-gold pt-1">{{ event.ceremony_time|time:"H:i" }}</span>
+                        <div>
+                            <p class="font-accent text-[10px] tracking-widest uppercase font-bold text-stone-400">{% translate "Ceremony" %}</p>
+                            <p class="font-display text-xl mb-1">{{ event.ceremony_location|default:_("Church Name") }}</p>
+                            {% if event.ceremony_maps_url %}
+                                <a href="{{ event.ceremony_maps_url }}" target="_blank" class="font-accent text-[8px] tracking-widest uppercase border-b border-inv-gold pb-0.5 text-stone-500">{% translate "View Map" %}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-6">
+                        <span class="font-display text-2xl italic text-inv-gold pt-1">{{ event.party_time|time:"H:i" }}</span>
+                        <div>
+                            <p class="font-accent text-[10px] tracking-widest uppercase font-bold text-stone-400">{% translate "Reception" %}</p>
+                            <p class="font-display text-xl mb-1">{{ event.venue_name|default:_("Venue Name") }}</p>
+                            <p class="font-body text-xs text-stone-500 mb-2">{{ event.venue_address }}</p>
+                            {% if event.party_maps_url %}
+                                <a href="{{ event.party_maps_url }}" target="_blank" class="font-accent text-[8px] tracking-widest uppercase border-b border-inv-gold pb-0.5 text-stone-500">{% translate "View Map" %}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if event.party_maps_url %}
+            <div class="reveal">
+                <h3 class="font-accent text-[11px] tracking-[0.4em] uppercase text-center mb-8">{% translate "Location" %}</h3>
+                <div class="aspect-[4/3] rounded-sm overflow-hidden shadow-sm grayscale active:grayscale-0 transition-all duration-700">
+                    <iframe src="{{ event.party_maps_url }}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </section>
+
+    {% if not is_preview %}
+    <section id="rsvp-anchor" class="bg-white py-24 px-8 border-t border-stone-100 mb-20">
+        <div class="max-w-md mx-auto text-center">
+            <h2 class="font-display text-4xl italic mb-4">RSVP</h2>
+            <p class="font-accent text-[10px] tracking-ultra-widest uppercase text-stone-400 mb-12">{% translate "Will you join us?" %}</p>
+
+            <form action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" method="POST" class="space-y-8 text-left">
+                {% csrf_token %}
+
+                <div class="border-b border-stone-200 py-2">
+                    <label class="font-accent text-[8px] tracking-widest uppercase text-inv-gold block mb-3">{% translate "Will you attend?" %}</label>
+                    <div class="flex flex-col space-y-3 font-body text-sm text-stone-600">
+                        {% for radio in form.attending %}
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                {{ radio.tag }}
+                                <span>{{ radio.choice_label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div id="attending_details" style="display: none;" class="space-y-8">
+                    <div class="border-b border-stone-200 py-2">
+                        <label class="font-accent text-[8px] tracking-widest uppercase text-inv-gold block mb-1">{% translate "Number of guests" %}</label>
+                        <input type="number" name="{{ form.number_attending.name }}" min="1" max="{{ guest.max_attendees }}" class="w-full bg-transparent border-none outline-none font-body text-sm py-2" placeholder="1">
+                        <p class="text-[10px] text-stone-400 mt-1">{% blocktranslate with max=guest.max_attendees %}Max {{ max }} guests{% endblocktranslate %}</p>
+                    </div>
+
+                    <div class="border-b border-stone-200 py-2">
+                        <label class="font-accent text-[8px] tracking-widest uppercase text-inv-gold block mb-1">{% translate "Dietary Requirements" %}</label>
+                        <textarea name="{{ form.meal_preference.name }}" rows="1" class="w-full bg-transparent border-none outline-none font-body text-sm py-2 resize-none" placeholder="Ex: Vegetarian, alergii..."></textarea>
+                    </div>
+                </div>
+
+                <div class="border-b border-stone-200 py-2">
+                    <label class="font-accent text-[8px] tracking-widest uppercase text-inv-gold block mb-1">{% translate "Message for parents" %}</label>
+                    <textarea name="{{ form.message.name }}" rows="2" class="w-full bg-transparent border-none outline-none font-body text-sm py-2 resize-none" placeholder="{% translate 'Write your message here...' %}"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-5 bg-inv-dark text-black font-accent text-[10px] tracking-[0.4em] uppercase active:scale-[0.98] transition-all shadow-xl">
+                    {% translate "Send Response" %}
+                </button>
+            </form>
+        </div>
+    </section>
+    {% endif %}
+
+    <nav class="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-md border-t border-stone-200 z-[100] px-8 py-4">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <a href="#home-anchor" class="flex flex-col items-center gap-1 group">
+                <svg class="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-width="1.5"/></svg>
+                <span class="text-[8px] uppercase tracking-widest font-bold opacity-60">Home</span>
+            </a>
+
+            {% if not is_preview %}
+            <a href="#rsvp-anchor" class="flex flex-col items-center gap-1 group text-inv-gold">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" stroke-width="1.5"/></svg>
+                <span class="text-[8px] uppercase tracking-widest font-bold">RSVP</span>
+            </a>
+            {% endif %}
+
+            <a href="https://wa.me/{{ event.host_whatsapp|default:'' }}?text={{ event.whatsapp_custom_message|default:'Buna! As dori cateva detalii despre eveniment.'|urlencode }}" target="_blank" class="flex flex-col items-center gap-1 group">
+                <i class="fa-brands fa-whatsapp text-[22px] text-stone-400 group-hover:text-[#25D366] transition-colors duration-300"></i>
+                <span class="text-[8px] uppercase tracking-widest font-bold opacity-60 group-hover:opacity-100 transition-opacity">Confirm WhatsApp</span>
+            </a>
+        </div>
+    </nav>
+
+</div>
+
+<script>
+    // Reveal on Scroll Logic
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Smooth scroll for nav links
+    document.querySelectorAll('nav a').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href.startsWith('#')) {
+                e.preventDefault();
+                document.querySelector(href).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // RSVP Logic: Show/Hide detailed inputs based on attendance selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const radios = document.querySelectorAll('input[name="attending"]');
+        const details = document.getElementById('attending_details');
+
+        function toggleDetails() {
+            if (!details) return;
+            const isYes = document.querySelector('input[name="attending"][value="True"]:checked');
+            details.style.display = isYes ? 'block' : 'none';
+        }
+
+        if (radios.length > 0) {
+            radios.forEach(r => r.addEventListener('change', toggleDetails));
+            toggleDetails();
+        }
+    });
+</script>
+{% endblock %}

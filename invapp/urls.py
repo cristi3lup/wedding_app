@@ -63,6 +63,10 @@ urlpatterns = [
     path('payment/success/', views.payment_success_view, name='payment_success'),
     path('payment/cancel/', views.payment_cancel_view, name='payment_cancel'),
 
+    # Voucher APIs
+    path('api/verify-voucher/', views.api_verify_voucher, name='api_verify_voucher'),
+    path('api/apply-free-voucher/', views.api_apply_free_voucher, name='api_apply_free_voucher'),
+
     # CRITICAL: Webhook URL required for stripe_webhook in views.py
     path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
 
