@@ -238,14 +238,14 @@
                     </div>
 
                     <!-- Iframe Container -->
-                    <div class="flex-grow bg-gray-100 dark:bg-black relative overflow-hidden">
-                        <div x-show="loading" class="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-black/50 z-20 backdrop-blur-sm" x-cloak>
+                    <div class="flex-grow bg-white relative overflow-hidden">
+                        <div x-show="loading" class="absolute inset-0 flex items-center justify-center bg-white/80 z-20 backdrop-blur-sm" x-cloak>
                             <div class="flex flex-col items-center">
                                 <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                                 <p class="mt-4 text-sm font-bold text-indigo-600 uppercase tracking-widest animate-pulse">{% translate "Generating Preview..." %}</p>
                             </div>
                         </div>
-                        <iframe :src="previewUrl" class="w-full h-full border-none shadow-inner" @load="loading = false"></iframe>
+                        <iframe :src="previewUrl" class="w-full h-full border-none shadow-inner bg-white" @load="loading = false"></iframe>
                     </div>
                 </div>
             </div>
