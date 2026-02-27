@@ -153,9 +153,9 @@
         </div>
 
         <!-- Center: Countdown -->
-        <div class="flex items-center gap-2">
-            <span class="text-yellow-400 hidden lg:inline">🔥 {{ active_campaign.urgency_text|default:"LIMITED OFFER:" }}</span> 
-            <span class="bg-yellow-500 text-black px-2 py-0.5 rounded animate-pulse whitespace-nowrap text-[10px] sm:text-xs">
+        <div class="flex items-center gap-1 sm:gap-2">
+            <span class="text-yellow-400 lg:inline">🔥 <span class="hidden sm:inline-block lg:inline text-[9px] uppercase font-bold tracking-tight text-yellow-500/90">{{ active_campaign.urgency_text|default:"LIMITED OFFER:" }}</span></span> 
+            <span class="bg-yellow-500 text-black px-1.5 sm:px-2 py-0.5 rounded animate-pulse whitespace-nowrap text-[9px] sm:text-xs font-mono font-bold">
                 <span id="fair-countdown" data-end-date="{{ active_campaign.countdown_end_date.isoformat|default:'' }}">--:--:--</span>
             </span>
         </div>
