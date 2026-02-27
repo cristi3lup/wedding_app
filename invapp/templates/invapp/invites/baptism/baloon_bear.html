@@ -30,8 +30,9 @@
         background-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
     }
 
-    /* --- INVITATION WORDING STYLE --- */
+    /* --- INVITATION WORDING STYLE (UPDATED) --- */
     .wording-container {
+        /* Layout & Positioning */
         width: 100%;
         max-width: 480px;
         margin-left: auto;
@@ -40,12 +41,18 @@
         margin-bottom: 25px;
         padding: 0 15px;
         box-sizing: border-box;
+
+        /* Typography & Alignment */
         text-align: center !important;
         font-style: italic;
         line-height: 1.6;
         font-size: 1.2rem;
         color: var(--color-text);
+
+        /* THE FIX: pre-line vs pre-wrap */
         white-space: pre-line;
+
+        /* Siguranță pentru cuvinte foarte lungi */
         overflow-wrap: break-word;
     }
 
@@ -53,18 +60,35 @@
     .card-container {
         width: 100%;
         max-width: 550px;
-        margin: 0 auto;
+        margin: 20px auto;
         background-color: white;
-        min-height: 100vh;
+        min-height: 95vh;
         position: relative;
         box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-        padding-bottom: 80px;
+        padding-bottom: 60px;
         overflow: hidden;
-        border-radius: 0;
+        border-radius: 8px;
+
+        /* Default background behavior */
         background-repeat: no-repeat;
         background-position: center top;
-        background-size: 100% auto;
+        background-size: cover;
     }
+
+    /* --- DECORATIVE CLOUDS (Only shown if no custom bg) --- */
+    .cloud {
+        position: absolute;
+        background: #EBF7FC;
+        border-radius: 50%;
+        opacity: 0.8;
+        z-index: 0;
+        filter: blur(12px);
+        pointer-events: none;
+    }
+    .cloud-1 { width: 180px; height: 180px; top: -60px; left: -60px; }
+    .cloud-2 { width: 220px; height: 140px; top: 40px; right: -90px; }
+    .cloud-3 { width: 120px; height: 120px; bottom: 30px; left: -40px; }
+    .cloud-4 { width: 200px; height: 160px; bottom: -60px; right: -30px; }
 
     /* --- CONTENT WRAPPER --- */
     .content {
@@ -72,37 +96,58 @@
         z-index: 1;
         padding: 30px 20px;
         text-align: center;
+    }
+
+    /* --- MAIN IMAGE (Bear) --- */
+    .hero-image-container {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        position: relative;
         display: flex;
-        flex-direction: column;
-        align-items: center;
+        justify-content: center;
+    }
+
+    .hero-image {
+        width: 85%;
+        max-width: 300px;
+        height: auto;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
     }
 
     /* --- TYPOGRAPHY --- */
     h1.name {
-        width: 100%;
+        width: 50%;
         text-align: center;
+        margin-left: 0;
         font-family: var(--font-script);
+        font-size: 3.8rem;
         color: var(--color-blue);
         line-height: 1.1;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         font-weight: 400;
-        text-shadow: 0 2px 10px rgba(255,255,255,0.9);
-        font-size: clamp(2.2rem, 15vw, 4.5rem);
-        padding: 0 15px;
-        overflow-wrap: normal;
-        word-wrap: normal;
+        text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+        font-size: clamp(2.5rem, 7vw, 3.8rem);
+        line-height: 1.2;
+        padding: 0 10px;
+        overflow-wrap: break-word;
     }
 
     .intro-text {
-        width: 100%;
+        width: 50%;
         text-align: center;
-        font-size: 1.1rem;
+        margin-left: 0;
+        font-size: 1rem;
         line-height: 1.6;
         margin-bottom: 30px;
         color: var(--color-text);
         font-weight: 500;
-        text-shadow: 0 1px 5px rgba(255,255,255,0.9);
-        padding: 0 20px;
+        text-shadow: 0 1px 2px rgba(255,255,255,0.8);
     }
 
     .intro-text strong {
@@ -185,21 +230,19 @@
         display: inline-block;
         background-color: var(--color-blue);
         color: white;
-        padding: 16px 50px;
+        padding: 14px 40px;
         border-radius: 50px;
         text-decoration: none;
-        font-weight: 700;
-        font-size: 1.1rem;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        box-shadow: 0 10px 20px rgba(162, 196, 214, 0.4);
-        border: 3px solid white;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(162, 196, 214, 0.5);
+        border: 2px solid white;
         cursor: pointer;
-        text-transform: uppercase;
-        letter-spacing: 1px;
     }
     .btn-rsvp:hover {
-        transform: scale(1.05);
-        box-shadow: 0 15px 30px rgba(162, 196, 214, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(162, 196, 214, 0.6);
         background-color: #91b6ca;
     }
 
@@ -230,16 +273,20 @@
             min-height: 100vh;
             box-shadow: none;
         }
+
         .content {
             padding: 20px 15px;
         }
+
         h1.name {
             font-size: 3rem;
             margin-bottom: 20px;
         }
+
         .intro-text {
             font-size: 0.95rem;
         }
+
         .date-highlight {
             font-size: 2.2rem;
             padding: 0 15px;
@@ -250,6 +297,11 @@
             font-size: 1.2rem;
             padding: 0 8px;
         }
+
+        .hero-image {
+            max-width: 280px;
+        }
+
         .details-section {
             padding: 15px;
         }
@@ -263,18 +315,26 @@
     <div class="card-container"
          style="background-image: url('{% static 'invapp/images/BaloonBear/BaloonBear.png' %}'); background-size: 100% auto;">
 
+        {% if not event.main_invitation_image %}
+            <div class="cloud cloud-1"></div>
+            <div class="cloud cloud-2"></div>
+            <div class="cloud cloud-3"></div>
+            <div class="cloud cloud-4"></div>
+        {% endif %}
+
         <div class="content">
+
             <div style="height: 33vh;"></div>
 
-            <h1 class="name">{{ event.child_name|default:_("Baby Name") }}</h1>
+            <h1 class="name">{{ event.child_name|default:"Matei - Alexandru" }}</h1>
 
             <div class="intro-text">
                 {% translate "Together with my parents" %}, <br>
-                <strong>{{ event.parents_names }}</strong><br>
+                <strong>{{ event.parents_names|default:"Raluca și Valentin" }}</strong><br>
 
                 {% if event.godparents.exists %}
                     <div class="mt-2">
-                        {% translate "Alongside my godparents" %}, <br>
+                        {% translate "Having by my side the godparents" %}, <br>
                         <strong>
                             {% for gp in event.godparents.all %}
                                 {{ gp.name }}{% if not forloop.last %} & {% endif %}
@@ -285,22 +345,22 @@
             </div>
 
             <div class="wording-container">
-                {{ event.invitation_wording|default:_("We are delighted to invite you to the holy baptism") }}
+                {{ event.invitation_wording|default:"Avem plăcerea de a vă invita" }}
             </div>
 
             <div class="date-container">
-                <div class="date-part uppercase">{{ event.event_date|date:"l" }}</div>
-                <div class="date-part date-highlight">{{ event.event_date|date:"d F" }}</div>
-                <div class="date-part">{{ event.event_date|date:"Y" }}</div>
+                <div class="date-part uppercase">{{ event.date_time|date:"l" }}</div>
+                <div class="date-part date-highlight">{{ event.date_time|date:"d F" }}</div>
+                <div class="date-part">{{ event.date_time|date:"Y" }}</div>
             </div>
 
             <div class="details-section">
-                <p style="margin-bottom: 20px;">{% translate "My baptism will take place at" %}</p>
+                <p style="margin-bottom: 20px;">{% translate "At my baptism, which will take place at" %}</p>
 
                 <div class="detail-block">
                     <i class="fas fa-star icon-star"></i>
-                    <span class="detail-location">{{ event.ceremony_location|default:_("Church Name") }}</span><br>
-                    {% translate "starting at" %} <span class="detail-time">{{ event.ceremony_time|time:"H:i" }}</span>.
+                    <span class="detail-location">{{ event.ceremony_location|default:"Biserica" }}</span><br>
+                    {% translate "starting at" %} <span class="detail-time">{{ event.ceremony_time|time:"H:i"|default:"13:00" }}</span>.
 
                     {% if event.ceremony_maps_url %}
                         <br>
@@ -310,10 +370,10 @@
 
                 <div class="detail-block">
                     {% translate "We will then celebrate together at" %}<br>
-                    <span class="detail-location">{{ event.venue_name|default:_("Venue Name") }}</span><br>
+                    <span class="detail-location">{{ event.venue_name|default:"Restaurant" }}</span><br>
                     <span class="text-sm">{{ event.venue_address }}</span><br>
                     {% translate "starting at" %}
-                    <span class="detail-time">{{ event.party_time|time:"H:i" }}</span>.
+                    <span class="detail-time">{{ event.date_time|time:"H:i"|default:"15:30" }}</span>.
 
                     {% if event.party_maps_url %}
                         <br>
@@ -333,22 +393,41 @@
                 </button>
             </div>
             {% endif %}
+
         </div>
     </div>
 
-    <!-- RSVP Modal -->
     {% if not is_preview %}
-    <div x-show="rsvpOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+    <div x-show="rsvpOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm"
+         style="display: none;">
+
         <div @click.away="rsvpOpen = false" class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 relative overflow-y-auto max-h-[90vh]">
             <button @click="rsvpOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <i class="fas fa-times text-xl"></i>
             </button>
 
             <h3 class="text-2xl font-bold text-center mb-2 text-[#6B5B52]" style="font-family: var(--font-script);">{% translate "Confirmation" %}</h3>
-            <p class="text-center text-sm text-gray-500 mb-6">{% translate "Please complete the form below." %}</p>
+            <p class="text-center text-sm text-gray-500 mb-6">{% translate "Please fill out the form below." %}</p>
 
             <form method="POST" action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" class="space-y-4">
                 {% csrf_token %}
+
+                <div class="mb-8 font-serif text-stone-600 text-sm italic text-center">
+                     {% if guest.honorific == 'family' %}
+                        {% blocktranslate with name=guest.name %}Dear The {{ name }} Family{% endblocktranslate %}
+                    {% elif guest.honorific == 'couple' %}
+                        {% blocktranslate with name=guest.name %}Dear The {{ name }} Couple{% endblocktranslate %}
+                    {% else %}
+                         {% blocktranslate with name=guest.name %}Dear {{ name }}{% endblocktranslate %}
+                    {% endif %}
+                </div>
 
                 <div class="text-center">
                     <label class="block text-sm font-semibold mb-3 text-gray-600">{% translate "Will you attend?" %}</label>
@@ -363,11 +442,12 @@
                 </div>
 
                 <div id="attending_details" style="display: none;">
-                    <label class="modal-label">{% translate "Number of guests" %}</label>
-                    <input type="number" name="{{ form.number_attending.name }}" min="1" max="{{ guest.max_attendees }}" class="modal-input" placeholder="1">
-                    <p class="text-xs text-gray-400 mt-1">{% blocktranslate with max=guest.max_attendees %}Max {{ max }} guests{% endblocktranslate %}</p>
 
-                    <label class="modal-label">{% translate "Dietary Requirements" %}</label>
+                    <label class="modal-label">{% translate "Number of people" %}</label>
+                    <input type="number" name="{{ form.number_attending.name }}" min="1" max="{{ guest.max_attendees }}" class="modal-input" placeholder="1">
+                    <p class="text-xs text-gray-400 mt-1">{% blocktranslate with max=guest.max_attendees %}Maximum {{ max }} people{% endblocktranslate %}</p>
+
+                    <label class="modal-label">{% translate "Menu Preferences / Allergies" %}</label>
                     <textarea name="{{ form.meal_preference.name }}" rows="2" class="modal-input" placeholder="..."></textarea>
                 </div>
 
@@ -381,17 +461,25 @@
         </div>
     </div>
     {% endif %}
-</div>
 
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
+    // RSVP Form Toggle Logic
     document.addEventListener('DOMContentLoaded', function() {
         const radios = document.querySelectorAll('input[name="attending"]');
         const details = document.getElementById('attending_details');
+
         function toggleDetails() {
+            // Check if details element exists (it won't in preview mode)
             if (!details) return;
+
             const isYes = document.querySelector('input[name="attending"][value="True"]:checked');
             details.style.display = isYes ? 'block' : 'none';
         }
+
         if (radios.length > 0) {
             radios.forEach(r => r.addEventListener('change', toggleDetails));
             toggleDetails();

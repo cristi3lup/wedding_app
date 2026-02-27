@@ -1,210 +1,216 @@
-{% extends "invapp/base_invite.html" %}
 {% load static %}
 {% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% translate "Baptism" %} {{ event.child_name|default:"" }} - {{ event.title }}</title>
 
-{% block page_specific_fonts %}
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts inspired by the invitation -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
-{% endblock %}
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
 
-{% block page_specific_styles %}
-<style>
-    :root {
-        --brand-blue: #A5D8FF;
-        --brand-darkblue: #4DABF7;
-        --brand-yellow: #FFF9DB;
-        --brand-heading: #1971C2;
-        --brand-text: #495057;
-    }
-
-    body {
-        background-color: #f8f9fa;
-        color: var(--brand-text);
-        font-family: 'Quicksand', sans-serif;
-    }
-
-    .font-fredoka { font-family: 'Fredoka', sans-serif; }
-
-    .duck-card {
-        background: white;
-        border-radius: 2rem;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        border: 4px solid var(--brand-blue);
-    }
-
-    .btn-duck {
-        background-color: var(--brand-heading);
-        color: white;
-        border-radius: 1rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-
-    .btn-duck:hover {
-        background-color: var(--brand-darkblue);
-        transform: scale(1.05);
-    }
-
-    .duck-bg-pattern {
-        background-image: radial-gradient(var(--brand-blue) 1px, transparent 1px);
-        background-size: 20px 20px;
-        opacity: 0.3;
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="relative min-h-screen py-12 px-4 overflow-hidden">
-    <div class="fixed inset-0 duck-bg-pattern -z-10"></div>
-
-    <!-- Decorative Ducks -->
-    <div class="absolute top-10 left-5 w-16 opacity-40 rotate-12">
-        <img src="{% static 'invapp/images/Duckling/Duck.png' %}" alt="duck">
-    </div>
-    <div class="absolute bottom-20 right-5 w-20 opacity-40 -rotate-12">
-        <img src="{% static 'invapp/images/Duckling/Duck.png' %}" alt="duck">
-    </div>
-
-    <main class="max-w-xl mx-auto space-y-12">
-        <!-- Hero Section -->
-        <section class="text-center space-y-6">
-            <div class="relative inline-block">
-                <img src="{% static 'invapp/images/Duckling/GirlDucks.png' %}" alt="Baptism Duckling" class="w-48 mx-auto animate-bounce duration-[3000ms]">
-            </div>
-            <h1 class="font-fredoka text-4xl md:text-5xl text-brand-heading leading-tight">
-                {% translate "Holy Baptism" %} <br>
-                <span class="text-brand-darkblue">{{ event.child_name|default:"Baby Name" }}</span>
-            </h1>
-            <div class="inline-block px-6 py-2 bg-brand-blue rounded-full text-white font-bold tracking-wider">
-                {{ event.event_date|date:"d . m . Y" }}
-            </div>
-        </section>
-
-        <!-- Main Card -->
-        <section class="duck-card p-8 md:p-12 text-center space-y-8 relative overflow-hidden">
-            <div class="space-y-4">
-                <p class="text-lg italic text-gray-500">
-                    {% translate "together with the parents" %}
-                </p>
-                <p class="text-xl font-bold text-brand-heading">{{ event.parents_names }}</p>
-                
-                {% if event.godparents.all %}
-                <div class="pt-4 space-y-2">
-                    <p class="text-lg italic text-gray-500">{% translate "and the godparents" %}</p>
-                    {% for gp in event.godparents.all %}
-                        <p class="text-xl font-bold text-brand-heading">{{ gp.name }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="h-px w-24 bg-brand-blue mx-auto"></div>
-
-            <div class="space-y-4 text-lg">
-                <p>{{ event.invitation_wording|default:_("We joyfully invite you to the baptism that will take place on") }}</p>
-                <div class="p-6 bg-brand-yellow/50 rounded-2xl border-2 border-dashed border-brand-blue/30">
-                    <div class="space-y-4">
-                        <div>
-                            <p class="font-semibold text-brand-heading">{% translate "Religious Service" %}</p>
-                            <p>{{ event.ceremony_time|time:"H:i" }}</p>
-                            <p>{{ event.ceremony_location }}</p>
-                            {% if event.ceremony_maps_url %}
-                                <a href="{{ event.ceremony_maps_url }}" target="_blank" class="text-xs font-bold text-brand-darkblue uppercase tracking-widest hover:underline mt-2 inline-block">{% translate "View Map" %}</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                <p class="font-semibold text-brand-heading">{% translate "We look forward to seeing you!" %}</p>
-            </div>
-        </section>
-
-        <!-- Party Location -->
-        <section class="duck-card p-8 md:p-12 text-center space-y-6">
-            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-glass-cheers text-2xl text-brand-darkblue"></i>
-            </div>
-            <h3 class="font-fredoka text-2xl font-semibold text-brand-heading mb-4">{% translate "Party Location" %}</h3>
-            <div class="space-y-2">
-                <p class="text-xl font-bold">{{ event.venue_name }}</p>
-                <p class="text-gray-500">{{ event.venue_address }}</p>
-                <p class="text-lg font-semibold text-brand-darkblue">{{ event.party_time|time:"H:i" }}</p>
-            </div>
-            {% if event.party_maps_url %}
-                <a href="{{ event.party_maps_url }}" target="_blank" class="inline-flex items-center px-6 py-2 bg-brand-blue text-white rounded-full text-sm font-bold hover:bg-brand-darkblue transition-all">
-                    <i class="fas fa-map-marker-alt mr-2"></i> {% translate "View Directions" %}
-                </a>
-            {% endif %}
-        </section>
-
-        <!-- RSVP Form -->
-        {% if not is_preview %}
-        <section id="rsvp" class="duck-card p-8 md:p-12">
-            <h3 class="font-fredoka text-2xl font-semibold text-brand-heading mb-2 text-center">{% translate "Confirm Attendance" %}</h3>
-            <p class="text-center mb-6">{% translate "Please confirm your presence." %}</p>
-
-            <form method="POST" action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" class="space-y-6">
-                {% csrf_token %}
-                
-                <div class="p-4 bg-blue-50 rounded-xl mb-6">
-                    <p class="text-center text-base">{% translate "Invitation for:" %} <strong class="font-semibold">{{ guest.name }}</strong></p>
-                </div>
-
-                <div class="flex justify-center gap-8 mb-8">
-                    {% for radio in form.attending %}
-                        <label class="flex flex-col items-center gap-2 cursor-pointer">
-                            {{ radio.tag }}
-                            <span class="font-semibold text-gray-600">{{ radio.choice_label }}</span>
-                        </label>
-                    {% endfor %}
-                </div>
-
-                <div id="attending_details" class="space-y-4" style="display: none;">
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">{% translate "Number of Guests" %}</label>
-                        <input type="number" name="{{ form.number_attending.name }}" min="1" max="{{ guest.max_attendees }}" class="w-full p-3 rounded-xl border-2 border-brand-blue/30 focus:border-brand-darkblue outline-none" placeholder="1">
-                        <p class="text-[10px] text-gray-400 mt-1">Max: {{ guest.max_attendees }}</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">{% translate "Menu Preferences / Allergies" %}</label>
-                        <textarea name="{{ form.meal_preference.name }}" rows="2" class="w-full p-3 rounded-xl border-2 border-brand-blue/30 focus:border-brand-darkblue outline-none"></textarea>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold mb-2">{% translate "Message" %}</label>
-                    <textarea name="{{ form.message.name }}" rows="2" class="w-full p-3 rounded-xl border-2 border-brand-blue/30 focus:border-brand-darkblue outline-none" placeholder="{% translate 'Your wishes...' %}"></textarea>
-                </div>
-
-                <button type="submit" class="btn-duck w-full py-4 text-lg">{% translate "Send Response" %}</button>
-            </form>
-        </section>
-        {% endif %}
-
-        <footer class="text-center pt-12 pb-8">
-            <p class="text-brand-heading font-fredoka">InvApp Romania</p>
-            <div class="flex justify-center gap-4 mt-4 text-brand-blue opacity-50">
-                <i class="fas fa-baby"></i>
-                <i class="fas fa-heart"></i>
-                <i class="fas fa-star"></i>
-            </div>
-        </footer>
-    </main>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const attendingRadios = document.querySelectorAll('input[name="attending"]');
-    const attendingDetailsDiv = document.getElementById('attending_details');
-    const attendingYesRadio = document.querySelector('input[name="attending"][value="True"]');
-
-    function toggleDetails() {
-        if (attendingDetailsDiv && attendingYesRadio) {
-            attendingDetailsDiv.style.display = attendingYesRadio.checked ? 'block' : 'none';
+    <!-- Custom Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              'sans': ['Quicksand', 'sans-serif'], /* Clean, rounded sans-serif */
+              'script': ['Great Vibes', 'cursive'], /* Elegant script font */
+            },
+            colors: {
+              'brand-bg': '#FEFDF9',       /* Soft off-white */
+              'brand-text': '#5C6B73',    /* Muted blue-grey text */
+              'brand-heading': '#4A5568', /* Deeper grey */
+              'brand-blue': '#A2B4A2',     /* Muted mint-green from hearts */
+              'brand-yellow': '#F3E9DD',   /* Pale cream-yellow from hearts */
+              'brand-darkblue': '#3A3D56', /* From the bow */
+            }
+          }
         }
-    }
-    attendingRadios.forEach(r => r.addEventListener('change', toggleDetails));
-    toggleDetails();
-});
-</script>
-{% endblock %}
+      }
+    </script>
+</head>
+
+<body class="bg-brand-bg text-brand-text font-sans antialiased">
+    <!-- ============================================== -->
+    <!-- == THIS IS THE NEW HEARTS BACKGROUND DIV    == -->
+    <!-- ============================================== -->
+    <!-- Decorative Hearts Background using your PNG images -->
+    <div class="absolute inset-0 z-0 overflow-hidden">
+        <!--
+            INSTRUCTION:
+            - Place your heart PNGs in 'invapp/static/invapp/images/hearts/'
+            - You can copy/paste these <img> tags to add more hearts.
+            - Change the 'top', 'left', 'right', 'w-X', 'rotate-XX' values to move them.
+        -->
+        <img src="{% static 'invapp/images/Duckling/hearts/h1.png' %}" alt="" class="absolute top-[8%] right-[10%] w-8 h-8 transform -rotate-45 opacity-50" loading="lazy">
+        <img src="{% static 'invapp/images/Duckling/hearts/h3.png' %}" alt="" class="absolute top-[10%] left-[15%] w-6 h-6 transform rotate-45 opacity-60" loading="lazy">
+        <img src="{% static 'invapp/images/Duckling/hearts/h2.png' %}" alt="" class="absolute top-[25%] left-[5%] w-8 h-8 transform rotate-12 opacity-50" loading="lazy">
+        <img src="{% static 'invapp/images/Duckling/hearts/h1.png' %}" alt="" class="absolute top-[35%] right-[15%] w-5 h-5 transform rotate-45 opacity-70" loading="lazy">
+        <img src="{% static 'invapp/images/Duckling/hearts/h5.png' %}" alt="" class="absolute top-[50%] left-[20%] w-7 h-7 transform -rotate-12 opacity-60" loading="lazy">
+        <img src="{% static 'invapp/images/Duckling/hearts/h4.png' %}" alt="" class="absolute top-[65%] right-[5%] w-8 h-8 transform rotate-45 opacity-50" loading="lazy">
+        <img src="{% static 'invapp/images/Duckling/hearts/h3.png' %}" alt="" class="absolute top-[85%] left-[10%] w-6 h-6 transform rotate-12 opacity-70" loading="lazy">
+        <img src="{% static 'invapp/images/Duckling/hearts/h5.png' %}" alt="" class="absolute top-[90%] right-[25%] w-7 h-7 transform -rotate-45 opacity-60" loading="lazy">
+        <img src="{% static 'invapp/images/Duckling/hearts/h4.png' %}" alt="" class="absolute top-[30%] right-[50%] w-10 h-10 transform rotate-23 opacity-40" loading="lazy">
+        <img src="{% static 'invapp/images/Duckling/hearts/h3.png' %}" alt="" class="absolute top-[40%] left-[70]%] w-12 h-12 transform rotate-39 opacity-70" loading="lazy">
+        <img src="{% static 'invapp/images/Duckling/hearts/h5.png' %}" alt="" class="absolute top-[40%] right-[49%] w-8 h-8 transform -rotate-65 opacity-60" loading="lazy">
+    </div>
+
+
+    <!-- Decorative Graphics: Replace placeholders with your own static images -->
+    <div class="absolute top-0 left-0 -z-10 opacity-70 w-24 sm:w-40">
+        <img src="{% static '/invapp/images/Duckling/Bow.png'%}" alt="Decorative Bow Graphic">
+    </div>
+    <div class="absolute bottom-0 left-0 -z-10 opacity-50 w-32 sm:w-40 pb-4 pl-4">
+    <img src="{% static '/invapp/images/Duckling/Dress.png'%}" alt="Decorative Dress Graphic">
+    </div>
+    <div class="absolute bottom-0 right-0 -z-10 opacity-70 w-32 sm:w-48 pb-4 pr-4">
+        <img src="{% static '/invapp/images/Duckling/GirlDucks.png'%}" alt="Decorative Girl Graphic">
+    </div>
+    <!-- End Decorative Graphics -->
+
+    <div class="max-w-xl mx-auto my-12 sm:my-20 px-6 text-center relative z-10">
+
+        <div class="mb-6">
+            <!--
+            INSTRUCTION:
+            1. Place your duckling image (e.g., 'duckling.png') in:
+               invapp/static/invapp/images/
+            2. The code below will then display it.
+            -->
+            <img src="{% static '/invapp/images/Duckling/Duck.png' %}" alt="Baptism Duckling Illustration" class="w-32 sm:w-40 mx-auto">
+        </div>
+        <!-- Main Invitation Text -->
+        <header class="mb-10">
+            <h1 class="font-sans text-6xl sm:text-7xl text-brand-heading">{{ event.child_name }}</h1>
+
+            <p class="mt-4 text-xl sm:text-2xl">
+                {% translate "together with the parents" %}
+            </p>
+            <h2 class="font-script text-4xl sm:text-5xl text-brand-darkblue my-2">{{ event.parents_names }}</h2>
+
+            {% if event.godparents_names %}
+                <p class="mt-4 text-xl sm:text-2xl">
+                    {% translate "and the godparents" %}
+                </p>
+                <h3 class="font-script text-4xl sm:text-5xl text-brand-darkblue my-2">{{ event.godparents_names }}</h3>
+            {% endif %}
+        </header>
+
+        <main>
+            <!-- Event Details Section -->
+            <section id="details" class="text-lg sm:text-xl leading-relaxed">
+                <p>{{ event.invitation_wording|default:"We joyfully invite you to the baptism that will take place on" }}</p>
+                <p class="font-semibold text-2xl text-brand-heading my-3">{{ event.date_time|date:"j F Y" }}</p>
+
+                <div class="space-y-4 mt-8">
+                    {% if event.ceremony_location %}
+                        <div class="ceremony-details">
+                            <p class="font-semibold">{% translate "Religious Service" %}</p>
+                            <p>{{ event.ceremony_location }}</p>
+                            <p>{% translate "At" %} {{ event.ceremony_time|time:"H:i" }}</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="reception-details">
+                        <p class="font-semibold">{% translate "The Party" %}</p>
+                        <p>{{ event.venue_name }} - {{ event.venue_address }}</p>
+                        <p>{% translate "From" %} {{ event.date_time|time:"H:i" }}</p>
+                    </div>
+                </div>
+
+                <p class="font-script text-4xl text-brand-heading mt-10">
+                    {% translate "We look forward to seeing you!" %}
+                </p>
+            </section>
+
+            <hr class="border-t border-dashed border-gray-300 w-1/2 mx-auto my-10">
+
+            <!-- Map Section -->
+            {% if event.Maps_embed_url %}
+            <section id="map" class="mb-12">
+                <h3 class="font-serif text-2xl font-semibold text-brand-heading mb-4">{% translate "Party Location" %}</h3>
+                <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-md">
+                    <iframe src="{{ event.Maps_embed_url }}" class="w-full h-full" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- RSVP Section -->
+            {% if not is_preview %}
+            <section id="rsvp" class="pt-8">
+                <h3 class="font-serif text-2xl font-semibold text-brand-heading mb-2">{% translate "Confirm Attendance" %}</h3>
+                <p class="mb-6">{% translate "Please confirm your presence." %}</p>
+
+                <div class="max-w-md mx-auto bg-white/50 p-6 rounded-lg shadow-sm border border-gray-200">
+                    <form class="space-y-4" action="{% url 'invapp:guest_invite' guest_uuid=guest.unique_id %}" method="POST">
+                        {% csrf_token %}
+                        <!-- This invitation is for the specific guest -->
+                        <p class="text-center text-base">{% translate "Invitation for:" %} <strong class="font-semibold">{{ guest.name }}</strong></p>
+
+                        <div>
+                            <fieldset>
+                                <legend class="block text-base font-medium text-brand-text mb-2">{{ form.attending.label }}</legend>
+                                <div class="flex items-center justify-center space-x-6">
+                                    {% for radio in form.attending %}
+                                        <div class="flex items-center">
+                                            {{ radio.tag }}
+                                            <label for="{{ radio.id_for_label }}" class="ml-2 block text-base text-brand-text">{{ radio.choice_label }}</label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <div id="attending_details" class="space-y-4" style="display: none;">
+                            <div>
+                                <label for="{{ form.number_attending.id_for_label }}" class="block text-sm font-medium text-brand-text">{{ form.number_attending.label }}</label>
+                                <input type="number" name="{{ form.number_attending.name }}" id="{{ form.number_attending.id_for_label }}" min="1" max="{{ guest.max_attendees }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm p-2" placeholder="e.g. 2">
+                            </div>
+
+                            <div>
+                                <label for="{{ form.meal_preference.id_for_label }}" class="block text-sm font-medium text-brand-text">{{form.meal_preference.label}} </label>
+                                <textarea name="{{ form.meal_preference.name }}" id="{{ form.meal_preference.id_for_label }}" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm p-2" placeholder="Opt. Vegan, o portie de copil, alergie la gluten "></textarea>
+                            </div>
+
+                              <div>
+                                <label for="{{ form.message.id_for_label }}" class="block text-sm font-medium text-brand-text">{{form.message.label}} </label>
+                                <textarea name="{{ form.message.name }}" id="{{ form.message.id_for_label }}" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm p-2" placeholder="Opt. Transmiteti un mesaj "></textarea>
+                            </div>
+                        </div>
+
+                        <div>
+                            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-darkblue hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-darkblue transition-colors">{% translate "Send Response" %}</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+            {% endif %}
+        </main>
+    </div>
+
+    <script>
+        // JavaScript to show/hide conditional RSVP fields
+        const attendingRadios = document.querySelectorAll('input[name="attending"]');
+        const attendingDetailsDiv = document.getElementById('attending_details');
+        const attendingYesRadio = document.querySelector('input[name="attending"][value="True"]');
+
+        function toggleAttendingDetails() {
+            if (attendingYesRadio && attendingYesRadio.checked) {
+                attendingDetailsDiv.style.display = 'block';
+            } else {
+                attendingDetailsDiv.style.display = 'none';
+            }
+        }
+        attendingRadios.forEach(radio => radio.addEventListener('change', toggleAttendingDetails));
+        toggleAttendingDetails();
+    </script>
+</body>
+</html>
