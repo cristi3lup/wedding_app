@@ -12,6 +12,7 @@ urlpatterns = [
 # --- TEMPORARY FIX URL ---
    # path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'invapp/images/favicon.png')),
     path('event/live-preview/', views.EventLivePreviewView.as_view(), name='event_live_preview'),
+    path('demo/design/<int:design_id>/', views.demo_invitation_view, name='demo_design'),
     path('faq/', views.faq_page, name='faq'),
     path('feedback/', views.submit_feedback, name='submit_feedback'),
     path('fix-domain/', views.fix_site_domain, name='fix_domain'),

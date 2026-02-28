@@ -161,6 +161,86 @@ def event_preview(request):
     return HttpResponse("Method not allowed", status=405)
 
 
+@xframe_options_exempt
+def demo_invitation_view(request, design_id):
+    """
+    Renders a live demo of a specific design using in-memory mock data.
+    No database objects are created or saved during this process.
+    """
+    design = get_object_or_404(CardDesign, pk=design_id)
+    
+    # 1. Create Mock Event with beautiful placeholder data
+    # Use SimpleNamespace to simulate a model instance
+    mock_event = SimpleNamespace(
+        event_type=design.event_type,
+        title=_("Ana & Andrei's Wedding") if design.event_type == 'wedding' else _("Baby Maria's Baptism"),
+        bride_name=_("Ana-Maria"),
+        groom_name=_("Andrei-Gabriel"),
+        child_name=_("Maria-Elena"),
+        parents_names=_("Elena & Ion Popescu, Maria & Vasile Ionescu"),
+        bride_parents=_("Elena & Ion Popescu"),
+        groom_parents=_("Maria & Vasile Ionescu"),
+        event_date=timezone.now() + timedelta(days=90),
+        party_time=time(19, 0),
+        ceremony_time=time(17, 0),
+        venue_name=_("Royal Garden Ballroom"),
+        venue_address=_("Soseaua Nordului 1, Bucuresti"),
+        ceremony_location=_("Church of Saint Nicholas"),
+        ceremony_address=_("Strada Victoriei 10, Bucuresti"),
+        ceremony_maps_url="https://goo.gl/maps/example1",
+        party_maps_url="https://goo.gl/maps/example2",
+        invitation_wording=_("Together with our families, we invite you to celebrate our love and the beginning of our new life together."),
+        selected_design=design,
+        couple_photo=None, # Fallback to design defaults if any
+        landscape_photo=None,
+        main_invitation_image=None,
+        audio_greeting=None,
+    )
+
+    # Attach mock managers to support template calls like event.godparents.all
+    mock_event.godparents = SimpleNamespace(
+        all=lambda: [SimpleNamespace(name=_("George & Ioana Vasilescu"))],
+        exists=lambda: True
+    )
+    mock_event.schedule_items = SimpleNamespace(
+        all=lambda: [
+            SimpleNamespace(time=time(17, 0), activity_type='religious_ceremony', description=_("Religious Ceremony")),
+            SimpleNamespace(time=time(19, 0), activity_type='reception', description=_("Cocktail Hour")),
+            SimpleNamespace(time=time(20, 0), activity_type='party', description=_("Dinner & Dancing")),
+        ],
+        exists=lambda: True
+    )
+
+    # 2. Create Mock Guest
+    mock_guest = SimpleNamespace(
+        unique_id='00000000-0000-0000-0000-000000000000',
+        name=_("Dear Guest"),
+        honorific='family',
+        max_attendees=2,
+        event=mock_event,
+        preferred_language='ro',
+        get_full_display_name=_("The Popescu Family"),
+        rsvp_details=SimpleNamespace(attending=None)
+    )
+
+    # 3. Create RSVP Form linked to mock guest
+    form = RSVPForm(guest=mock_guest)
+
+    # 4. Generate Mock Calendar Link
+    google_calendar_link = "https://www.google.com/calendar/render"
+
+    context = {
+        'event': mock_event,
+        'guest': mock_guest,
+        'form': form,
+        'google_calendar_link': google_calendar_link,
+        'is_preview': True,
+    }
+    
+    template_name = design.template_name or 'invapp/invites/default_invite.html'
+    return render(request, template_name, context)
+
+
 # --- CSV Export View ---
 @login_required
 def export_assignments_csv(request, event_id):
