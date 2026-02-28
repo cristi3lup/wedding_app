@@ -55,11 +55,12 @@
         }
         {% endif %}
 
-        /* Hide existing navigation for landing page */
+        /* Hide existing navigation for landing page 
         body > div > nav, 
         body > div > header { 
             display: none !important; 
         }
+        */
         
         /* Ensure fair banner stays visible if active */
         #fair-banner { 
@@ -780,7 +781,7 @@
             </div>
         </div>
 
-        {% include 'invapp/components/nav_dock.html' %}
+        {# {% include 'invapp/components/nav_dock.html' %} #}
     </main>
 {% endblock content %}
 
