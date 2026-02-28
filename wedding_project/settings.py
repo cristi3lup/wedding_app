@@ -38,12 +38,28 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# CSRF
+# CSRF & Security Configuration
 CSRF_TRUSTED_ORIGINS = ['https://invapp-romania.ro', 'https://www.invapp-romania.ro', 'https://*.invapp-romania.ro']
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
 if DEBUG:
     CSRF_TRUSTED_ORIGINS.extend(['http://localhost:8000', 'http://127.0.0.1:8000'])
+
+# Critical Fix for Proxy/Cloudflare Environments:
+CSRF_USE_SESSIONS = True          # Stores CSRF token in session instead of a separate cookie
+CSRF_COOKIE_HTTPONLY = True       # Prevents JS access to CSRF cookie (extra layer)
+SESSION_COOKIE_HTTPONLY = True    # Prevents JS access to session cookie
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+if not DEBUG:
+    # Cookie security for production
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Explicitly allow cookies across root and all subdomains (.domain.ro)
+    SESSION_COOKIE_DOMAIN = '.invapp-romania.ro'
+    CSRF_COOKIE_DOMAIN = '.invapp-romania.ro'
 
 INSTALLED_APPS = [
     # 1. Storage & Static - Order is important
@@ -311,21 +327,13 @@ else:
     STRIPE_TEST_MODE = True
     print("💳 STRIPE: Running in TEST MODE")
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-USE_X_FORWARDED_HOST = True
-USE_X_FORWARDED_PORT = True
-
 if not DEBUG:
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
     DOMAIN_URL = f'https://{RENDER_EXTERNAL_HOSTNAME}' if RENDER_EXTERNAL_HOSTNAME else 'https://invapp-romania.ro'
 else:
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
     SECURE_SSL_REDIRECT = False
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
     DOMAIN_URL = 'http://localhost:8000'
 
 LOGGING = {

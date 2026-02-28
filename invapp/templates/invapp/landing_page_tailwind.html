@@ -54,6 +54,17 @@
             }
         }
         {% endif %}
+
+        /* Hide existing navigation for landing page */
+        body > div > nav, 
+        body > div > header { 
+            display: none !important; 
+        }
+        
+        /* Ensure fair banner stays visible if active */
+        #fair-banner { 
+            display: flex !important; 
+        }
     </style>
 {% endblock %}
 
@@ -768,6 +779,8 @@
                 </div>
             </div>
         </div>
+
+        {% include 'invapp/components/nav_dock.html' %}
     </main>
 {% endblock content %}
 
